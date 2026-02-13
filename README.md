@@ -22,6 +22,23 @@ A full-stack Medical Appointment Management Web Application that allows Admins, 
 
 ---
 
+## 📦 How to Run the Project
+
+After cloning the repository:
+
+### Backend
+cd backend
+npm install
+Create a .env file
+npm run dev
+
+### Frontend
+cd frontend
+npm install
+npm run dev
+
+---
+
 ## 👥 User Roles
 
 ### 🛠 Admin
