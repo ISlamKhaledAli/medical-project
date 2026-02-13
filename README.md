@@ -37,9 +37,9 @@ cd frontend
 npm install
 npm run dev
 
-## 👥 User Roles
-
 ---
+
+## 👥 User Roles
 
 ### 🛠 Admin
 - View all users
