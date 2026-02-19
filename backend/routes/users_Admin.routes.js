@@ -2,11 +2,11 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get("/api/users")
-router.get("/api/users/:id")
-router.patch("/api/users/:id/approve")
-router.patch("/api/users/:id/block")
-router.patch("/api/users/:id/unblock")
-router.delete("/api/users/:id")
+router.get("/");
+router.get("/:id");
+router.patch("/:id/approve");
+router.patch("/:id/block");
+router.patch("/:id/unblock");
+router.delete("/:id");
 
 export default router;

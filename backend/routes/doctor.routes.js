@@ -2,10 +2,10 @@ import { Router } from "express";
 
 const router = Router();
 
-router.post("/api/doctors/profile");
-router.get("/api/doctors");
-router.get("/api/doctors/:id");
-router.patch("/api/doctors/profile");
-router.delete("/api/doctors/profile");
+router.post("/profile");
+router.get("/");
+router.get("/:id");
+router.patch("/profile");
+router.delete("/profile");
 
 export default router;

@@ -2,8 +2,8 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get("/api/notifications")
-router.patch("/api/notifications/:id/red")
-router.delete("/api/notifications/:id")
+router.get("/");
+router.patch("/:id/read");
+router.delete("/:id");
 
 export default router;

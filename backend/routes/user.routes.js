@@ -2,8 +2,8 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get("/api/profile")
-router.patch("/api/profile")
-router.delete("/api/profile")
+router.get("/profile");
+router.patch("/profile");
+router.delete("/profile");
 
 export default router;
