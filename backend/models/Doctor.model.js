@@ -16,5 +16,9 @@ const doctorSchema = new mongoose.Schema({
     consultationFee: Number,
     address: String,
 }, { timestamps: true });
+doctorSchema.index({ specialty: 1 });
+doctorSchema.index({ rating: -1 });
+doctorSchema.index({ experienceYears: -1 });
+doctorSchema.index({ createdAt: -1 });
 
 export default mongoose.model("DoctorProfile", doctorSchema);

@@ -1,4 +1,5 @@
 import DoctorProfile from "../models/Doctor.model.js";
+import Appointment from "../models/Appointments.model.js";
 
 /* ========================
    CREATE & UPDATE
@@ -17,11 +18,29 @@ export const updateProfile = (id, data) =>
 export const filterDoctors = (query) => {
   const filter = { isApproved: true };
 
+  // Filter by specialty
   if (query.specialty) {
     filter.specialty = query.specialty;
   }
 
   return filter;
+};
+
+/* ========================
+   SORTING
+======================== */
+
+export const sortDoctors = (query) => {
+  switch (query.sort) {
+    case "rating":
+      return { rating: -1 };
+    case "experience":
+      return { experienceYears: -1 };
+    case "newest":
+      return { createdAt: -1 };
+    default:
+      return { createdAt: -1 };
+  }
 };
 
 /* ========================
@@ -42,13 +61,23 @@ export const paginateDoctors = (query) => {
 
 export const fetchDoctorsWithFilters = async (query) => {
   const filter = filterDoctors(query);
+  const sortOption = sortDoctors(query);
   const { page, limit, skip } = paginateDoctors(query);
 
-  const doctors = await DoctorProfile.find(filter)
-    .populate("specialty")
+  let doctors = await DoctorProfile.find(filter)
+    .populate("specialty", "name")
     .populate("user", "name email")
+    .sort(sortOption)
     .skip(skip)
     .limit(limit);
+
+  // 🔥 Search by doctor name (Regex)
+  if (query.name) {
+    const search = query.name.toLowerCase();
+    doctors = doctors.filter((doc) =>
+      doc.user?.name?.toLowerCase().includes(search)
+    );
+  }
 
   const total = await DoctorProfile.countDocuments(filter);
 
@@ -56,6 +85,7 @@ export const fetchDoctorsWithFilters = async (query) => {
     total,
     page,
     totalPages: Math.ceil(total / limit),
+    results: doctors.length,
     data: doctors,
   };
 };
@@ -66,7 +96,7 @@ export const fetchDoctorsWithFilters = async (query) => {
 
 export const fetchDoctorById = (id) =>
   DoctorProfile.findById(id)
-    .populate("specialty")
+    .populate("specialty", "name")
     .populate("user", "name email");
 
 /* ========================
@@ -74,5 +104,7 @@ export const fetchDoctorById = (id) =>
 ======================== */
 
 export const fetchDoctorAppointments = async (doctorId) => {
-  return await Appointment.find({ doctor: doctorId });
+  return await Appointment.find({ doctor: doctorId })
+    .populate("patient", "name email")
+    .sort({ createdAt: -1 });
 };
