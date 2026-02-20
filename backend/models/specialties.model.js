@@ -6,4 +6,4 @@ const specialtySchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model("Specialty", specialtySchema);
+export default mongoose.model("Specialty", specialtySchema);

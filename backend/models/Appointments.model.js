@@ -27,4 +27,4 @@ appointmentSchema.index(
     { unique: true }
 );
 
-module.exports = mongoose.model("Appointment", appointmentSchema);
+export default mongoose.model("Appointment", appointmentSchema);
