@@ -17,4 +17,4 @@ const doctorSchema = new mongoose.Schema({
     address: String,
 }, { timestamps: true });
 
-module.exports = mongoose.model("DoctorProfile", doctorSchema);
+export default mongoose.model("DoctorProfile", doctorSchema);

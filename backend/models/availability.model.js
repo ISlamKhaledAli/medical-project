@@ -12,4 +12,4 @@ const availabilitySchema = new mongoose.Schema({
     slotDuration: { type: Number, default: 30 },
 });
 
-module.exports = mongoose.model("Availability", availabilitySchema);
+export default mongoose.model("Availability", availabilitySchema);
