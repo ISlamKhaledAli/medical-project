@@ -7,4 +7,7 @@ const specialtySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
+
+
+
 export default mongoose.model("Specialty", specialtySchema);
