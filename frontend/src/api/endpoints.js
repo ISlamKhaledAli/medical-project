@@ -13,40 +13,40 @@ export const ENDPOINTS = {
 
   /* ================= DOCTOR ================= */
   DOCTOR: {
-    LIST: "/doctors",
-    DETAILS: (id) => `/doctors/${id}`,
-    UPDATE: (id) => `/doctors/${id}`,
-    DELETE: (id) => `/doctors/${id}`,
+    LIST: "/doctors", // GET (list + filtering + pagination)
+    DETAILS: (id) => `/doctors/${id}`, // GET by id
+    UPDATE: (id) => `/doctors/${id}`, // PATCH
+    DELETE: (id) => `/doctors/${id}`, // DELETE
   },
 
   /* ================= SPECIALTY ================= */
   SPECIALTY: {
-    LIST: "/specialties",
-    CREATE: "/specialties",
-    DELETE: (id) => `/specialties/${id}`,
-    UPDATE: (id) => `/specialties/${id}`,
+    LIST: "/specialties", // GET
+    CREATE: "/specialties", // POST
+    UPDATE: (id) => `/specialties/${id}`, // PATCH
+    DELETE: (id) => `/specialties/${id}`, // DELETE
   },
 
   /* ================= AVAILABILITY ================= */
   AVAILABILITY: {
-    DOCTOR: (doctorId) => `/availability/${doctorId}`,
-    SET: "/availability",
-    UPDATE: (id) => `/availability/${id}`,
-    DELETE: (id) => `/availability/${id}`,
+    DOCTOR: (doctorId) => `/availability/${doctorId}`, // GET doctor availability
+    SET: "/availability", // POST
+    UPDATE: (id) => `/availability/${id}`, // PATCH
+    DELETE: (id) => `/availability/${id}`, // DELETE
   },
 
   /* ================= APPOINTMENT ================= */
   APPOINTMENT: {
-    LIST: "/appointments",
-    CREATE: "/appointments",
-    DETAILS: (id) => `/appointments/${id}`,
-    CANCEL: (id) => `/appointments/${id}/cancel`,
-    RESCHEDULE: (id) => `/appointments/${id}/reschedule`,
+    LIST: "/appointments", // GET all my appointments
+    CREATE: "/appointments", // POST new appointment
+    DETAILS: (id) => `/appointments/${id}`, // GET by id
+    CANCEL: (id) => `/appointments/${id}/cancel`, // PATCH cancel
+    RESCHEDULE: (id) => `/appointments/${id}/reschedule`, // PATCH reschedule
   },
 
   /* ================= ADMIN ================= */
   ADMIN: {
-    USERS: "/admin/users",
+    USERS: "/admin/users", // GET
     APPROVE_USER: (id) => `/admin/users/${id}/approve`,
     BLOCK_USER: (id) => `/admin/users/${id}/block`,
     UNBLOCK_USER: (id) => `/admin/users/${id}/unblock`,
