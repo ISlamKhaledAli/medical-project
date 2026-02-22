@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authAPI from "./authAPI";
-import { startGlobalLoading, stopGlobalLoading } from "../ui/uiSlice";
 
 // ==========================
 // Async Thunks
