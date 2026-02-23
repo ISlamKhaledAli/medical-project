@@ -59,6 +59,12 @@ export const handleRefreshToken = async (incomingRefreshToken) => {
     throw new Error("Invalid refresh token. Please log in again.");
   }
 
+  if (user.isBlocked) {
+    user.refreshToken = null;
+    await user.save();
+    throw new Error("Your account has been blocked by an administrator.");
+  }
+
   const accessToken = generateAccessToken(user._id, user.role);
   const newRefreshToken = generateRefreshToken(user._id);
 

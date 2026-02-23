@@ -3,10 +3,14 @@ import Availability from "../models/availability.model.js";
 import DoctorProfile from "../models/Doctor.model.js";
 import ApiError from "../utils/ApiError.js";
 import { timeToMinutes, normalizeDate } from "../utils/dateTime.js";
+import {
+    sendBookingNotification,
+    sendCancelNotification,
+    sendRescheduleNotification,
+} from "./notification.service.js";
 
-/* =========================
-   Validate Slot Availability
-========================= */
+//Validate Slot Availability
+   
 export const validateSlotAvailability = async ({
     doctorId,
     appointmentDate,
@@ -79,9 +83,9 @@ export const validateSlotAvailability = async ({
     return true;
 };
 
-/* =========================
-   Create Appointment
-========================= */
+// Create Appointment
+  
+
 export const createAppointment = async ({
     doctorId,
     patientId,
@@ -110,12 +114,27 @@ export const createAppointment = async ({
         status: "pending",
     });
 
+    // Fire-and-forget booking notification
+    try {
+        const doctorProfile = await DoctorProfile.findById(doctorId);
+        if (doctorProfile) {
+            await sendBookingNotification({
+                patientId,
+                doctorUserId: doctorProfile.user,
+                appointmentDate: appointment.appointmentDate,
+                startTime: appointment.startTime,
+            });
+        }
+    } catch (err) {
+        console.error("Notification failed (bookAppointment):", err.message);
+    }
+
     return appointment;
 };
 
-/* =========================
-   Change Status (State Machine)
-========================= */
+//Change Status (State Machine)
+   
+
 export const changeAppointmentStatus = async ({
     appointmentId,
     newStatus,
@@ -146,9 +165,9 @@ export const changeAppointmentStatus = async ({
     return appointment;
 };
 
-/* =========================
-   Cancel Appointment
-========================= */
+// Cancel Appointment
+  
+
 export const cancelAppointment = async ({
     appointmentId,
     currentUser,
@@ -182,12 +201,28 @@ export const cancelAppointment = async ({
     appointment.status = "cancelled";
     await appointment.save();
 
+    // Fire-and-forget cancel notification
+    try {
+        const doctorProfile = await DoctorProfile.findById(appointment.doctor);
+        if (doctorProfile) {
+            await sendCancelNotification({
+                patientId: appointment.patient,
+                doctorUserId: doctorProfile.user,
+                appointmentDate: appointment.appointmentDate,
+                startTime: appointment.startTime,
+                cancelledByRole: currentUser.role,
+            });
+        }
+    } catch (err) {
+        console.error("Notification failed (cancelAppointment):", err.message);
+    }
+
     return appointment;
 };
 
-/* =========================
-   Reschedule Appointment
-========================= */
+//Reschedule Appointment
+   
+
 export const rescheduleAppointment = async ({
     appointmentId,
     newDate,
@@ -222,6 +257,10 @@ export const rescheduleAppointment = async ({
         endTime: newEndTime,
     });
 
+    // Save old values for notification before updating
+    const oldDate = appointment.appointmentDate;
+    const oldStartTime = appointment.startTime;
+
     // Update appointment
     appointment.appointmentDate = normalizeDate(newDate);
     appointment.startTime = newStartTime;
@@ -230,12 +269,29 @@ export const rescheduleAppointment = async ({
 
     await appointment.save();
 
+    // Fire-and-forget reschedule notification
+    try {
+        const doctorProfile = await DoctorProfile.findById(appointment.doctor);
+        if (doctorProfile) {
+            await sendRescheduleNotification({
+                patientId: appointment.patient,
+                doctorUserId: doctorProfile.user,
+                oldDate,
+                oldStartTime,
+                newDate: appointment.appointmentDate,
+                newStartTime: appointment.startTime,
+            });
+        }
+    } catch (err) {
+        console.error("Notification failed (rescheduleAppointment):", err.message);
+    }
+
     return appointment;
 };
 
-/* =========================
-   Get My Appointments
-========================= */
+
+  // Get My Appointments
+
 export const getMyAppointments = async ({
     currentUser,
     queryParams,
@@ -270,9 +326,9 @@ export const getMyAppointments = async ({
     return appointments;
 };
 
-/* =========================
-   Get All Appointments (Admin)
-========================= */
+
+ //  Get All Appointments (Admin)
+
 export const getAllAppointments = async ({
     queryParams,
 }) => {
@@ -317,9 +373,9 @@ export const getAllAppointments = async ({
     };
 };
 
-/* =========================
-   Calculate Admin Stats
-========================= */
+//Calculate Admin Stats
+   
+
 export const calculateAdminStats = async () => {
     const totalAppointments = await Appointment.countDocuments();
 
@@ -367,9 +423,9 @@ export const calculateAdminStats = async () => {
     };
 };
 
-/* =========================
-   Get Appointment By ID
-========================= */
+//Get Appointment By ID
+   
+
 export const getAppointmentById = async ({
     appointmentId,
     currentUser,
