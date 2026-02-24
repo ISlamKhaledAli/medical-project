@@ -1,5 +1,6 @@
 import Notification from "../models/Notifications.model.js";
 import ApiError from "../utils/ApiError.js";
+import { getIO } from "../sockets/socket.js";
 
 
 // Create Notification (internal)
@@ -10,6 +11,18 @@ export const createNotification = async ({ userId, type, message }) => {
         type,
         message,
     });
+
+    // Emit real-time notification to the user's private room
+    const io = getIO();
+    if (io) {
+        io.to(userId.toString()).emit("newNotification", {
+            _id: notification._id,
+            type: notification.type,
+            message: notification.message,
+            isRead: notification.isRead,
+            createdAt: notification.createdAt,
+        });
+    }
 
     return notification;
 };

@@ -5,7 +5,7 @@ import { protect } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.post("/register", authController.register);
-router.get("/verify-email/:token", authController.verifyEmail);
+router.get("/verifyemail/:token", authController.verifyEmail);
 router.post("/resend-verification", authController.resendVerification);
 router.post("/login", authController.login);
 router.post("/refresh-token", authController.refreshToken);

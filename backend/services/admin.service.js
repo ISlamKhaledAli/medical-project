@@ -5,6 +5,7 @@ import Availability from "../models/availability.model.js";
 import Notification from "../models/Notifications.model.js";
 import ApiError from "../utils/ApiError.js";
 import { createNotification } from "./notification.service.js";
+import { disconnectUser } from "../sockets/socket.js";
 
 
 //Get All Users (paginated + filters)
@@ -147,6 +148,9 @@ export const blockUser = async ({ userId, currentUserId }) => {
     } catch (err) {
         console.error("Notification failed (blockUser):", err.message);
     }
+
+    // Force-disconnect all active sockets for this user
+    disconnectUser(userId);
 
     return user;
 };

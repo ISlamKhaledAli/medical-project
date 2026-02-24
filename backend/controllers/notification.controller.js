@@ -3,12 +3,22 @@ import {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    createNotification,
 } from "../services/notification.service.js";
 import wrapAsync from "../middleware/asyncHandler.js";
 
 //GET /api/notifications
    
 
+    // POST /api/notifications
+    export const createNotificationHandler = wrapAsync(async (req, res) => {
+        const { userId, type, message } = req.body;
+        if (!userId || !type || !message) {
+            return res.status(400).json({ success: false, message: "userId, type, and message are required." });
+        }
+        const notification = await createNotification({ userId, type, message });
+        res.status(201).json({ success: true, data: notification });
+    });
 export const getMyNotifications = wrapAsync(async (req, res) => {
     const result = await getUserNotifications({
         userId: req.user._id,

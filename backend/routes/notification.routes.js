@@ -4,6 +4,7 @@ import {
     markNotificationAsRead,
     markAllNotificationsAsRead,
     deleteNotificationHandler,
+    createNotificationHandler,
 } from "../controllers/notification.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 import validateObjectId from "../middleware/validateObjectId.js";
@@ -12,6 +13,10 @@ const router = Router();
 
 // All notification routes require authentication
 router.use(protect);
+
+
+// POST /api/notifications — create a notification for any user
+router.post("/", createNotificationHandler);
 
 // GET /api/notifications — get current user's notifications (paginated)
 router.get("/", getMyNotifications);

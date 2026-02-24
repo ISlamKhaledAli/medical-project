@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateToken.js";
+import { disconnectUser } from "../sockets/socket.js";
 
 export const createUser = async (userData) => {
   const salt = await bcrypt.genSalt(12);
@@ -76,6 +77,9 @@ export const handleRefreshToken = async (incomingRefreshToken) => {
 
 export const handleLogout = async (userId) => {
   await User.findByIdAndUpdate(userId, { refreshToken: null });
+
+  // Disconnect all active sockets for this user
+  disconnectUser(userId.toString());
 };
 
 export const generateVerificationToken = async (userId) => {
