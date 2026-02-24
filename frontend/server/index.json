@@ -1,0 +1,65 @@
+{
+  "specialties": [
+    { "id": "spec_1", "name": "Cardiology" },
+    { "id": "spec_2", "name": "Pediatrics" },
+    { "id": "spec_3", "name": "Neurology" },
+    { "id": "spec_4", "name": "Orthopedics" },
+    { "id": "spec_5", "name": "Dermatology" }
+  ],
+  "doctors": [
+    {
+      "id": "doc_1",
+      "_id": "doc_1",
+      "user": { "name": "Sarah Chen", "avatar": "https://i.pravatar.cc/150?u=doc1", "email": "sarah@mediconnect.com", "phone": "(555) 123-4567" },
+      "specialty": { "_id": "spec_1", "name": "Cardiology" },
+      "bio": "Board-certified cardiologist with 15 years of experience in preventative care.",
+      "clinicAddress": "Heart Center, Building A",
+      "experienceYears": 15
+    },
+    {
+      "id": "doc_2",
+      "_id": "doc_2",
+      "user": { "name": "James Wilson", "avatar": "https://i.pravatar.cc/150?u=doc2", "email": "james@mediconnect.com", "phone": "(555) 987-6543" },
+      "specialty": { "_id": "spec_4", "name": "Orthopedics" },
+      "bio": "Specialist in sports medicine and joint replacement surgery.",
+      "clinicAddress": "Ortho Wing, Level 2",
+      "experienceYears": 12
+    },
+    {
+      "id": "doc_3",
+      "_id": "doc_3",
+      "user": { "name": "Emily Carter", "avatar": "https://i.pravatar.cc/150?u=doc3", "email": "emily@mediconnect.com", "phone": "(555) 456-7890" },
+      "specialty": { "_id": "spec_2", "name": "Pediatrics" },
+      "bio": "Dedicated pediatrician focused on early childhood development.",
+      "clinicAddress": "Children's Ward, Level 1",
+      "experienceYears": 8
+    },
+    {
+      "id": "doc_4",
+      "_id": "doc_4",
+      "user": { "name": "Michael Chang", "avatar": "https://i.pravatar.cc/150?u=doc4", "email": "michael@mediconnect.com", "phone": "(555) 222-3333" },
+      "specialty": { "_id": "spec_3", "name": "Neurology" },
+      "bio": "Expert in treating complex neurological disorders and migraines.",
+      "clinicAddress": "Neuro Center, Building B",
+      "experienceYears": 20
+    },
+    {
+      "id": "doc_5",
+      "_id": "doc_5",
+      "user": { "name": "Jessica Patel", "avatar": "https://i.pravatar.cc/150?u=doc5", "email": "jessica@mediconnect.com", "phone": "(555) 777-8888" },
+      "specialty": { "_id": "spec_5", "name": "Dermatology" },
+      "bio": "Specializing in cosmetic and medical dermatology.",
+      "clinicAddress": "Skin Clinic, Level 3",
+      "experienceYears": 10
+    },
+    {
+      "id": "doc_6",
+      "_id": "doc_6",
+      "user": { "name": "Robert Davis", "avatar": "https://i.pravatar.cc/150?u=doc6", "email": "robert@mediconnect.com", "phone": "(555) 444-5555" },
+      "specialty": { "_id": "spec_1", "name": "Cardiology" },
+      "bio": "Focused on advanced interventional cardiology procedures.",
+      "clinicAddress": "Heart Center, Building A",
+      "experienceYears": 25
+    }
+  ]
+}
