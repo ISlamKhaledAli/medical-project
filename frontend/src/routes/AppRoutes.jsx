@@ -34,22 +34,22 @@ const AppRoutes = () => {
         <Route
           path="/doctors"
           element={
-            // <ProtectedRoute role="patient">
+            <ProtectedRoute role="patient">
               <DoctorListPage />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
         <Route path="/doctors/:id" element={
-            // <ProtectedRoute role="patient">
+            <ProtectedRoute role="patient">
               <DoctorDetailsPage />
-            // </ProtectedRoute>
+            </ProtectedRoute>
         }/>
         <Route
           path="/"
           element={
-            // <ProtectedRoute role="patient">
+            <ProtectedRoute role="patient">
               <Dashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
 
@@ -57,9 +57,9 @@ const AppRoutes = () => {
         <Route
           path="/doctor"
           element={
-            // <ProtectedRoute role="doctor">
+            <ProtectedRoute role="doctor">
               <DoctorDashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
 

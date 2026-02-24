@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* أي Custom CSS إضافي ممكن تحطه تحتهم لو احتجت، بس إحنا معتمدين على Tailwind كلياً */
 body {
     background-color: #f9fafb;
-    /* لون خلفية خفيف رمادي/أزرق */
 }
