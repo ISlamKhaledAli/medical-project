@@ -8,22 +8,43 @@ import { sendEmail } from "../utils/sendEmail.js";
  */
 export const register = async (req, res, next) => {
   try {
-    const user = await authService.createUser(req.body);
+    console.log("📝 Registration started for:", req.body.email);
 
-    const verificationToken = await authService.generateVerificationToken(
-      user._id,
-    );
+    const user = await authService.createUser(req.body);
+    console.log("✅ User created successfully in DB:", user._id);
+
+    let verificationToken;
+    try {
+      verificationToken = await authService.generateVerificationToken(user._id);
+      console.log("✅ Verification token generated");
+    } catch (tokenError) {
+      console.error("❌ Token generation failed:", tokenError.message);
+      return res.status(201).json({
+        success: true,
+        message: "Account created, but verification failed. Please contact support."
+      });
+    }
 
     const verifyUrl = `${req.protocol}://${req.get("host")}/api/auth/verifyemail/${verificationToken}`;
     const message = `Please verify your email by clicking: \n\n ${verifyUrl}`;
-    await sendEmail({ email: user.email, subject: "Verify Email", message });
 
-    res.status(201).json({
-      success: true,
-      message:
-        "Registration successful. Please check your email to verify your account.",
-    });
+    try {
+      await sendEmail({ email: user.email, subject: "Verify Email", message });
+      console.log("✉️ Verification email sent successfully");
+
+      res.status(201).json({
+        success: true,
+        message: "Registration successful. Please check your email to verify your account.",
+      });
+    } catch (emailError) {
+      console.error("📧 Email sending failed:", emailError.message);
+      res.status(201).json({
+        success: true,
+        message: "Registration successful, but we couldn't send the verification email. Please try logging in to resend it.",
+      });
+    }
   } catch (error) {
+    console.error("💥 Registration overall failure:", error.message);
     next(error);
   }
 };

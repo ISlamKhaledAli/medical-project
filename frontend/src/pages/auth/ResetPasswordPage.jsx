@@ -13,14 +13,16 @@ import {
   IconButton,
   CircularProgress,
   LinearProgress,
+  Tooltip,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   LockReset as LockIcon,
+  Info as InfoIcon,
 } from "@mui/icons-material";
 import { resetPassword, clearError } from "../../features/auth/authSlice";
-import { validatePassword } from "../../utils/validators";
+import { validatePassword, getStrengthLabel, getStrengthColor } from "../../utils/validators";
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
@@ -64,6 +66,11 @@ const ResetPasswordPage = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
+    // Always calculate strength if password
+    if (name === "password") {
+        validateField("password", value);
+    }
+
     if (touched[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
@@ -94,11 +101,7 @@ const ResetPasswordPage = () => {
     dispatch(resetPassword({ token, password: formData.password }));
   };
 
-  const getStrengthColor = () => {
-    if (passwordStrength < 2) return "error";
-    if (passwordStrength < 4) return "warning";
-    return "success";
-  };
+  // Removed local strength color mapper in favor of shared utility
 
   if (successMessage) {
     return (
@@ -135,7 +138,12 @@ const ResetPasswordPage = () => {
         </Typography>
 
         <form onSubmit={handleSubmit} noValidate>
-          <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>New Password</Typography>
+          <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>
+                New Password
+                <Tooltip title="At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char" arrow>
+                    <IconButton size="small" sx={{ ml: 0.5 }}><InfoIcon fontSize="inherit" /></IconButton>
+                </Tooltip>
+          </Typography>
           <TextField
             fullWidth
             name="password"
@@ -149,10 +157,15 @@ const ResetPasswordPage = () => {
             required
             disabled={isLoading}
             sx={{ mb: 1, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            autoComplete="new-password"
             InputProps={{
                 endAdornment: (
                     <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        <IconButton 
+                            onClick={() => setShowPassword(!showPassword)} 
+                            edge="end"
+                            type="button"
+                        >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                     </InputAdornment>
@@ -161,11 +174,14 @@ const ResetPasswordPage = () => {
           />
           {formData.password && (
                 <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">Strength: {getStrengthLabel(passwordStrength)}</Typography>
+                    </Box>
                     <LinearProgress 
                         variant="determinate" 
                         value={(passwordStrength / 5) * 100} 
-                        color={getStrengthColor()} 
-                        sx={{ height: 4, borderRadius: 2 }} 
+                        color={getStrengthColor(passwordStrength)} 
+                        sx={{ height: 6, borderRadius: 3 }} 
                     />
                 </Box>
           )}
@@ -183,6 +199,7 @@ const ResetPasswordPage = () => {
             disabled={isLoading}
             error={touched.confirmPassword && !!formErrors.confirmPassword}
             helperText={touched.confirmPassword && formErrors.confirmPassword}
+            autoComplete="new-password"
             sx={{ mb: 4, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
           />
 

@@ -52,6 +52,30 @@ export const validatePassword = (password) => {
 };
 
 /**
+ * Returns a human-readable label for password strength
+ * @param {number} strength - 0 to 5
+ * @returns {string}
+ */
+export const getStrengthLabel = (strength) => {
+    if (strength === 0) return "Very Weak";
+    if (strength <= 2) return "Weak";
+    if (strength === 3) return "Fair";
+    if (strength === 4) return "Good";
+    return "Strong";
+};
+
+/**
+ * Returns a MUI color name based on password strength
+ * @param {number} strength - 0 to 5
+ * @returns {string} "error" | "warning" | "success"
+ */
+export const getStrengthColor = (strength) => {
+    if (strength < 2) return "error";
+    if (strength < 4) return "warning";
+    return "success";
+};
+
+/**
  * Normalizes email (lowercase and trim)
  * @param {string} email 
  * @returns {string}

@@ -55,7 +55,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (user) {
       if (user.role === "admin") navigate("/admin");
-      else if (user.role === "doctor") navigate("/doctor");
+      else if (user.role === "doctor") navigate("/doctor/dashboard");
       else navigate("/");
     }
   }, [user, navigate]);
@@ -71,8 +71,7 @@ const LoginPage = () => {
       return validateEmail(value);
     }
     if (name === "password") {
-      if (!value) return "Password is required";
-      if (value.length < 8) return "Password must be at least 8 characters";
+      return !value ? "Password is required" : "";
     }
     return "";
   };
@@ -110,7 +109,7 @@ const LoginPage = () => {
 
     const payload = {
       email: normalizeEmail(formData.email),
-      password: formData.password.trim(),
+      password: formData.password,
       role,
     };
 
@@ -203,6 +202,7 @@ const LoginPage = () => {
                   helperText={touched.email && formErrors.email}
                   required
                   disabled={isLoading}
+                  autoComplete="email"
                   InputProps={{
                     endAdornment: formData.email.includes("@") && !formErrors.email && (
                       <InputAdornment position="end">
@@ -229,6 +229,7 @@ const LoginPage = () => {
                   helperText={touched.password && formErrors.password}
                   required
                   disabled={isLoading}
+                  autoComplete="current-password"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -236,6 +237,7 @@ const LoginPage = () => {
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                           size="small"
+                          type="button"
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>

@@ -1,25 +1,31 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import { createServer } from "http";
+import cors from "cors";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
-import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
-// import doctorRoutes from "./routes/doctor.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 import availabilityRoutes from "./routes/availability.routes.js";
-// import specialtyRoutes from "./routes/specialty.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { initSocket } from "./sockets/socket.js";
 
-dotenv.config();
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const httpServer = createServer(app);
+
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
+}));
 
 app.use(express.json());
 

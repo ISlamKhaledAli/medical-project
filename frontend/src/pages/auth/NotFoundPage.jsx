@@ -1,6 +1,5 @@
 import { Container, Box, Typography, Button, Paper } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { BugReport as BugIcon } from "@mui/icons-material";
 
 const NotFoundPage = () => {
   return (

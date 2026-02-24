@@ -1,22 +1,23 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-const ProtectedRoute = ({ children, role }) => {
-  const { user, accessToken, isLoading } = useSelector((state) => state.auth);
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, accessToken, isInitialLoading } = useSelector((state) => state.auth);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isInitialLoading) {
+    // Return null or empty while authenticating; GlobalLoader handles the overlay
+    return null;
   }
 
   if (!accessToken || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (role && user.role !== role) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;

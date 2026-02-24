@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "../../api/axiosInstance";
+import appointmentAPI from "./appointmentAPI";
 
-export const fetchAppointments = createAsyncThunk(
-    "appointment/fetchAppointments",
+export const fetchMyAppointments = createAsyncThunk(
+    "appointment/fetchMy",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get("/appointments");
+            const response = await appointmentAPI.fetchMy();
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to fetch appointments");
@@ -13,31 +13,144 @@ export const fetchAppointments = createAsyncThunk(
     }
 );
 
+export const createAppointment = createAsyncThunk(
+    "appointment/create",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await appointmentAPI.create(data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Booking failed");
+        }
+    }
+);
+
+export const cancelAppointment = createAsyncThunk(
+    "appointment/cancel",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await appointmentAPI.cancel(id);
+            return { id, data: response.data };
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Cancellation failed");
+        }
+    }
+);
+
+export const rescheduleAppointment = createAsyncThunk(
+    "appointment/reschedule",
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            const response = await appointmentAPI.reschedule(id, data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Rescheduling failed");
+        }
+    }
+);
+
+export const updateAppointmentStatus = createAsyncThunk(
+    "appointment/updateStatus",
+    async ({ id, status }, { rejectWithValue }) => {
+        try {
+            const response = await appointmentAPI.updateStatus(id, status);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Status update failed");
+        }
+    }
+);
+
 const initialState = {
     appointments: [],
     isLoading: false,
+    isActionLoading: false, // For specific actions like cancel/book
     error: null,
 };
 
 const appointmentSlice = createSlice({
     name: "appointment",
     initialState,
-    reducers: {},
+    reducers: {
+        clearAppointmentError: (state) => {
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchAppointments.pending, (state) => {
+            // Fetch
+            .addCase(fetchMyAppointments.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
             })
-            .addCase(fetchAppointments.fulfilled, (state, action) => {
+            .addCase(fetchMyAppointments.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.appointments = action.payload;
             })
-            .addCase(fetchAppointments.rejected, (state, action) => {
+            .addCase(fetchMyAppointments.rejected, (state, action) => {
                 state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Create
+            .addCase(createAppointment.pending, (state) => {
+                state.isActionLoading = true;
+                state.error = null;
+            })
+            .addCase(createAppointment.fulfilled, (state, action) => {
+                state.isActionLoading = false;
+                state.appointments.unshift(action.payload);
+            })
+            .addCase(createAppointment.rejected, (state, action) => {
+                state.isActionLoading = false;
+                state.error = action.payload;
+            })
+            // Cancel
+            .addCase(cancelAppointment.pending, (state) => {
+                state.isActionLoading = true;
+            })
+            .addCase(cancelAppointment.fulfilled, (state, action) => {
+                state.isActionLoading = false;
+                const index = state.appointments.findIndex(a => a.id === action.payload.id);
+                if (index !== -1) {
+                    state.appointments[index].status = "cancelled";
+                }
+            })
+            .addCase(cancelAppointment.rejected, (state, action) => {
+                state.isActionLoading = false;
+                state.error = action.payload;
+            })
+            // Reschedule
+            .addCase(rescheduleAppointment.pending, (state) => {
+                state.isActionLoading = true;
+            })
+            .addCase(rescheduleAppointment.fulfilled, (state, action) => {
+                state.isActionLoading = false;
+                const index = state.appointments.findIndex(a => a.id === action.payload.id);
+                if (index !== -1) {
+                    state.appointments[index] = action.payload;
+                }
+            })
+            .addCase(rescheduleAppointment.rejected, (state, action) => {
+                state.isActionLoading = false;
+                state.error = action.payload;
+            })
+            // Update Status (Doctor/Admin)
+            .addCase(updateAppointmentStatus.pending, (state) => {
+                state.isActionLoading = true;
+            })
+            .addCase(updateAppointmentStatus.fulfilled, (state, action) => {
+                state.isActionLoading = false;
+                const index = state.appointments.findIndex(a => a._id === action.payload._id || a.id === action.payload.id);
+                if (index !== -1) {
+                    state.appointments[index] = action.payload;
+                }
+            })
+            .addCase(updateAppointmentStatus.rejected, (state, action) => {
+                state.isActionLoading = false;
                 state.error = action.payload;
             });
     },
 });
 
+export const { clearAppointmentError } = appointmentSlice.actions;
 export default appointmentSlice.reducer;

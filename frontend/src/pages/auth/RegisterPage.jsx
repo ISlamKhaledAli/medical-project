@@ -32,21 +32,21 @@ import {
   Info as InfoIcon,
 } from "@mui/icons-material";
 import { register, clearError } from "../../features/auth/authSlice";
-import { validateEmail, validatePassword, validateName, normalizeEmail } from "../../utils/validators";
+import { validateEmail, validatePassword, validateName, normalizeEmail, getStrengthLabel, getStrengthColor } from "../../utils/validators";
 
 const steps = ["Basic Info", "Role Selection", "Role Details"];
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, error } = useSelector((state) => state.auth);
+  const { user, isLoading, error, successMessage } = useSelector((state) => state.auth);
   
   const formRef = useRef(null);
 
   const [activeStep, setActiveStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -54,14 +54,14 @@ const RegisterPage = () => {
   });
 
   const [formErrors, setFormErrors] = useState({
-    name: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const [touched, setTouched] = useState({
-    name: false,
+    fullName: false,
     email: false,
     password: false,
     confirmPassword: false,
@@ -82,7 +82,7 @@ const RegisterPage = () => {
 
   const validateField = (name, value) => {
     switch (name) {
-      case "name":
+      case "fullName":
         return validateName(value);
       case "email":
         return validateEmail(value);
@@ -103,6 +103,11 @@ const RegisterPage = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
+    // Always calculate strength if password, regardless of "touched" status
+    if (name === "password") {
+        validateField("password", value);
+    }
+
     if (touched[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
@@ -122,14 +127,14 @@ const RegisterPage = () => {
 
   const handleNext = () => {
     if (activeStep === 0) {
-      const nameError = validateField("name", formData.name);
+      const nameError = validateField("fullName", formData.fullName);
       const emailError = validateField("email", formData.email);
       const passwordError = validateField("password", formData.password);
       const confirmError = validateField("confirmPassword", formData.confirmPassword);
 
       if (nameError || emailError || passwordError || confirmError) {
-        setFormErrors({ name: nameError, email: emailError, password: passwordError, confirmPassword: confirmError });
-        setTouched({ name: true, email: true, password: true, confirmPassword: true });
+        setFormErrors({ fullName: nameError, email: emailError, password: passwordError, confirmPassword: confirmError });
+        setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
         return;
       }
     }
@@ -144,7 +149,7 @@ const RegisterPage = () => {
     e.preventDefault();
     
     const payload = {
-      name: formData.name.trim(),
+      fullName: formData.fullName.trim(),
       email: normalizeEmail(formData.email),
       password: formData.password,
       role: formData.role,
@@ -153,19 +158,8 @@ const RegisterPage = () => {
     dispatch(register(payload));
   };
 
-  const getStrengthColor = () => {
-    if (passwordStrength < 2) return "error";
-    if (passwordStrength < 4) return "warning";
-    return "success";
-  };
+  // Removed local strength functions in favor of shared utilities
 
-  const getStrengthLabel = () => {
-    if (passwordStrength === 0) return "";
-    if (passwordStrength < 2) return "Weak";
-    if (passwordStrength < 4) return "Fair";
-    if (passwordStrength === 5) return "Strong";
-    return "Good";
-  };
 
   const renderStepContent = (step) => {
     switch (step) {
@@ -175,13 +169,13 @@ const RegisterPage = () => {
             <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>Full Name</Typography>
             <TextField
               fullWidth
-              name="name"
-              placeholder="name  "
-              value={formData.name}
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
               onChange={handleChange}
               onBlur={handleBlur}
-              error={touched.name && !!formErrors.name}
-              helperText={touched.name && formErrors.name}
+              error={touched.fullName && !!formErrors.fullName}
+              helperText={touched.fullName && formErrors.fullName}
               required
               sx={{ mb: 2 }}
             />
@@ -199,6 +193,7 @@ const RegisterPage = () => {
               helperText={touched.email && formErrors.email}
               required
               sx={{ mb: 2 }}
+              autoComplete="email"
             />
 
             <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>
@@ -219,10 +214,15 @@ const RegisterPage = () => {
               helperText={touched.password && formErrors.password}
               required
               sx={{ mb: 1 }}
+              autoComplete="new-password"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                    <IconButton 
+                      onClick={() => setShowPassword(!showPassword)} 
+                      edge="end"
+                      type="button"
+                    >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -232,12 +232,12 @@ const RegisterPage = () => {
             {formData.password && (
                 <Box sx={{ mb: 2 }}>
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                        <Typography variant="caption" color="text.secondary">Strength: {getStrengthLabel()}</Typography>
+                        <Typography variant="caption" color="text.secondary">Strength: {getStrengthLabel(passwordStrength)}</Typography>
                     </Box>
                     <LinearProgress 
                         variant="determinate" 
                         value={(passwordStrength / 5) * 100} 
-                        color={getStrengthColor()} 
+                        color={getStrengthColor(passwordStrength)} 
                         sx={{ height: 6, borderRadius: 3 }} 
                     />
                 </Box>
@@ -255,6 +255,7 @@ const RegisterPage = () => {
               error={touched.confirmPassword && !!formErrors.confirmPassword}
               helperText={touched.confirmPassword && formErrors.confirmPassword}
               required
+              autoComplete="new-password"
             />
           </Box>
         );
@@ -319,7 +320,7 @@ const RegisterPage = () => {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mb: 4 }}>
                 <Paper variant="outlined" sx={{ p: 2, textAlign: "left", borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">Full Name</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{formData.name}</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{formData.fullName}</Typography>
                 </Paper>
                 <Paper variant="outlined" sx={{ p: 2, textAlign: "left", borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">Email Address</Typography>
@@ -362,39 +363,62 @@ const RegisterPage = () => {
         </Stepper>
 
         <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-          {renderStepContent(activeStep)}
+          {successMessage ? (
+              <Box sx={{ py: 4, textAlign: "center" }}>
+                  <DoctorIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
+                  <Typography variant="h5" color="success.main" gutterBottom sx={{ fontWeight: 700 }}>
+                      Account Created!
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                      {successMessage}
+                  </Typography>
+                  <Button 
+                      variant="contained" 
+                      fullWidth 
+                      component={RouterLink}
+                      to="/login"
+                      sx={{ py: 1.5, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+                  >
+                      Go to Sign In
+                  </Button>
+              </Box>
+          ) : (
+              <>
+                {renderStepContent(activeStep)}
 
-          {error && <Alert severity="error" sx={{ mt: 3, borderRadius: 2 }}>{error}</Alert>}
+                {error && <Alert severity="error" sx={{ mt: 3, borderRadius: 2 }}>{error}</Alert>}
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 5 }}>
-            <Button
-              disabled={activeStep === 0 || isLoading}
-              onClick={handleBack}
-              startIcon={<BackIcon />}
-              sx={{ textTransform: "none", color: "text.secondary" }}
-            >
-              Back
-            </Button>
-            {activeStep === steps.length - 1 ? (
-              <Button
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={isLoading}
-                sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
-              >
-                {isLoading ? <CircularProgress size={24} color="inherit" /> : "Register Account"}
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={isLoading}
-                sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
-              >
-                Next Step
-              </Button>
-            )}
-          </Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 5 }}>
+                    <Button
+                    disabled={activeStep === 0 || isLoading}
+                    onClick={handleBack}
+                    startIcon={<BackIcon />}
+                    sx={{ textTransform: "none", color: "text.secondary" }}
+                    >
+                    Back
+                    </Button>
+                    {activeStep === steps.length - 1 ? (
+                    <Button
+                        variant="contained"
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                        sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+                    >
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : "Register Account"}
+                    </Button>
+                    ) : (
+                    <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        disabled={isLoading}
+                        sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+                    >
+                        Next Step
+                    </Button>
+                    )}
+                </Box>
+              </>
+          )}
         </Paper>
         
         <Box sx={{ mt: 6, textAlign: "center", opacity: 0.6 }}>

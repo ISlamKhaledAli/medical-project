@@ -31,11 +31,12 @@ const globalErrorHandler = (err, req, res, next) => {
     error.statusCode = 401;
   }
 
-  const statusCode = err.statusCode || 500;
+  const statusCode = error.statusCode || 500;
+  const message = error.message || "Internal Server Error";
 
   res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: message,
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 };

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
@@ -9,11 +9,18 @@ import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import NotFoundPage from "../pages/auth/NotFoundPage";
 import ProtectedRoute from "../components/ui/ProtectedRoute";
 import DoctorListPage from "../pages/patient/DoctorListPage";
+import DoctorDetailsPage from "../pages/patient/DoctorDetailsPage";
+import BookAppointmentPage from "../pages/patient/BookAppointmentPage";
+import MyAppointmentsPage from "../pages/patient/MyAppointmentsPage";
+import StatsDashboard from "../pages/admin/StatsDashboard";
+import UsersManagementPage from "../pages/admin/UsersManagementPage";
+import AllAppointmentsPage from "../pages/admin/AllAppointmentsPage";
+import DoctorDashboard from "../pages/doctor/DoctorDashboard";
+import ScheduleManagementPage from "../pages/doctor/ScheduleManagementPage";
+import MainLayout from "../components/layout/MainLayout";
 
 // Placeholders for other components
 const Dashboard = () => <Navigate to="/doctors" replace />;
-const DoctorDashboard = () => <div>Doctor Dashboard</div>;
-const AdminDashboard = () => <div>Admin Dashboard</div>;
 
 const AppRoutes = () => {
   return (
@@ -30,43 +37,37 @@ const AppRoutes = () => {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/404" element={<NotFoundPage />} />
 
-        {/* Protected Patient Routes */}
+        {/* Protected Routes wrapped in MainLayout */}
         <Route
-          path="/doctors"
           element={
-            <ProtectedRoute role="patient">
-              <DoctorListPage />
+            <ProtectedRoute>
+              <MainLayout>
+                <Outlet />
+              </MainLayout>
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute role="patient">
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        >
+          {/* Patient Routes */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/doctors" element={<DoctorListPage />} />
+          <Route path="/doctors/:id" element={<DoctorDetailsPage />} />
+          <Route path="/book/:doctorId" element={<BookAppointmentPage />} />
+          <Route path="/my-appointments" element={<MyAppointmentsPage />} />
+          
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<StatsDashboard />} />
+            <Route path="/admin/users" element={<UsersManagementPage />} />
+            <Route path="/admin/appointments" element={<AllAppointmentsPage />} />
+          </Route>
 
-        {/* Protected Doctor Routes */}
-        <Route
-          path="/doctor"
-          element={
-            <ProtectedRoute role="doctor">
-              <DoctorDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Protected Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+          {/* Doctor Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["doctor"]} />}>
+            <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
+            <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+            <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
+          </Route>
+        </Route>
 
         {/* Redirect unknown routes */}
         <Route path="*" element={<Navigate to="/404" replace />} />

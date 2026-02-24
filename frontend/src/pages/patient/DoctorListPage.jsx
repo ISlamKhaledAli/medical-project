@@ -1,85 +1,225 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { 
     Container, 
     Grid, 
     Typography, 
     Box, 
-    Card, 
-    CardContent, 
-    Avatar, 
-    Button,
-    Rating
+    TextField, 
+    InputAdornment,
+    Paper,
+    Button
 } from "@mui/material";
-import { fetchDoctors } from "../../features/doctor/doctorSlice";
+import { Search as SearchIcon, FilterList as FilterIcon } from "@mui/icons-material";
+import { fetchDoctors, setFilters, setPage } from "../../features/doctor/doctorSlice";
+import { useDebounce } from "../../hooks/useDebounce";
+import DoctorCard from "../../components/doctor/DoctorCard";
+import SpecialtySelect from "../../components/doctor/SpecialtySelect";
+import PaginationControl from "../../components/ui/PaginationControl";
 import DoctorCardSkeleton from "../../components/skeletons/DoctorCardSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
 
 const DoctorListPage = () => {
     const dispatch = useDispatch();
-    const { doctors, isLoading, error } = useSelector((state) => state.doctor);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { doctors, isLoading, error, pagination, filters } = useSelector((state) => state.doctor);
+    
+    // Local state for immediate search input feedback
+    const [searchTerm, setSearchTerm] = useState(filters.name || "");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+    
+    // AbortController ref to cancel stale requests
+    const abortControllerRef = useRef(null);
 
+    // 1. Sync URL params to Redux state (ONLY ON MOUNT or URL change)
     useEffect(() => {
-        dispatch(fetchDoctors());
-    }, [dispatch]);
+        const name = searchParams.get("name") || "";
+        const specialty = searchParams.get("specialty") || "";
+        const page = parseInt(searchParams.get("page")) || 1;
+        
+        // Initialize local search term from URL
+        setSearchTerm(name);
+        
+        dispatch(setFilters({ name, specialty }));
+        dispatch(setPage(page));
+    }, [dispatch, searchParams]); // searchParams change happens only when updateURL or manual URL edit happens
+
+    // 2. Fetch doctors when debounced filters or page change
+    useEffect(() => {
+        // Cancel previous request if it exists
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        // Create new AbortController
+        abortControllerRef.current = new AbortController();
+        
+        const params = {
+            name: debouncedSearch,
+            specialty: filters.specialty,
+            page: pagination.page,
+            limit: pagination.limit
+        };
+
+        const fetchAction = dispatch(fetchDoctors({ ...params, signal: abortControllerRef.current.signal }));
+        
+        return () => {
+            // Cleanup: abort if component unmounts or effect re-runs
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [dispatch, debouncedSearch, filters.specialty, pagination.page, pagination.limit]);
+
+    // 3. Update URL when filters or page change
+    const updateURL = useCallback((newFilters, newPage) => {
+        const params = {};
+        if (newFilters.name) params.name = newFilters.name;
+        if (newFilters.specialty) params.specialty = newFilters.specialty;
+        if (newPage > 1) params.page = newPage;
+        setSearchParams(params);
+    }, [setSearchParams]);
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        // Note: URL update only happens after debounce in another effect or here
+        // Usually better to update URL only after debounce or on blur to avoid messy URls
+    };
+
+    // Effect to update URL when debounced search changes
+    useEffect(() => {
+        const updatedFilters = { ...filters, name: debouncedSearch };
+        // Avoid redundant Redux dispatch if values are the same
+        if (debouncedSearch !== filters.name) {
+            dispatch(setFilters(updatedFilters));
+            updateURL(updatedFilters, 1);
+        }
+    }, [debouncedSearch, dispatch, filters, updateURL]);
+
+    const handleSpecialtyChange = (value) => {
+        const updatedFilters = { ...filters, specialty: value };
+        dispatch(setFilters(updatedFilters));
+        updateURL(updatedFilters, 1);
+    };
+
+    const handlePageChange = (newPage) => {
+        dispatch(setPage(newPage));
+        updateURL(filters, newPage);
+    };
+
+    const handleClearFilters = () => {
+        setSearchTerm("");
+        dispatch(setFilters({ name: "", specialty: "" }));
+        updateURL({ name: "", specialty: "" }, 1);
+    };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-            <Box sx={{ mb: 6, textAlign: "center" }}>
-                <Typography variant="h3" sx={{ fontWeight: 800, color: "#1a237e", mb: 2 }}>
-                    Our Medical Specialists
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box sx={{ mb: 5 }}>
+                <Typography variant="h4" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
+                    Find Your Specialist
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: "auto" }}>
-                    Find the best doctors and specialists for your medical needs. All our professionals are highly qualified and verified.
+                <Typography variant="body1" color="text.secondary">
+                    Search from our verified list of world-class medical professionals.
                 </Typography>
             </Box>
 
-            {error && (
-                <Box sx={{ mb: 4, textAlign: "center" }}>
-                    <Typography color="error" variant="h6">{error}</Typography>
-                    <Button onClick={() => dispatch(fetchDoctors())} sx={{ mt: 1 }}>Try Again</Button>
+            {/* Filters Bar */}
+            <Paper 
+                elevation={0} 
+                sx={{ 
+                    p: 3, 
+                    mb: 4, 
+                    borderRadius: 3, 
+                    bgcolor: "white", 
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    gap: 2,
+                    alignItems: "center"
+                }}
+            >
+                <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Search doctor name..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        sx: { borderRadius: 2 }
+                    }}
+                />
+                <Box sx={{ width: { xs: "100%", md: 300 } }}>
+                    <SpecialtySelect 
+                        value={filters.specialty} 
+                        onChange={handleSpecialtyChange} 
+                    />
                 </Box>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<FilterIcon />}
+                    sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700, px: 3, height: 40, whiteSpace: "nowrap" }}
+                >
+                    Filters
+                </Button>
+            </Paper>
+
+            {error && (
+                <ErrorState 
+                    message={error} 
+                    onRetry={() => {
+                        const params = {
+                            name: debouncedSearch,
+                            specialty: filters.specialty,
+                            page: pagination.page,
+                            limit: pagination.limit
+                        };
+                        dispatch(fetchDoctors(params));
+                    }} 
+                />
             )}
 
-            <Grid container spacing={4}>
-                {isLoading ? (
-                    // Render 6 skeletons while loading
-                    [...Array(6)].map((_, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                            <DoctorCardSkeleton />
+            {!error && (
+                <Grid container spacing={4}>
+                    {isLoading ? (
+                        [...Array(6)].map((_, index) => (
+                            <Grid item xs={12} sm={6} md={4} key={index}>
+                                <DoctorCardSkeleton />
+                            </Grid>
+                        ))
+                    ) : doctors.length > 0 ? (
+                        doctors.map((doctor) => (
+                            <Grid item xs={12} sm={6} md={4} key={doctor.id}>
+                                <DoctorCard doctor={doctor} />
+                            </Grid>
+                        ))
+                    ) : (
+                        <Grid item xs={12}>
+                            <EmptyState 
+                                message="No doctors found" 
+                                subMessage="Try adjusting your search or category filters to find what you're looking for." 
+                                onClear={handleClearFilters}
+                            />
                         </Grid>
-                    ))
-                ) : (
-                    doctors.map((doctor) => (
-                        <Grid item xs={12} sm={6} md={4} key={doctor.id}>
-                            <Card sx={{ height: "100%", borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", transition: "0.3s", "&:hover": { transform: "translateY(-5px)", boxShadow: "0 8px 24px rgba(0,0,0,0.1)" } }}>
-                                <CardContent sx={{ p: 3 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                        <Avatar 
-                                            src={doctor.image} 
-                                            sx={{ width: 64, height: 64, mr: 2, border: "2px solid #e3f2fd" }} 
-                                        />
-                                        <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 700 }}>{doctor.name}</Typography>
-                                            <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>{doctor.specialty}</Typography>
-                                        </Box>
-                                    </Box>
-                                    <Rating value={doctor.rating || 4.5} readOnly size="small" sx={{ mb: 1 }} />
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                                        {doctor.bio || "No biography provided. Specialist in various medical treatments and patient care."}
-                                    </Typography>
-                                    <Button 
-                                        fullWidth 
-                                        variant="contained" 
-                                        sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
-                                    >
-                                        Book Appointment
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))
-                )}
-            </Grid>
+                    )}
+                </Grid>
+            )}
+
+            {!error && doctors.length > 0 && (
+                <PaginationControl 
+                    count={pagination.totalPages} 
+                    page={pagination.page} 
+                    onChange={handlePageChange} 
+                />
+            )}
         </Container>
     );
 };

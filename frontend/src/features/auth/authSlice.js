@@ -24,6 +24,7 @@ export const register = createAsyncThunk(
             const response = await authAPI.register(userData);
             return response.data;
         } catch (error) {
+            console.error("Registration error details:", error.response?.data);
             return rejectWithValue(error.response?.data?.message || "Registration failed");
         }
     }
@@ -113,6 +114,7 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.accessToken = null;
+            state.isInitialLoading = false;
             localStorage.removeItem("accessToken");
         },
         setCredentials: (state, action) => {
@@ -153,9 +155,8 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload.user;
-                state.accessToken = action.payload.accessToken;
-                localStorage.setItem("accessToken", action.payload.accessToken);
+                state.successMessage = action.payload.message || "Registration successful. Please verify your email.";
+                // We do NOT set user or token here because backend requires email verification first
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
@@ -216,5 +217,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { logout, setCredentials, clearError } = authSlice.actions;
+export const { logout, setCredentials, clearError, stopInitialLoading } = authSlice.actions;
 export default authSlice.reducer;

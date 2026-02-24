@@ -59,7 +59,7 @@ axiosInstance.interceptors.response.use(
             try {
                 store.dispatch(startGlobalLoading());
                 const response = await axios.post(
-                    `${baseURL}/auth/refresh`,
+                    `${baseURL}/auth/refresh-token`,
                     {},
                     { withCredentials: true }
                 );
