@@ -6,7 +6,7 @@ import connectDB from "./config/db.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
-// import doctorRoutes from "./routes/doctor.routes.js";
+import doctorRoutes from "./routes/doctor.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 import availabilityRoutes from "./routes/availability.routes.js";
 // import specialtyRoutes from "./routes/specialty.routes.js";
@@ -33,7 +33,7 @@ initSocket(httpServer);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-// app.use("/api/doctors", doctorRoutes);
+app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/availability", availabilityRoutes);
 // app.use("/api/specialties", specialtyRoutes);
