@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
+import { useSelector } from "react-redux";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
@@ -17,10 +18,14 @@ import UsersManagementPage from "../pages/admin/UsersManagementPage";
 import AllAppointmentsPage from "../pages/admin/AllAppointmentsPage";
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import ScheduleManagementPage from "../pages/doctor/ScheduleManagementPage";
+import DoctorAppointmentsPage from "../pages/doctor/DoctorAppointmentsPage";
+import DoctorProfilePage from "../pages/doctor/DoctorProfilePage";
+import { ROLES } from "../constants/roles";
+import PatientHome from "../pages/patient/PatientHome";
+import PatientProfilePage from "../pages/patient/PatientProfilePage";
+import NotificationsPage from "../pages/common/NotificationsPage";
+import SettingsPage from "../pages/common/SettingsPage";
 import MainLayout from "../components/layout/MainLayout";
-
-// Placeholders for other components
-const Dashboard = () => <Navigate to="/doctors" replace />;
 
 const AppRoutes = () => {
   return (
@@ -37,6 +42,16 @@ const AppRoutes = () => {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/404" element={<NotFoundPage />} />
 
+        {/* Root Redirect Logic based on role */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <RootRedirect />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Protected Routes wrapped in MainLayout */}
         <Route
           element={
@@ -48,25 +63,34 @@ const AppRoutes = () => {
           }
         >
           {/* Patient Routes */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/doctors" element={<DoctorListPage />} />
-          <Route path="/doctors/:id" element={<DoctorDetailsPage />} />
-          <Route path="/book/:doctorId" element={<BookAppointmentPage />} />
-          <Route path="/my-appointments" element={<MyAppointmentsPage />} />
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT]} />}>
+            <Route path="/patient" element={<PatientHome />} />
+            <Route path="/patient/doctors" element={<DoctorListPage />} />
+            <Route path="/patient/doctors/:id" element={<DoctorDetailsPage />} />
+            <Route path="/patient/book/:doctorId" element={<BookAppointmentPage />} />
+            <Route path="/patient/appointments" element={<MyAppointmentsPage />} />
+            <Route path="/patient/profile" element={<PatientProfilePage />} />
+          </Route>
+
+          {/* Doctor Routes */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCTOR]} />}>
+            <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
+            <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+            <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
+            <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
+            <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+          </Route>
           
           {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
             <Route path="/admin" element={<StatsDashboard />} />
             <Route path="/admin/users" element={<UsersManagementPage />} />
             <Route path="/admin/appointments" element={<AllAppointmentsPage />} />
           </Route>
 
-          {/* Doctor Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["doctor"]} />}>
-            <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
-            <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-            <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
-          </Route>
+          {/* Shared Protected Routes */}
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
         {/* Redirect unknown routes */}
@@ -74,6 +98,15 @@ const AppRoutes = () => {
       </Routes>
     </BrowserRouter>
   );
+};
+
+// Helper component for root redirection
+const RootRedirect = () => {
+    const { user } = useSelector((state) => state.auth);
+    const role = user?.role?.toLowerCase();
+    if (role === ROLES.ADMIN.toLowerCase()) return <Navigate to="/admin" replace />;
+    if (role === ROLES.DOCTOR.toLowerCase()) return <Navigate to="/doctor/dashboard" replace />;
+    return <Navigate to="/patient" replace />;
 };
 
 export default AppRoutes;

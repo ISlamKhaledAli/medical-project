@@ -17,6 +17,12 @@ const doctorAPI = {
      * Fetch all specialties
      */
     fetchSpecialties: () => axiosInstance.get("/specialties"),
+
+    /**
+     * Update doctor profile
+     * @param {Object} data 
+     */
+    updateProfile: (data) => axiosInstance.patch("/doctors/profile", data),
 };
 
 export default doctorAPI;

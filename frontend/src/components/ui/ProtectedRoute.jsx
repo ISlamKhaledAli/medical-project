@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { ROLES } from "../../constants/roles";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, accessToken, isInitialLoading } = useSelector((state) => state.auth);
 
   if (isInitialLoading) {
-    // Return null or empty while authenticating; GlobalLoader handles the overlay
     return null;
   }
 
@@ -13,7 +13,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.map(r => r.toLowerCase()).includes(user.role?.toLowerCase())) {
+    console.warn(`Access denied for role: ${user.role}. Allowed: ${allowedRoles}`);
     return <Navigate to="/unauthorized" replace />;
   }
 

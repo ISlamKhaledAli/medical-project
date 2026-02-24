@@ -58,44 +58,49 @@ const UsersManagementPage = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => (
-                            <TableRow key={user.id} hover>
-                                <TableCell>
-                                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                                        <Avatar sx={{ mr: 2 }}>{user.name[0]}</Avatar>
-                                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{user.name}</Typography>
-                                    </Box>
-                                </TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>
-                                    <Chip 
-                                        label={user.role} 
-                                        size="small" 
-                                        variant="outlined" 
-                                        sx={{ textTransform: "capitalize", fontWeight: 700 }} 
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <Chip 
-                                        label={user.status || "active"} 
-                                        size="small" 
-                                        color={user.status === "blocked" ? "error" : "success"}
-                                        sx={{ fontWeight: 700 }} 
-                                    />
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Button
-                                        size="small"
-                                        startIcon={user.status === "blocked" ? <ApproveIcon /> : <BlockIcon />}
-                                        color={user.status === "blocked" ? "success" : "error"}
-                                        onClick={() => handleToggleStatus(user.id, user.status)}
-                                        sx={{ fontWeight: 700 }}
-                                    >
-                                        {user.status === "blocked" ? "Unblock" : "Block"}
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {users.map((user) => {
+                            const isBlocked = user.isBlocked;
+                            const status = isBlocked ? "blocked" : "active";
+                            
+                            return (
+                                <TableRow key={user._id} hover>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <Avatar sx={{ mr: 2 }}>{user?.fullName?.[0] || user?.name?.[0] || "U"}</Avatar>
+                                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{user?.fullName || user?.name || "Unknown User"}</Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>
+                                        <Chip 
+                                            label={user.role} 
+                                            size="small" 
+                                            variant="outlined" 
+                                            sx={{ textTransform: "capitalize", fontWeight: 700 }} 
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip 
+                                            label={status} 
+                                            size="small" 
+                                            color={isBlocked ? "error" : "success"}
+                                            sx={{ fontWeight: 700 }} 
+                                        />
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Button
+                                            size="small"
+                                            startIcon={isBlocked ? <ApproveIcon /> : <BlockIcon />}
+                                            color={isBlocked ? "success" : "error"}
+                                            onClick={() => handleToggleStatus(user._id, status)}
+                                            sx={{ fontWeight: 700 }}
+                                        >
+                                            {isBlocked ? "Unblock" : "Block"}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

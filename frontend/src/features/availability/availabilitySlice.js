@@ -77,10 +77,9 @@ const availabilitySlice = createSlice({
             })
             .addCase(fetchDoctorAvailability.fulfilled, (state, action) => {
                 state.isLoading = false;
-                // If payload is an array of slots (patient view) or recurring slots (doctor view)
-                // We'll populate both for safety or distinguish if possible
-                state.slots = action.payload;
-                state.availabilityList = action.payload;
+                const data = Array.isArray(action.payload) ? action.payload : [];
+                state.slots = data;
+                state.availabilityList = data;
             })
             .addCase(fetchDoctorAvailability.rejected, (state, action) => {
                 state.isLoading = false;

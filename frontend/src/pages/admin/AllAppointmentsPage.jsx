@@ -51,31 +51,31 @@ const AllAppointmentsPage = () => {
                     </TableHead>
                     <TableBody>
                         {appointments.map((appointment) => (
-                            <TableRow key={appointment.id} hover>
+                            <TableRow key={appointment._id} hover>
                                 <TableCell>
                                     <Box sx={{ display: "flex", alignItems: "center" }}>
                                         <Avatar sx={{ mr: 2, bgcolor: "secondary.light", color: "secondary.main" }}>
-                                            {appointment.patient?.name[0]}
+                                            {appointment.patient?.fullName[0]}
                                         </Avatar>
                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                            {appointment.patient?.name}
+                                            {appointment.patient?.fullName}
                                         </Typography>
                                     </Box>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        Dr. {appointment.doctor?.name}
+                                        Dr. {appointment.doctor?.user?.fullName}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        {appointment.doctor?.specialty}
+                                        {appointment.doctor?.specialty?.name}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {format(new Date(appointment.date), "PPP")}
+                                        {format(new Date(appointment.appointmentDate), "PPP")}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        {appointment.timeSlot}
+                                        {appointment.startTime} - {appointment.endTime}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>

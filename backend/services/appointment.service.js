@@ -1,4 +1,5 @@
 import Appointment from "../models/Appointments.model.js";
+import User from "../models/User.model.js";
 import Availability from "../models/availability.model.js";
 import DoctorProfile from "../models/Doctor.model.js";
 import ApiError from "../utils/ApiError.js";
@@ -10,7 +11,7 @@ import {
 } from "./notification.service.js";
 
 //Validate Slot Availability
-   
+
 export const validateSlotAvailability = async ({
     doctorId,
     appointmentDate,
@@ -84,7 +85,7 @@ export const validateSlotAvailability = async ({
 };
 
 // Create Appointment
-  
+
 
 export const createAppointment = async ({
     doctorId,
@@ -133,7 +134,7 @@ export const createAppointment = async ({
 };
 
 //Change Status (State Machine)
-   
+
 
 export const changeAppointmentStatus = async ({
     appointmentId,
@@ -166,7 +167,7 @@ export const changeAppointmentStatus = async ({
 };
 
 // Cancel Appointment
-  
+
 
 export const cancelAppointment = async ({
     appointmentId,
@@ -221,7 +222,7 @@ export const cancelAppointment = async ({
 };
 
 //Reschedule Appointment
-   
+
 
 export const rescheduleAppointment = async ({
     appointmentId,
@@ -290,7 +291,7 @@ export const rescheduleAppointment = async ({
 };
 
 
-  // Get My Appointments
+// Get My Appointments
 
 export const getMyAppointments = async ({
     currentUser,
@@ -327,7 +328,7 @@ export const getMyAppointments = async ({
 };
 
 
- //  Get All Appointments (Admin)
+//  Get All Appointments (Admin)
 
 export const getAllAppointments = async ({
     queryParams,
@@ -357,8 +358,14 @@ export const getAllAppointments = async ({
     const skip = (page - 1) * limit;
 
     const appointments = await Appointment.find(filter)
-        .populate("doctor")
-        .populate("patient", "name email")
+        .populate({
+            path: "doctor",
+            populate: [
+                { path: "user", select: "fullName" },
+                { path: "specialty", select: "name" }
+            ]
+        })
+        .populate("patient", "fullName email")
         .sort({ appointmentDate: -1, startTime: -1 })
         .skip(skip)
         .limit(Number(limit));
@@ -374,10 +381,12 @@ export const getAllAppointments = async ({
 };
 
 //Calculate Admin Stats
-   
 
 export const calculateAdminStats = async () => {
     const totalAppointments = await Appointment.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const activeDoctors = await User.countDocuments({ role: "doctor", isApproved: true });
+    const pendingApprovals = await User.countDocuments({ role: "doctor", isApproved: false });
 
     const statusStats = await Appointment.aggregate([
         {
@@ -417,6 +426,9 @@ export const calculateAdminStats = async () => {
 
     return {
         totalAppointments,
+        totalUsers,
+        activeDoctors,
+        pendingApprovals,
         monthlyAppointments,
         statusStats,
         totalRevenue: revenueStats[0]?.totalRevenue || 0,
@@ -424,15 +436,21 @@ export const calculateAdminStats = async () => {
 };
 
 //Get Appointment By ID
-   
+
 
 export const getAppointmentById = async ({
     appointmentId,
     currentUser,
 }) => {
     const appointment = await Appointment.findById(appointmentId)
-        .populate("doctor")
-        .populate("patient", "name email");
+        .populate({
+            path: "doctor",
+            populate: [
+                { path: "user", select: "fullName" },
+                { path: "specialty", select: "name" }
+            ]
+        })
+        .populate("patient", "fullName email");
 
     if (!appointment) {
         throw new ApiError("Appointment not found", 404);

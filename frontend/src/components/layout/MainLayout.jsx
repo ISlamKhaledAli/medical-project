@@ -7,19 +7,14 @@ import Navbar from "./Navbar";
 
 const MainLayout = ({ children }) => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("fixed")); // Simplified check
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Standardized check
     const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const [open, setOpen] = useState(false);
     
     const { user, accessToken, isInitialLoading } = useSelector((state) => state.auth);
     const navigate = useNavigate();
 
-    // Protection logic
-    useEffect(() => {
-        if (!isInitialLoading && (!accessToken || !user)) {
-            navigate("/login");
-        }
-    }, [accessToken, user, isInitialLoading, navigate]);
+    // Protection logic is handled by the wrapping ProtectedRoute component
 
     const toggleDrawer = () => {
         setOpen(!open);

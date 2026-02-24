@@ -14,6 +14,10 @@ const authAPI = {
     resetPassword: (data) => axiosInstance.post(`/auth/reset-password/${data.token}`, { password: data.password }),
 
     resendVerification: (email) => axiosInstance.post("/auth/resend-verification", { email }),
+
+    updateProfile: (data) => axiosInstance.patch("/auth/profile/update", data),
+
+    changePassword: (data) => axiosInstance.patch("/auth/change-password", data),
 };
 
 export default authAPI;

@@ -135,7 +135,7 @@ const ScheduleManagementPage = () => {
 
     const groupedAvailability = DAYS.map((day) => ({
         ...day,
-        slots: availabilityList.filter((a) => a.dayOfWeek === day.value),
+        slots: (availabilityList || []).filter((a) => a?.dayOfWeek === day.value),
     }));
 
     return (
@@ -162,7 +162,7 @@ const ScheduleManagementPage = () => {
             {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => dispatch(clearAvailabilityError())}>{error}</Alert>}
 
             {isLoading ? (
-                <TableSkeleton rowCount={5} columnCount={4} />
+                <TableSkeleton rows={5} cols={4} />
             ) : (
                 <Grid container spacing={3}>
                     {groupedAvailability.map((day) => (

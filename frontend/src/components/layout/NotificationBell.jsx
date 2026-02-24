@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { 
     IconButton, 
     Badge, 
@@ -15,11 +16,12 @@ import {
     Avatar
 } from "@mui/material";
 import { Notifications as NotificationsIcon, Info as InfoIcon } from "@mui/icons-material";
-import { fetchNotifications, markAsRead } from "../../features/notification/notificationSlice";
+import { fetchNotifications, markAsRead, markAllNotificationsAsRead } from "../../features/notification/notificationSlice";
 import { formatDistanceToNow } from "date-fns";
 
 const NotificationBell = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { notifications, unreadCount } = useSelector((state) => state.notification);
     const [anchorEl, setAnchorEl] = useState(null);
 
@@ -32,7 +34,15 @@ const NotificationBell = () => {
 
     const handleMarkAsRead = (id) => {
         dispatch(markAsRead(id));
-        // Keep menu open for better UX if needed, or close it
+    };
+
+    const handleMarkAll = () => {
+        dispatch(markAllNotificationsAsRead());
+    };
+
+    const handleViewAll = () => {
+        handleClose();
+        navigate("/notifications");
     };
 
     return (
@@ -60,15 +70,19 @@ const NotificationBell = () => {
             >
                 <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Typography variant="h6" sx={{ fontWeight: 800 }}>Notifications</Typography>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }}>
+                    <Typography 
+                        variant="caption" 
+                        sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }}
+                        onClick={handleMarkAll}
+                    >
                         Mark all as read
                     </Typography>
                 </Box>
                 <Divider />
                 
                 <List sx={{ p: 0 }}>
-                    {notifications.length > 0 ? (
-                        notifications.map((notification) => (
+                    {notifications.slice(0, 5).length > 0 ? (
+                        notifications.slice(0, 5).map((notification) => (
                             <ListItem 
                                 key={notification.id} 
                                 onClick={() => handleMarkAsRead(notification.id)}
@@ -109,7 +123,11 @@ const NotificationBell = () => {
 
                 {notifications.length > 0 && (
                     <Box sx={{ p: 1.5, textAlign: "center", bgcolor: "rgba(0,0,0,0.02)" }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary", cursor: "pointer" }}>
+                        <Typography 
+                            variant="caption" 
+                            sx={{ fontWeight: 700, color: "text.secondary", cursor: "pointer" }}
+                            onClick={handleViewAll}
+                        >
                             View All Notifications
                         </Typography>
                     </Box>

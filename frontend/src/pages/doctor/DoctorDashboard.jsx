@@ -71,9 +71,9 @@ const DoctorDashboard = () => {
         const today = new Date().toISOString().split("T")[0];
         
         return {
-            today: appointments.filter(a => a.appointmentDate.startsWith(today)).length,
-            pending: appointments.filter(a => a.status === "pending").length,
-            completed: appointments.filter(a => a.status === "completed").length,
+            today: (appointments || []).filter(a => a?.appointmentDate?.startsWith(today)).length,
+            pending: (appointments || []).filter(a => a?.status === "pending").length,
+            completed: (appointments || []).filter(a => a?.status === "completed").length,
         };
     }, [appointments]);
 
@@ -94,7 +94,7 @@ const DoctorDashboard = () => {
             <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
                 <Box>
                     <Typography variant="h4" sx={{ fontWeight: 800, color: "text.primary" }}>
-                        Hey, Dr. {user?.fullName?.split(" ")[0] || "Doctor"} 👋
+                        Hey, Dr. {user?.fullName?.split(" ")?.[0] || user?.name || "Doctor"} 👋
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Here's what's happening today.

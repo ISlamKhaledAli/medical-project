@@ -24,6 +24,7 @@ import {
 } from "@mui/icons-material";
 import { login, clearError } from "../../features/auth/authSlice";
 import { validateEmail, normalizeEmail } from "../../utils/validators";
+import { ROLES } from "../../constants/roles";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -54,9 +55,10 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (user) {
-      if (user.role === "admin") navigate("/admin");
-      else if (user.role === "doctor") navigate("/doctor/dashboard");
-      else navigate("/");
+      const roleLower = user.role?.toLowerCase();
+      if (roleLower === ROLES.ADMIN.toLowerCase()) navigate("/admin");
+      else if (roleLower === ROLES.DOCTOR.toLowerCase()) navigate("/doctor/dashboard");
+      else navigate("/patient");
     }
   }, [user, navigate]);
 

@@ -74,8 +74,12 @@ const adminSlice = createSlice({
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.users = action.payload.users;
-                state.pagination = action.payload.pagination;
+                state.users = Array.isArray(action.payload.data) ? action.payload.data : [];
+                state.pagination = {
+                    page: action.payload.page || 1,
+                    totalPages: action.payload.pages || 1,
+                    totalItems: action.payload.total || 0
+                };
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.isLoading = false;
@@ -87,14 +91,32 @@ const adminSlice = createSlice({
             })
             .addCase(toggleUserStatus.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const index = state.users.findIndex(u => u.id === action.payload.id);
+                const user = action.payload.data;
+                const index = state.users.findIndex(u => u._id === user._id);
                 if (index !== -1) {
-                    state.users[index] = action.payload;
+                    state.users[index] = user;
                 }
+            })
+            // Appointments
+            .addCase(fetchAllAppointments.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(fetchAllAppointments.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.appointments = Array.isArray(action.payload.data) ? action.payload.data : [];
+                state.pagination = {
+                    page: action.payload.page || 1,
+                    totalPages: action.payload.pages || 1,
+                    totalItems: action.payload.total || 0
+                };
+            })
+            .addCase(fetchAllAppointments.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
             })
             // Stats
             .addCase(fetchStats.fulfilled, (state, action) => {
-                state.stats = action.payload;
+                state.stats = action.payload.data;
             });
     },
 });

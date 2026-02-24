@@ -9,10 +9,13 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    if (token) {
+    // Verify it's a real token, not a stringified "null" or "undefined"
+    if (token && token !== "null" && token !== "undefined" && token.length > 10) {
       dispatch(getMe());
     } else {
       dispatch(stopInitialLoading());
+      // Clean up if it was a malformed token
+      if (token) localStorage.removeItem("accessToken");
     }
   }, [dispatch]);
 

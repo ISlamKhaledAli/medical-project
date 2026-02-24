@@ -18,10 +18,14 @@ import {
     Work as AppointmentsIcon,
     Settings as SettingsIcon,
     BarChart as AnalyticsIcon,
-    ChevronLeft as ChevronLeftIcon
+    ChevronLeft as ChevronLeftIcon,
+    Person as ProfileIcon
 } from "@mui/icons-material";
 
+import { ROLES } from "../../constants/roles";
+
 const DRAWER_WIDTH = 100;
+
 
 const Sidebar = ({ open, toggleDrawer, isMobile }) => {
     const { user } = useSelector((state) => state.auth);
@@ -32,14 +36,17 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
         const common = [];
         
         const patientItems = [
-            { id: "dashboard", icon: <DashboardIcon />, path: "/", label: "Dashboard" },
-            { id: "doctors", icon: <PeopleIcon />, path: "/doctors", label: "Find Doctors" },
-            { id: "appointments", icon: <AppointmentsIcon />, path: "/my-appointments", label: "My Appointments" },
+            { id: "home", icon: <DashboardIcon />, path: "/patient", label: "Home" },
+            { id: "doctors", icon: <PeopleIcon />, path: "/patient/doctors", label: "Find Doctors" },
+            { id: "appointments", icon: <AppointmentsIcon />, path: "/patient/appointments", label: "My Appointments" },
+            { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Profile Settings" },
         ];
 
         const doctorItems = [
             { id: "dashboard", icon: <DashboardIcon />, path: "/doctor/dashboard", label: "Dashboard" },
+            { id: "appointments", icon: <AppointmentsIcon />, path: "/doctor/appointments", label: "Appointments" },
             { id: "schedule", icon: <CalendarIcon />, path: "/doctor/schedule", label: "Manage Schedule" },
+            { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Professional Profile" },
         ];
 
         const adminItems = [
@@ -49,8 +56,8 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
         ];
 
         switch (role) {
-            case "doctor": return [...doctorItems, ...common];
-            case "admin": return [...adminItems, ...common];
+            case ROLES.DOCTOR: return [...doctorItems, ...common];
+            case ROLES.ADMIN: return [...adminItems, ...common];
             default: return [...patientItems, ...common];
         }
     };
@@ -109,9 +116,12 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                 })}
             </List>
 
-            <Box sx={{ mt: "auto", mb: 2 }}>
+            <Box sx={{ mt: "auto", mb: 5 }}>
                 <Tooltip title="Settings" placement="right">
-                    <IconButton sx={{ color: "white" }}>
+                    <IconButton 
+                        onClick={() => navigate("/settings")}
+                        sx={{ color: "white" }}
+                    >
                         <SettingsIcon />
                     </IconButton>
                 </Tooltip>

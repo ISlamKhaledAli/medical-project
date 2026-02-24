@@ -92,6 +92,30 @@ export const resendVerification = createAsyncThunk(
     }
 );
 
+export const updateProfile = createAsyncThunk(
+    "auth/updateProfile",
+    async (userData, { rejectWithValue }) => {
+        try {
+            const response = await authAPI.updateProfile(userData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update profile");
+        }
+    }
+);
+
+export const changePassword = createAsyncThunk(
+    "auth/changePassword",
+    async (passwordData, { rejectWithValue }) => {
+        try {
+            const response = await authAPI.changePassword(passwordData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to change password");
+        }
+    }
+);
+
 // ==========================
 // Initial State
 // ==========================
@@ -120,8 +144,14 @@ const authSlice = createSlice({
         setCredentials: (state, action) => {
             const { user, accessToken } = action.payload;
             if (user) state.user = user;
-            state.accessToken = accessToken;
-            localStorage.setItem("accessToken", accessToken);
+            // Support both wrapped and direct payloads
+            else if (action.payload && !accessToken && action.payload.email) {
+                state.user = action.payload;
+            }
+            if (accessToken) {
+                state.accessToken = accessToken;
+                localStorage.setItem("accessToken", accessToken);
+            }
         },
         clearError: (state) => {
             state.error = null;
@@ -140,12 +170,16 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload.user;
-                state.accessToken = action.payload.accessToken;
-                localStorage.setItem("accessToken", action.payload.accessToken);
+                state.isInitialLoading = false; // Just in case
+                state.user = action.payload?.user || action.payload;
+                state.accessToken = action.payload?.accessToken;
+                if (action.payload?.accessToken) {
+                    localStorage.setItem("accessToken", action.payload.accessToken);
+                }
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
+                state.isInitialLoading = false;
                 state.error = action.payload;
             })
             // Register
@@ -156,7 +190,6 @@ const authSlice = createSlice({
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.successMessage = action.payload.message || "Registration successful. Please verify your email.";
-                // We do NOT set user or token here because backend requires email verification first
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
@@ -168,15 +201,49 @@ const authSlice = createSlice({
             })
             .addCase(getMe.fulfilled, (state, action) => {
                 state.isInitialLoading = false;
+                // Support both { user: ... } and direct user object
+                state.user = action.payload?.user || action.payload;
+            })
+            .addCase(getMe.rejected, (state, action) => {
+                state.isInitialLoading = false;
+                // Only clear if it's clearly an auth failure
+                const isAuthError = action.payload === "Unauthorized" ||
+                    action.payload === "Session expired" ||
+                    (action.error && action.error.message?.includes("401"));
+
+                if (isAuthError) {
+                    state.user = null;
+                    state.accessToken = null;
+                    localStorage.removeItem("accessToken");
+                }
+            })
+            // Update Profile
+            .addCase(updateProfile.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(updateProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
                 state.user = action.payload.user;
             })
-            .addCase(getMe.rejected, (state) => {
-                state.isInitialLoading = false;
-                state.user = null;
-                state.accessToken = null;
-                localStorage.removeItem("accessToken");
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
             })
-            // Password Recovery & Verification
+            // Change Password
+            .addCase(changePassword.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(changePassword.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.successMessage = action.payload.message || "Password changed successfully";
+            })
+            .addCase(changePassword.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Matchers for common auth thunks
             .addMatcher(
                 (action) =>
                     [

@@ -29,6 +29,18 @@ export const fetchDoctorById = createAsyncThunk(
     }
 );
 
+export const updateDoctorProfile = createAsyncThunk(
+    "doctor/updateProfile",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await doctorAPI.updateProfile(data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update profile");
+        }
+    }
+);
+
 // ==========================
 // Initial State
 // ==========================
@@ -47,6 +59,11 @@ const initialState = {
     filters: {
         name: "",
         specialty: "",
+    },
+    stats: {
+        today: 0,
+        pending: 0,
+        completed: 0,
     },
 };
 
@@ -95,6 +112,19 @@ const doctorSlice = createSlice({
                 state.doctorDetails = action.payload;
             })
             .addCase(fetchDoctorById.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Update Profile
+            .addCase(updateDoctorProfile.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(updateDoctorProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.doctorDetails = action.payload;
+            })
+            .addCase(updateDoctorProfile.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             });
