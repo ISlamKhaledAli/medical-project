@@ -1,110 +1,107 @@
 import DoctorProfile from "../models/Doctor.model.js";
-import Appointment from "../models/Appointments.model.js";
+import User from "../models/User.model.js";
+import ApiError from "../utils/ApiError.js";
 
-/* ========================
-   CREATE & UPDATE
-======================== */
-
-export const createProfile = (data) =>
-  DoctorProfile.create(data);
-
-export const updateProfile = (id, data) =>
-  DoctorProfile.findByIdAndUpdate(id, data, { new: true });
-
-/* ========================
-   FILTERING
-======================== */
-
-export const filterDoctors = (query) => {
-  const filter = { isApproved: true };
-
-  // Filter by specialty
-  if (query.specialty) {
-    filter.specialty = query.specialty;
+/**
+ * Create a doctor profile for the logged-in user (role must be "doctor").
+ */
+export const createDoctorProfile = async (userId, data) => {
+  const existing = await DoctorProfile.findOne({ user: userId });
+  if (existing) {
+    throw new ApiError("Doctor profile already exists.", 409);
   }
 
-  return filter;
+  const profile = await DoctorProfile.create({
+    user: userId,
+    specialty: data.specialty,
+    bio: data.bio,
+    experienceYears: data.experienceYears,
+    consultationFee: data.consultationFee,
+    address: data.address,
+  });
+
+  return profile;
 };
 
-/* ========================
-   SORTING
-======================== */
+/**
+ * Get all doctor profiles (public).
+ */
+export const getAllDoctors = async (queryParams = {}) => {
+  const { page = 1, limit = 20, specialty } = queryParams;
+  const filter = {};
 
-export const sortDoctors = (query) => {
-  switch (query.sort) {
-    case "rating":
-      return { rating: -1 };
-    case "experience":
-      return { experienceYears: -1 };
-    case "newest":
-      return { createdAt: -1 };
-    default:
-      return { createdAt: -1 };
-  }
-};
+  if (specialty) filter.specialty = specialty;
 
-/* ========================
-   PAGINATION
-======================== */
-
-export const paginateDoctors = (query) => {
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  return { page, limit, skip };
-};
-
-/* ========================
-   FETCH WITH FILTERS
-======================== */
-
-export const fetchDoctorsWithFilters = async (query) => {
-  const filter = filterDoctors(query);
-  const sortOption = sortDoctors(query);
-  const { page, limit, skip } = paginateDoctors(query);
-
-  let doctors = await DoctorProfile.find(filter)
+  const doctors = await DoctorProfile.find(filter)
+    .populate("user", "fullName email")
     .populate("specialty", "name")
-    .populate("user", "name email")
-    .sort(sortOption)
+    .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit);
-
-  // 🔥 Search by doctor name (Regex)
-  if (query.name) {
-    const search = query.name.toLowerCase();
-    doctors = doctors.filter((doc) =>
-      doc.user?.name?.toLowerCase().includes(search)
-    );
-  }
+    .limit(Number(limit));
 
   const total = await DoctorProfile.countDocuments(filter);
 
   return {
     total,
-    page,
-    totalPages: Math.ceil(total / limit),
-    results: doctors.length,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
     data: doctors,
   };
 };
 
-/* ========================
-   SINGLE DOCTOR
-======================== */
+/**
+ * Get a single doctor profile by its _id (public).
+ */
+export const getDoctorById = async (doctorId) => {
+  const doctor = await DoctorProfile.findById(doctorId)
+    .populate("user", "fullName email")
+    .populate("specialty", "name");
 
-export const fetchDoctorById = (id) =>
-  DoctorProfile.findById(id)
-    .populate("specialty", "name")
-    .populate("user", "name email");
+  if (!doctor) throw new ApiError("Doctor profile not found.", 404);
+  return doctor;
+};
 
-/* ========================
-   DOCTOR APPOINTMENTS
-======================== */
+/**
+ * Update the logged-in doctor's own profile.
+ */
+export const updateDoctorProfile = async (userId, updates) => {
+  const allowedFields = [
+    "specialty",
+    "bio",
+    "experienceYears",
+    "consultationFee",
+    "address",
+  ];
+  const filtered = {};
 
-export const fetchDoctorAppointments = async (doctorId) => {
-  return await Appointment.find({ doctor: doctorId })
-    .populate("patient", "name email")
-    .sort({ createdAt: -1 });
+  allowedFields.forEach((field) => {
+    if (updates[field] !== undefined) {
+      filtered[field] = updates[field];
+    }
+  });
+
+  if (Object.keys(filtered).length === 0) {
+    throw new ApiError("No valid fields provided to update.", 400);
+  }
+
+  const profile = await DoctorProfile.findOneAndUpdate(
+    { user: userId },
+    filtered,
+    { new: true, runValidators: true },
+  )
+    .populate("user", "fullName email")
+    .populate("specialty", "name");
+
+  if (!profile) throw new ApiError("Doctor profile not found.", 404);
+  return profile;
+};
+
+/**
+ * Delete the logged-in doctor's own profile.
+ */
+export const deleteDoctorProfile = async (userId) => {
+  const profile = await DoctorProfile.findOneAndDelete({ user: userId });
+  if (!profile) throw new ApiError("Doctor profile not found.", 404);
 };

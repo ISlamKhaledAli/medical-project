@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateToken.js";
+import { disconnectUser } from "../sockets/socket.js";
 
 export const createUser = async (userData) => {
   const salt = await bcrypt.genSalt(12);
@@ -59,6 +60,12 @@ export const handleRefreshToken = async (incomingRefreshToken) => {
     throw new Error("Invalid refresh token. Please log in again.");
   }
 
+  if (user.isBlocked) {
+    user.refreshToken = null;
+    await user.save();
+    throw new Error("Your account has been blocked by an administrator.");
+  }
+
   const accessToken = generateAccessToken(user._id, user.role);
   const newRefreshToken = generateRefreshToken(user._id);
 
@@ -70,6 +77,9 @@ export const handleRefreshToken = async (incomingRefreshToken) => {
 
 export const handleLogout = async (userId) => {
   await User.findByIdAndUpdate(userId, { refreshToken: null });
+
+  // Disconnect all active sockets for this user
+  disconnectUser(userId.toString());
 };
 
 export const generateVerificationToken = async (userId) => {
