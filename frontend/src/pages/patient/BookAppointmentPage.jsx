@@ -54,13 +54,18 @@ const BookAppointmentPage = () => {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [isDateSelectionInitial, setIsDateSelectionInitial] = useState(true);
 
+    const isValidId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
     // 1. Initial Load: Fetch doctor details and their general weekly schedule
     useEffect(() => {
-        if (doctorId) {
+        if (doctorId && isValidId(doctorId)) {
             dispatch(fetchDoctorById(doctorId));
             // Fetch working days on mount
             dispatch(fetchDoctorSchedule({ doctorId }));
+        } else if (doctorId) {
+            console.error("Malformed or invalid doctorId in URL:", doctorId);
         }
+
         return () => {
             dispatch(clearSchedule());
             dispatch(clearAppointmentError());

@@ -161,6 +161,11 @@ export const generateTimeSlots = (availability) => {
 };
 
 export const getDoctorAvailability = async (doctorId, dateString) => {
+    // 0. Validate doctorId format
+    if (!doctorId || !/^[0-9a-fA-F]{24}$/.test(doctorId)) {
+        throw new ApiError(`Invalid Doctor ID format: ${doctorId}`, 400);
+    }
+
     // 1. Get ALL ranges for the doctor to determine working days
     const allRanges = await Availability.find({ doctor: doctorId, isActive: true });
     const workingDays = allRanges.map(r => r.dayOfWeek);
@@ -180,7 +185,7 @@ export const getDoctorAvailability = async (doctorId, dateString) => {
         return { workingDays, slots: [] };
     }
 
-    // 4. Get active bookings
+    // 4. Get active bookings for the target local day
     const startOfTargetDay = normalizeDate(dateString);
     const endOfTargetDay = new Date(startOfTargetDay);
     endOfTargetDay.setHours(23, 59, 59, 999);
@@ -191,12 +196,25 @@ export const getDoctorAvailability = async (doctorId, dateString) => {
         status: { $in: ["pending", "confirmed"] }
     });
 
-    // 5. Generate slots
+    // 5. Generate slots and filter past ones if target date is today
     const slots = generateTimeSlots(range);
-    const slotsWithStatus = slots.map(slot => ({
-        ...slot,
-        isAvailable: !existingAppointments.some(apt => apt.startTime === slot.startTime)
-    }));
+
+    // Check if target day is today in local time
+    const todayLocalString = new Date().toLocaleDateString("en-CA");
+    const isTargetToday = dateString === todayLocalString;
+    const currentMinutes = isTargetToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
+
+    const slotsWithStatus = slots.map(slot => {
+        const slotMinutes = timeToMinutes(slot.startTime);
+        const isBooked = existingAppointments.some(apt => apt.startTime === slot.startTime);
+        const isPast = isTargetToday && (slotMinutes <= currentMinutes);
+
+        return {
+            ...slot,
+            isAvailable: !isBooked && !isPast,
+            reason: isPast ? "Past" : isBooked ? "Booked" : null
+        };
+    });
 
     return { workingDays, slots: slotsWithStatus };
 };
