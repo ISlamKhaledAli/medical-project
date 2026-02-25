@@ -51,9 +51,9 @@ export const rescheduleAppointment = createAsyncThunk(
 
 export const updateAppointmentStatus = createAsyncThunk(
     "appointment/updateStatus",
-    async ({ id, status }, { rejectWithValue }) => {
+    async ({ id, status, notes: doctorNotes }, { rejectWithValue }) => {
         try {
-            const response = await appointmentAPI.updateStatus(id, status);
+            const response = await appointmentAPI.updateStatus(id, status, doctorNotes);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Status update failed");
@@ -149,7 +149,15 @@ const appointmentSlice = createSlice({
                 const updatedAppt = action.payload.data || action.payload;
                 const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
                 if (index !== -1) {
-                    state.appointments[index] = updatedAppt;
+                    // Merge to preserve populated patient/doctor fields from original fetch
+                    state.appointments[index] = {
+                        ...state.appointments[index],
+                        status: updatedAppt.status,
+                        doctorNotes: updatedAppt.doctorNotes ?? state.appointments[index].doctorNotes,
+                        appointmentDate: updatedAppt.appointmentDate ?? state.appointments[index].appointmentDate,
+                        startTime: updatedAppt.startTime ?? state.appointments[index].startTime,
+                        endTime: updatedAppt.endTime ?? state.appointments[index].endTime,
+                    };
                 }
             })
             .addCase(updateAppointmentStatus.rejected, (state, action) => {

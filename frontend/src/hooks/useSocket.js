@@ -7,7 +7,7 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
 
 const useSocket = () => {
     const dispatch = useDispatch();
-    const { token, user } = useSelector((state) => state.auth);
+    const { accessToken: token, user } = useSelector((state) => state.auth);
     const socketRef = useRef(null);
 
     useEffect(() => {

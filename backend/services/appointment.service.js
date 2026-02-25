@@ -176,6 +176,7 @@ export const createAppointment = async ({
 export const changeAppointmentStatus = async ({
     appointmentId,
     newStatus,
+    notes,
     currentUser,
 }) => {
     const appointment = await Appointment.findById(appointmentId);
@@ -184,23 +185,66 @@ export const changeAppointmentStatus = async ({
         throw new ApiError("Appointment not found", 404);
     }
 
-    if (["completed", "cancelled"].includes(appointment.status)) {
-        throw new ApiError("Cannot modify completed/cancelled appointment", 400);
+    // Allow saving notes without changing status
+    const isStatusChange = newStatus !== appointment.status;
+
+    if (isStatusChange) {
+        if (["completed", "cancelled"].includes(appointment.status)) {
+            throw new ApiError("Cannot modify completed/cancelled appointment", 400);
+        }
+
+        const allowedTransitions = {
+            pending: ["confirmed", "cancelled", "rejected"],
+            confirmed: ["completed", "cancelled"],
+        };
+
+        if (!allowedTransitions[appointment.status]?.includes(newStatus)) {
+            throw new ApiError("Invalid status transition", 400);
+        }
+
+        appointment.status = newStatus;
     }
 
-    const allowedTransitions = {
-        pending: ["confirmed", "cancelled", "rejected"],
-        confirmed: ["completed", "cancelled"],
-    };
-
-    if (!allowedTransitions[appointment.status]?.includes(newStatus)) {
-        throw new ApiError("Invalid status transition", 400);
-    }
-
-    appointment.status = newStatus;
+    if (notes !== undefined) appointment.doctorNotes = notes;
     await appointment.save();
 
-    return appointment;
+    // Return fully populated appointment so the frontend UI stays consistent
+    const populated = await Appointment.findById(appointment._id)
+        .populate("patient", "fullName email")
+        .populate({ path: "doctor", populate: { path: "user", select: "fullName email" } });
+
+    // Send notification to the patient
+    try {
+        const { createNotification } = await import("./notification.service.js");
+        const doctorName = populated.doctor?.user?.fullName || "Your doctor";
+
+        if (isStatusChange) {
+            const statusMessages = {
+                confirmed: `Dr. ${doctorName} has confirmed your appointment.`,
+                completed: `Your appointment with Dr. ${doctorName} has been marked as completed.`,
+                cancelled: `Your appointment with Dr. ${doctorName} has been cancelled.`,
+                rejected: `Your appointment with Dr. ${doctorName} has been rejected.`,
+            };
+            const message = statusMessages[newStatus] || `Your appointment status was updated to ${newStatus}.`;
+            const typeMap = { confirmed: "booking", completed: "booking", cancelled: "cancel", rejected: "cancel" };
+
+            await createNotification({
+                userId: populated.patient._id,
+                type: typeMap[newStatus] || "booking",
+                message,
+            });
+        } else if (notes !== undefined && notes.trim()) {
+            await createNotification({
+                userId: populated.patient._id,
+                type: "booking",
+                message: `Dr. ${doctorName} added notes to your appointment: "${notes.substring(0, 100)}${notes.length > 100 ? '...' : ''}"`,
+            });
+        }
+    } catch (notifError) {
+        console.error("Failed to send notification:", notifError.message);
+    }
+
+    return populated;
 };
 
 // Cancel Appointment

@@ -226,50 +226,7 @@ const DoctorDashboard = () => {
                     </Card>
                 </Grid>
 
-                {/* Quick Actions Side Panel */}
-                <Grid item xs={12} lg={4}>
-                    <Card sx={{ borderRadius: 4, height: "100%", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                                Quick Actions
-                            </Typography>
-                            
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                <Button
-                                    variant="outlined"
-                                    fullWidth
-                                    startIcon={<ProfileIcon />}
-                                    component={RouterLink}
-                                    to="/doctor/profile"
-                                    sx={{ justifyContent: "flex-start", p: 2, borderRadius: 3, textTransform: "none" }}
-                                >
-                                    Update My Profile
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    fullWidth
-                                    startIcon={<ProfileIcon />} // Change to appropriate icon if available
-                                    component={RouterLink}
-                                    to="/doctor/patients"
-                                    sx={{ justifyContent: "flex-start", p: 2, borderRadius: 3, textTransform: "none" }}
-                                >
-                                    My Patient List
-                                </Button>
-                                <Box sx={{ mt: 2, p: 3, borderRadius: 4, bgcolor: "info.light", color: "info.contrastText" }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                                        Need Help?
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                                        Our support team is available 24/7 for technical assistance.
-                                    </Typography>
-                                    <Button size="small" variant="contained" sx={{ mt: 2, bgcolor: "white", color: "info.main", "&:hover": { bgcolor: "#f5f5f5" }, borderRadius: 2 }}>
-                                        Contact Admin
-                                    </Button>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
+
             </Grid>
         </Box>
     );

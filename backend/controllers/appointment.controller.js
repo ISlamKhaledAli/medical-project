@@ -31,7 +31,7 @@ export const bookAppointment = wrapAsync(async (req, res) => {
 
 export const updateAppointmentStatus = wrapAsync(async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, notes: doctorNotes } = req.body;
 
     // 1. Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -55,6 +55,7 @@ export const updateAppointmentStatus = wrapAsync(async (req, res) => {
     const appointment = await changeAppointmentStatus({
         appointmentId: id,
         newStatus: finalStatus,
+        notes: doctorNotes,
         currentUser: req.user,
     });
 

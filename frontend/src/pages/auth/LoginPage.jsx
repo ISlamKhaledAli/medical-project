@@ -155,38 +155,7 @@ const LoginPage = () => {
               Secure Login
             </Typography>
 
-            <ToggleButtonGroup
-              value={role}
-              exclusive
-              onChange={handleRoleChange}
-              fullWidth
-              sx={{ my: 3, border: "1px solid #e0e0e0", borderRadius: 2 }}
-            >
-              <ToggleButton 
-                value="doctor" 
-                disabled={isLoading}
-                sx={{ 
-                  py: 1.5, 
-                  textTransform: "none",
-                  fontWeight: 600,
-                  "&.Mui-selected": { bgcolor: "#1976d2", color: "white", "&:hover": { bgcolor: "#1565c0" } }
-                }}
-              >
-                Doctor
-              </ToggleButton>
-              <ToggleButton 
-                value="patient" 
-                disabled={isLoading}
-                sx={{ 
-                  py: 1.5, 
-                  textTransform: "none",
-                  fontWeight: 600,
-                  "&.Mui-selected": { bgcolor: "#1976d2", color: "white", "&:hover": { bgcolor: "#1565c0" } }
-                }}
-              >
-                Patient
-              </ToggleButton>
-            </ToggleButtonGroup>
+           
 
             <form onSubmit={handleSubmit} noValidate>
               <Box sx={{ mb: 2 }}>

@@ -89,10 +89,10 @@ const AppointmentDetailsModal = ({ open, onClose, appointment }) => {
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                                 <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 700 }}>
-                                    Admin/Internal Notes
+                                    Doctor Notes
                                 </Typography>
-                                <Typography variant="body2" sx={{ fontStyle: "italic", color: "text.secondary", mt: 0.5 }}>
-                                    {appointment.notes || "No notes provided for this appointment."}
+                                <Typography variant="body2" sx={{ fontStyle: appointment.doctorNotes ? "normal" : "italic", color: appointment.doctorNotes ? "text.primary" : "text.secondary", mt: 0.5 }}>
+                                    {appointment.doctorNotes || "No notes provided for this appointment."}
                                 </Typography>
                             </Box>
                         </Box>

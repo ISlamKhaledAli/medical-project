@@ -122,6 +122,7 @@ const MyAppointmentsPage = () => {
                                 <TableCell sx={{ fontWeight: 800 }}>Specialty</TableCell>
                                 <TableCell sx={{ fontWeight: 800 }}>Date & Time</TableCell>
                                 <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 800 }}>Doctor Notes</TableCell>
                                 <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -129,7 +130,7 @@ const MyAppointmentsPage = () => {
                             {isLoading ? (
                                 [...Array(5)].map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={5} sx={{ py: 3, textAlign: "center" }}>
+                                        <TableCell colSpan={6} sx={{ py: 3, textAlign: "center" }}>
                                             <CircularProgress size={20} sx={{ mr: 2 }} />
                                             Loading...
                                         </TableCell>
@@ -163,6 +164,18 @@ const MyAppointmentsPage = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <StatusBadge status={appointment.status} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" sx={{ 
+                                                    maxWidth: 200, 
+                                                    overflow: "hidden", 
+                                                    textOverflow: "ellipsis", 
+                                                    whiteSpace: "nowrap",
+                                                    color: appointment.doctorNotes ? "text.primary" : "text.disabled",
+                                                    fontStyle: appointment.doctorNotes ? "normal" : "italic"
+                                                }}>
+                                                    {appointment.doctorNotes || "No notes yet"}
+                                                </Typography>
                                             </TableCell>
                                             <TableCell align="right">
                                                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
@@ -203,7 +216,7 @@ const MyAppointmentsPage = () => {
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5}>
+                                    <TableCell colSpan={6}>
                                         <EmptyState 
                                             message="No appointments scheduled" 
                                             subMessage="You haven't booked any consultations yet. Find a specialist to get started."

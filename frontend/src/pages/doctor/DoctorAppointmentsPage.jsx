@@ -35,6 +35,7 @@ import StatusBadge from "../../components/appointment/StatusBadge";
 import { format } from "date-fns";
 import TableSkeleton from "../../components/skeletons/TableSkeleton";
 import EmptyState from "../../components/ui/EmptyState";
+import toast from "react-hot-toast";
 
 const DoctorAppointmentsPage = () => {
     const dispatch = useDispatch();
@@ -54,14 +55,20 @@ const DoctorAppointmentsPage = () => {
         return true;
     });
 
-    const handleUpdateStatus = (id, status, notes = "") => {
-        dispatch(updateAppointmentStatus({ id, status, notes }));
+    const handleUpdateStatus = async (id, status, notes = "") => {
+        try {
+            const result = await dispatch(updateAppointmentStatus({ id, status, notes })).unwrap();
+            toast.success(notes ? "Notes saved successfully" : `Appointment ${status} successfully`);
+            dispatch(fetchMyAppointments());
+        } catch (err) {
+            toast.error(err || "Failed to update appointment");
+        }
         setNoteDialogOpen(false);
     };
 
     const handleOpenNoteDialog = (apt) => {
         setSelectedApt(apt);
-        setNote(apt.notes || "");
+        setNote(apt.doctorNotes || "");
         setNoteDialogOpen(true);
     };
 
@@ -140,10 +147,10 @@ const DoctorAppointmentsPage = () => {
                                             overflow: "hidden", 
                                             textOverflow: "ellipsis", 
                                             whiteSpace: "nowrap",
-                                            color: apt.notes ? "text.primary" : "text.disabled",
-                                            fontStyle: apt.notes ? "normal" : "italic"
+                                            color: apt.doctorNotes ? "text.primary" : "text.disabled",
+                                            fontStyle: apt.doctorNotes ? "normal" : "italic"
                                         }}>
-                                            {apt.notes || "No notes added"}
+                                            {apt.doctorNotes || "No notes added"}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="right">
