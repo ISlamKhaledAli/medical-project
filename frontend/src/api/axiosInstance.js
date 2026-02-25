@@ -2,6 +2,7 @@ import axios from "axios";
 import { store } from "../app/store";
 import { logout, setCredentials } from "../features/auth/authSlice";
 import { startGlobalLoading, stopGlobalLoading } from "../features/ui/uiSlice";
+import { debugAPI } from "../utils/debugTrace";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,16 +34,23 @@ axiosInstance.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    debugAPI(`Request: ${config.method.toUpperCase()} ${config.url}`, config.params || config.data);
     return config;
 });
 
 axiosInstance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        debugAPI(`Response: ${response.status} ${response.config.url}`, response.data);
+        return response;
+    },
     async (error) => {
         const originalRequest = error.config;
+        debugAPI(`Error: ${error.response?.status} ${originalRequest.url}`, error.response?.data);
 
+        // Handle 401 Unauthorized - Token Refresh Flow
         if (error.response?.status === 401 && !originalRequest._retry) {
             if (isRefreshing) {
+                debugAPI("Token refresh already in progress, queuing request");
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
@@ -55,6 +63,7 @@ axiosInstance.interceptors.response.use(
 
             originalRequest._retry = true;
             isRefreshing = true;
+            debugAPI("Starting token refresh flow");
 
             try {
                 store.dispatch(startGlobalLoading());
@@ -65,13 +74,17 @@ axiosInstance.interceptors.response.use(
                 );
 
                 const { accessToken } = response.data;
+                debugAPI("Token refresh successful");
+
                 store.dispatch(setCredentials({ accessToken }));
+                // LocalStorage is also updated in slice, but kept here for immediate interceptor sync
                 localStorage.setItem("accessToken", accessToken);
 
                 processQueue(null, accessToken);
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
+                debugAPI("Token refresh failed, logging out user", refreshError);
                 processQueue(refreshError, null);
                 store.dispatch(logout());
                 return Promise.reject(refreshError);

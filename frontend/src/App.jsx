@@ -4,6 +4,7 @@ import { getMe, stopInitialLoading } from "./features/auth/authSlice";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalLoader from "./components/ui/GlobalLoader";
 import useSocket from "./hooks/useSocket";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 
 function App() {
   console.log("App Is Mounting");
@@ -25,10 +26,10 @@ function App() {
   }, [dispatch]);
 
   return (
-    <>
+    <ErrorBoundary>
       <GlobalLoader />
       <AppRoutes />
-    </>
+    </ErrorBoundary>
   );
 }
 

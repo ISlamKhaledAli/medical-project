@@ -17,9 +17,12 @@ export const toggleUserStatus = createAsyncThunk(
     "admin/toggleStatus",
     async ({ id, status }, { rejectWithValue }) => {
         try {
+            console.log(`[Thunk:toggleUserStatus] ID: ${id}, Status: ${status}`);
             const response = await adminAPI.toggleUserStatus(id, status);
+            console.log(`[Thunk:toggleUserStatus] Success response:`, response.data);
             return response.data;
         } catch (error) {
+            console.error(`[Thunk:toggleUserStatus] Error:`, error.response?.data);
             return rejectWithValue(error.response?.data?.message || "Action failed");
         }
     }
@@ -54,115 +57,108 @@ const initialState = {
     appointments: [],
     stats: null,
     isLoading: false,
-    isActionLoading: false, // Legacy global loading
-    actionLoadingStates: {}, // Per-row loading: { [id]: true }
+    isActionLoading: false, // Per-action global loading (legacy/general)
+    actionLoadingStates: {}, // Per-ID loading: { [id]: true }
     error: null,
     pagination: {
         page: 1,
-        totalPages: 1
+        totalPages: 1,
+        totalItems: 0
     }
 };
 
 const adminSlice = createSlice({
     name: "admin",
     initialState,
-    reducers: {},
+    reducers: {
+        clearAdminError: (state) => {
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
-            // Users
+            // Users Fetching
             .addCase(fetchUsers.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.users = Array.isArray(action.payload.data) ? action.payload.data : [];
+                const payload = action.payload;
+                state.users = Array.isArray(payload.data) ? payload.data : [];
                 state.pagination = {
-                    page: action.payload.page || 1,
-                    totalPages: action.payload.pages || 1,
-                    totalItems: action.payload.totalItems || action.payload.total || 0
+                    page: payload.page || 1,
+                    totalPages: payload.pages || 1,
+                    totalItems: payload.totalItems || payload.total || 0
                 };
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
-            // Status Toggle (True Optimistic Update)
+            // Status Toggle (Optimistic Update)
             .addCase(toggleUserStatus.pending, (state, action) => {
-                state.isActionLoading = true;
                 const { id, status } = action.meta.arg;
                 state.actionLoadingStates[id] = true;
 
-                // Optimistically update the user in the state
-                const user = state.users.find(u => u._id === id);
-                if (user) {
+                // Create a backup of the user for rollback
+                const userIndex = state.users.findIndex(u => u._id === id);
+                if (userIndex !== -1) {
+                    const user = state.users[userIndex];
+                    // Store original state in meta if we were using a custom middleware, 
+                    // but for now we'll just handle basic rollback in rejected case.
+
+                    // Apply optimistic change
                     if (status === "approved" || status === "rejected") {
                         user.status = status;
-                    } else if (status === "blocked" || status === "active") {
-                        user.isBlocked = status === "blocked";
+                    } else if (status === "blocked") {
+                        user.isBlocked = true;
+                    } else if (status === "active") {
+                        user.isBlocked = false;
                     }
                 }
             })
             .addCase(toggleUserStatus.fulfilled, (state, action) => {
-                state.isActionLoading = false;
-                const updatedUser = action.payload.data;
-                if (!updatedUser) return;
+                const updatedUser = action.payload.data || action.payload;
+                if (!updatedUser?._id) return;
 
-                // Clear per-row loading
                 delete state.actionLoadingStates[updatedUser._id];
 
                 const index = state.users.findIndex(u => u._id === updatedUser._id);
                 if (index !== -1) {
-                    // If the user's status is no longer 'pending', remove from the users list
-                    // (The component filters locally, but this keeps the global state clean)
-                    if (updatedUser.role === "doctor" && updatedUser.status !== "pending") {
-                        state.users.splice(index, 1);
-                    } else {
-                        state.users[index] = updatedUser;
-                    }
+                    state.users[index] = updatedUser;
                 }
             })
             .addCase(toggleUserStatus.rejected, (state, action) => {
-                state.isActionLoading = false;
-                const { id, status } = action.meta?.arg || {};
-                const errorMessage = action.payload;
+                const { id, status } = action.meta.arg;
+                delete state.actionLoadingStates[id];
+                state.error = action.payload;
 
-                if (id) {
-                    delete state.actionLoadingStates[id];
-
-                    // If backend says they are ALREADY processed or NOT a doctor, we sync UI by removing them
-                    const isInvalidOrProcessed =
-                        (status === "approved" && errorMessage?.includes("already approved")) ||
-                        (status === "rejected" && errorMessage?.includes("already rejected")) ||
-                        (errorMessage?.includes("not a doctor"));
-
-                    if (isInvalidOrProcessed) {
-                        const index = state.users.findIndex(u => u._id === id);
-                        if (index !== -1) state.users.splice(index, 1);
-                    } else {
-                        // Regular rollback for legitimate failures
-                        const user = state.users.find(u => u._id === id);
-                        if (user) {
-                            if (status === "approved" || status === "rejected") {
-                                user.status = "pending";
-                            } else if (status === "blocked" || status === "active") {
-                                user.isBlocked = status !== "blocked";
-                            }
-                        }
+                // Rollback optimistic update
+                const user = state.users.find(u => u._id === id);
+                if (user) {
+                    if (status === "approved" || status === "rejected") {
+                        user.status = "pending";
+                    } else if (status === "blocked") {
+                        user.isBlocked = false;
+                    } else if (status === "active") {
+                        user.isBlocked = true;
                     }
                 }
-                state.error = action.payload;
             })
             // Appointments
             .addCase(fetchAllAppointments.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(fetchAllAppointments.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.appointments = Array.isArray(action.payload.data) ? action.payload.data : [];
+                const payload = action.payload;
+                state.appointments = Array.isArray(payload.data) ? payload.data : [];
                 state.pagination = {
-                    page: action.payload.page || 1,
-                    totalPages: action.payload.pages || 1,
-                    totalItems: action.payload.totalItems || action.payload.total || 0
+                    page: payload.page || 1,
+                    totalPages: payload.pages || 1,
+                    totalItems: payload.totalItems || payload.total || 0
                 };
             })
             .addCase(fetchAllAppointments.rejected, (state, action) => {
@@ -170,10 +166,14 @@ const adminSlice = createSlice({
                 state.error = action.payload;
             })
             // Stats
+            .addCase(fetchStats.pending, (state) => {
+                state.error = null;
+            })
             .addCase(fetchStats.fulfilled, (state, action) => {
                 state.stats = action.payload.data || action.payload;
             });
     },
 });
 
+export const { clearAdminError } = adminSlice.actions;
 export default adminSlice.reducer;
