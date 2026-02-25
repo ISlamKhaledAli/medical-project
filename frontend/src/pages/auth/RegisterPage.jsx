@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
@@ -22,6 +22,9 @@ import {
   Tooltip,
   CircularProgress,
   Link,
+  Fade,
+  Grow,
+  Zoom
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -30,17 +33,27 @@ import {
   Visibility,
   VisibilityOff,
   Info as InfoIcon,
+  CheckCircle as SuccessIcon,
 } from "@mui/icons-material";
-import { register, clearError } from "../../features/auth/authSlice";
+import { useAuth } from "../../hooks/useAuth";
 import { validateEmail, validatePassword, validateName, normalizeEmail, getStrengthLabel, getStrengthColor } from "../../utils/validators";
+import { debugUI } from "../../utils/debugTrace";
 
 const steps = ["Basic Info", "Role Selection", "Role Details"];
 
 const RegisterPage = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { user, isLoading, error, successMessage } = useSelector((state) => state.auth);
+  const { 
+    user, 
+    isRegisterLoading, 
+    error, 
+    successMessage, 
+    register: registerUser, 
+    clearAuthError,
+    isAuthenticated,
+    userRole
+  } = useAuth();
   
+  const navigate = useNavigate();
   const formRef = useRef(null);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -67,29 +80,34 @@ const RegisterPage = () => {
     confirmPassword: false,
   });
 
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  // Strength calculation is now memoized to avoid redundant compute on every render
+  const passwordStrength = useMemo(() => {
+    if (!formData.password) return 0;
+    return validatePassword(formData.password).strength;
+  }, [formData.password]);
 
+  // Effect for clearing errors between steps
   useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch, activeStep]);
+    clearAuthError();
+  }, [clearAuthError, activeStep]);
 
+  // Handle Redirection when authenticated
   useEffect(() => {
-    if (user) {
-      const target = user.role === "admin" ? "/admin" : user.role === "doctor" ? "/doctor" : "/";
+    if (isAuthenticated) {
+      debugUI("User authenticated, redirecting from register page");
+      const target = userRole === "admin" ? "/admin" : userRole === "doctor" ? "/doctor" : "/";
       navigate(target);
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, userRole, navigate]);
 
-  const validateField = (name, value) => {
+  const validateField = useCallback((name, value) => {
     switch (name) {
       case "fullName":
         return validateName(value);
       case "email":
         return validateEmail(value);
       case "password":
-        const result = validatePassword(value);
-        setPasswordStrength(result.strength);
-        return result.error;
+        return validatePassword(value).error;
       case "confirmPassword":
         if (!value) return "Please confirm your password";
         if (value !== formData.password) return "Passwords do not match";
@@ -97,26 +115,26 @@ const RegisterPage = () => {
       default:
         return null;
     }
-  };
+  }, [formData.password]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Always calculate strength if password, regardless of "touched" status
-    if (name === "password") {
-        validateField("password", value);
-    }
-
+    // Auto-validate if already touched
     if (touched[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
 
+    // Sync validation for password match
     if (name === "password" && touched.confirmPassword) {
-        setFormErrors(prev => ({ ...prev, confirmPassword: value !== formData.confirmPassword ? "Passwords do not match" : null }));
+        setFormErrors(prev => ({ 
+            ...prev, 
+            confirmPassword: value !== formData.confirmPassword ? "Passwords do not match" : null 
+        }));
     }
 
-    if (error) dispatch(clearError());
+    if (error) clearAuthError();
   };
 
   const handleBlur = (e) => {
@@ -135,6 +153,7 @@ const RegisterPage = () => {
       if (nameError || emailError || passwordError || confirmError) {
         setFormErrors({ fullName: nameError, email: emailError, password: passwordError, confirmPassword: confirmError });
         setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
+        debugUI("Validation failed for initial registration step");
         return;
       }
     }
@@ -146,25 +165,14 @@ const RegisterPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Register clicked", { role: formData.role, email: formData.email });
+    if (e) e.preventDefault();
+    debugUI("Submitting registration request", formData.email);
     
-    const payload = {
+    await registerUser({
+      ...formData,
       fullName: formData.fullName.trim(),
-      email: normalizeEmail(formData.email),
-      password: formData.password,
-      role: formData.role,
-    };
-
-    try {
-      const result = await dispatch(register(payload)).unwrap();
-      console.log("Dispatch result:", result);
-      // If the backend returns a success message, the slice will store it in successMessage
-      // and the component will render the success view automatically due to the ternary in return.
-      console.log("Registration process completed successfully");
-    } catch (err) {
-      console.error("Registration failed in component:", err);
-    }
+      email: normalizeEmail(formData.email)
+    });
   };
 
   // Removed local strength functions in favor of shared utilities
@@ -374,7 +382,7 @@ const RegisterPage = () => {
         <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
           {successMessage ? (
               <Box sx={{ py: 4, textAlign: "center" }}>
-                  <DoctorIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
+                  <SuccessIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
                   <Typography variant="h5" color="success.main" gutterBottom sx={{ fontWeight: 700 }}>
                       Account Created!
                   </Typography>
@@ -399,7 +407,7 @@ const RegisterPage = () => {
 
                 <Box sx={{ display: "flex", justifyContent: "space-between", mt: 5 }}>
                     <Button
-                    disabled={activeStep === 0 || isLoading}
+                    disabled={activeStep === 0 || isRegisterLoading}
                     onClick={handleBack}
                     startIcon={<BackIcon />}
                     sx={{ textTransform: "none", color: "text.secondary" }}
@@ -410,16 +418,16 @@ const RegisterPage = () => {
                     <Button
                         variant="contained"
                         onClick={handleSubmit}
-                        disabled={isLoading}
+                        disabled={isRegisterLoading}
                         sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
                     >
-                        {isLoading ? <CircularProgress size={24} color="inherit" /> : "Register Account"}
+                        {isRegisterLoading ? <CircularProgress size={24} color="inherit" /> : "Register Account"}
                     </Button>
                     ) : (
                     <Button
                         variant="contained"
                         onClick={handleNext}
-                        disabled={isLoading}
+                        disabled={isRegisterLoading}
                         sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
                     >
                         Next Step

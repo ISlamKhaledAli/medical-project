@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
     Container, 
@@ -19,7 +20,8 @@ import {
     DialogContent,
     DialogActions,
     CircularProgress,
-    Avatar
+    Avatar,
+    Tooltip
 } from "@mui/material";
 import { 
     Cancel as CancelIcon, 
@@ -30,35 +32,65 @@ import { format } from "date-fns";
 
 import { fetchMyAppointments, cancelAppointment } from "../../features/appointment/appointmentSlice";
 import StatusBadge from "../../components/appointment/StatusBadge";
+import AppointmentDetailsModal from "../../components/appointment/AppointmentDetailsModal";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
 
 const MyAppointmentsPage = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { appointments, isLoading, error, isActionLoading } = useSelector((state) => state.appointment);
+    
+    // Dialog/Modal States
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
     useEffect(() => {
         dispatch(fetchMyAppointments());
     }, [dispatch]);
 
-    const handleOpenCancelDialog = (appointment) => {
+    const handleOpenCancelDialog = useCallback((appointment) => {
         setSelectedAppointment(appointment);
         setCancelDialogOpen(true);
-    };
+    }, []);
 
-    const handleCloseCancelDialog = () => {
+    const handleOpenDetails = useCallback((appointment) => {
+        setSelectedAppointment(appointment);
+        setDetailsModalOpen(true);
+    }, []);
+
+    const handleCloseDialogs = useCallback(() => {
         setCancelDialogOpen(false);
+        setDetailsModalOpen(false);
         setSelectedAppointment(null);
-    };
+    }, []);
 
     const handleConfirmCancel = async () => {
         if (selectedAppointment) {
-            await dispatch(cancelAppointment(selectedAppointment.id));
-            handleCloseCancelDialog();
+            const id = selectedAppointment._id || selectedAppointment.id;
+            await dispatch(cancelAppointment(id));
+            handleCloseDialogs();
         }
     };
+
+    const handleReschedule = useCallback((appointment) => {
+        // Navigate to booking page with doctor pre-selected
+        const doctorId = appointment.doctor?._id || appointment.doctor?.id;
+        
+        if (!doctorId) {
+            console.error('doctorId is undefined', appointment);
+            return;
+        }
+
+        navigate(`/patient/book/${doctorId}`, { 
+            state: { 
+                rescheduleId: appointment._id || appointment.id,
+                doctorName: appointment.doctor?.user?.fullName || appointment.doctor?.name,
+                specialty: appointment.doctor?.specialty?.name || appointment.doctor?.specialty
+            } 
+        });
+    }, [navigate]);
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -104,60 +136,71 @@ const MyAppointmentsPage = () => {
                                     </TableRow>
                                 ))
                             ) : appointments.length > 0 ? (
-                                appointments.map((appointment) => (
-                                    <TableRow key={appointment._id || appointment.id} hover>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                                                <Avatar 
-                                                    src={appointment.doctor?.image} 
-                                                    sx={{ width: 40, height: 40, mr: 2, border: "1px solid rgba(0,0,0,0.05)" }} 
-                                                />
-                                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                                    Dr. {appointment.doctor?.name}
+                                appointments.map((appointment) => {
+                                    const isTerminal = ["completed", "cancelled", "rejected"].includes(appointment.status);
+                                    
+                                    return (
+                                        <TableRow key={appointment._id || appointment.id} hover>
+                                            <TableCell>
+                                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                                    <Avatar 
+                                                        src={appointment.doctor?.image} 
+                                                        sx={{ width: 40, height: 40, mr: 2, border: "1px solid rgba(0,0,0,0.05)" }} 
+                                                    />
+                                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                                        {appointment.doctor?.user?.fullName || appointment.doctor?.name}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>{appointment.doctor?.specialty?.name || appointment.doctor?.specialty}</TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                    {format(new Date(appointment.appointmentDate), "PPP")}
                                                 </Typography>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>{appointment.doctor?.specialty?.name || appointment.doctor?.specialty}</TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                {format(new Date(appointment.appointmentDate), "PPP")}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {appointment.startTime} - {appointment.endTime}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <StatusBadge status={appointment.status} />
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                                                {appointment.status === "pending" || appointment.status === "confirmed" ? (
-                                                    <>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {appointment.startTime} - {appointment.endTime}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusBadge status={appointment.status} />
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                                                    {!isTerminal && (
+                                                        <>
+                                                            <Tooltip title="Cancel Appointment">
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    color="error" 
+                                                                    onClick={() => handleOpenCancelDialog(appointment)}
+                                                                >
+                                                                    <CancelIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Reschedule">
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    color="primary" 
+                                                                    onClick={() => handleReschedule(appointment)}
+                                                                >
+                                                                    <RescheduleIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </>
+                                                    )}
+                                                    <Tooltip title="View Details">
                                                         <IconButton 
                                                             size="small" 
-                                                            color="error" 
-                                                            title="Cancel Appointment"
-                                                            onClick={() => handleOpenCancelDialog(appointment)}
+                                                            onClick={() => handleOpenDetails(appointment)}
                                                         >
-                                                            <CancelIcon fontSize="small" />
+                                                            <ViewIcon fontSize="small" />
                                                         </IconButton>
-                                                        <IconButton 
-                                                            size="small" 
-                                                            color="primary" 
-                                                            title="Reschedule"
-                                                            onClick={() => {/* TODO: Reschedule logic */}}
-                                                        >
-                                                            <RescheduleIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </>
-                                                ) : null}
-                                                <IconButton size="small" title="View Details">
-                                                    <ViewIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                                    </Tooltip>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={5}>
@@ -173,20 +216,27 @@ const MyAppointmentsPage = () => {
                 </TableContainer>
             )}
 
+            {/* Appointment Details Modal */}
+            <AppointmentDetailsModal 
+                open={detailsModalOpen}
+                onClose={handleCloseDialogs}
+                appointment={selectedAppointment}
+            />
+
             {/* Cancel Confirmation Dialog */}
             <Dialog 
                 open={cancelDialogOpen} 
-                onClose={handleCloseCancelDialog}
+                onClose={handleCloseDialogs}
                 PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
             >
                 <DialogTitle sx={{ fontWeight: 900 }}>Cancel Appointment?</DialogTitle>
                 <DialogContent>
                     <Typography color="text.secondary">
-                        Are you sure you want to cancel your appointment with Dr. {selectedAppointment?.doctor?.name} on {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "PPP")}? This action cannot be undone.
+                        Are you sure you want to cancel your appointment with Dr. {selectedAppointment?.doctor?.user?.fullName || selectedAppointment?.doctor?.name} on {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "PPP")}? This action cannot be undone.
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={handleCloseCancelDialog} sx={{ fontWeight: 700 }}>No, Keep It</Button>
+                    <Button onClick={handleCloseDialogs} sx={{ fontWeight: 700 }}>No, Keep It</Button>
                     <Button 
                         variant="contained" 
                         color="error" 
@@ -194,7 +244,7 @@ const MyAppointmentsPage = () => {
                         disabled={isActionLoading}
                         sx={{ borderRadius: 2, fontWeight: 700 }}
                     >
-                        {isActionLoading ? <CircularProgress size={20} color="inherit" /> : "Yes, Cancel"}
+                        {isActionLoading ? <CircularProgress size="20" color="inherit" /> : "Yes, Cancel"}
                     </Button>
                 </DialogActions>
             </Dialog>

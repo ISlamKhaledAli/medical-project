@@ -15,7 +15,7 @@ const doctorAPI = {
     /**
      * Get the logged-in doctor's profile
      */
-    fetchMyProfile: () => axiosInstance.get(ENDPOINTS.DOCTOR.UPDATE_PROFILE),
+    fetchMyProfile: () => axiosInstance.get(ENDPOINTS.DOCTOR.ME),
 
     /**
      * Create doctor profile

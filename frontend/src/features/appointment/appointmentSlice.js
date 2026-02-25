@@ -111,10 +111,9 @@ const appointmentSlice = createSlice({
             })
             .addCase(cancelAppointment.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const updatedAppt = action.payload.data || action.payload;
-                const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
+                const index = state.appointments.findIndex(a => a._id === (action.payload.data?._id || action.payload.id));
                 if (index !== -1) {
-                    state.appointments[index] = updatedAppt;
+                    state.appointments[index].status = 'cancelled';
                 }
             })
             .addCase(cancelAppointment.rejected, (state, action) => {
@@ -127,10 +126,14 @@ const appointmentSlice = createSlice({
             })
             .addCase(rescheduleAppointment.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const updatedAppt = action.payload.data || action.payload;
-                const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
+                const updatedData = action.payload.data || action.payload;
+                const index = state.appointments.findIndex(a => a._id === (updatedData._id || updatedData.id));
+
                 if (index !== -1) {
-                    state.appointments[index] = updatedAppt;
+                    state.appointments[index].appointmentDate = updatedData.appointmentDate;
+                    state.appointments[index].startTime = updatedData.startTime;
+                    state.appointments[index].endTime = updatedData.endTime;
+                    state.appointments[index].status = 'pending'; // Reset status if it changes on reschedule
                 }
             })
             .addCase(rescheduleAppointment.rejected, (state, action) => {

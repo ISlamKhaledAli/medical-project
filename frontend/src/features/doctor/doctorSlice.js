@@ -173,6 +173,14 @@ const doctorSlice = createSlice({
             .addCase(createDoctorProfile.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.doctorDetails = action.payload.data || action.payload;
+                // Reactive update for AppRoutes guard
+                if (action.payload.data?.user) {
+                    // This assumes state.auth is handled elsewhere, but we can set a flag here 
+                    // or the user will rely on the next fetch. 
+                    // Actually, we should probably update state.auth if possible, 
+                    // but slices are isolated. 
+                    // Usually, we'd handle this in a root reducer or by re-fetching 'getMe'.
+                }
             })
             .addCase(createDoctorProfile.rejected, (state, action) => {
                 state.isLoading = false;

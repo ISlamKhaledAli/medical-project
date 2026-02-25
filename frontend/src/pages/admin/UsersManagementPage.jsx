@@ -22,6 +22,7 @@ import {
     CheckCircle as ApproveIcon 
 } from "@mui/icons-material";
 import { fetchUsers, toggleUserStatus } from "../../features/admin/adminSlice";
+import { debugAdmin } from "../../utils/debugTrace";
 
 const UsersManagementPage = () => {
     const dispatch = useDispatch();
@@ -31,9 +32,10 @@ const UsersManagementPage = () => {
         dispatch(fetchUsers());
     }, [dispatch]);
 
-    const handleToggleStatus = (id, currentStatus) => {
-        const newStatus = currentStatus === "active" ? "blocked" : "active";
-        dispatch(toggleUserStatus({ id, status: newStatus }));
+    const handleToggleStatus = (id, isCurrentlyBlocked) => {
+        const targetStatus = isCurrentlyBlocked ? "active" : "blocked";
+        debugAdmin(`Toggling status for user ${id}. Current block state: ${isCurrentlyBlocked}. Target status: ${targetStatus}`);
+        dispatch(toggleUserStatus({ id, status: targetStatus }));
     };
 
     return (
@@ -115,7 +117,7 @@ const UsersManagementPage = () => {
                                             variant="outlined"
                                             startIcon={isBlocked ? <ApproveIcon /> : <BlockIcon />}
                                             color={isBlocked ? "success" : "error"}
-                                            onClick={() => handleToggleStatus(user._id, isBlocked ? "active" : "blocked")}
+                                            onClick={() => handleToggleStatus(user._id, isBlocked)}
                                             sx={{ fontWeight: 700 }}
                                         >
                                             {isBlocked ? "Unblock" : "Block"}

@@ -5,10 +5,33 @@ const availabilityAPI = {
     /**
      * Fetch available slots for a doctor on a specific date
      */
-    fetchSlots: (doctorId, date) => axiosInstance.get(ENDPOINTS.AVAILABILITY.DOCTOR(doctorId), { params: { date } }),
+    fetchSlots: (doctorId, date, excludeAppointmentId = null) =>
+        axiosInstance.get(ENDPOINTS.AVAILABILITY.DOCTOR(doctorId), {
+            params: { date, excludeAppointmentId }
+        }),
 
     /**
-     * Create a new availability range
+     * Set bulk weekly availability
+     */
+    saveWeekly: (scheduleData) => {
+        const payload = {
+            availability: scheduleData.map(day => ({
+                dayOfWeek: day.dayOfWeek,
+                startTime: typeof day.startTime === "string"
+                    ? day.startTime
+                    : day.startTime?.format?.("HH:mm") || "09:00",
+                endTime: typeof day.endTime === "string"
+                    ? day.endTime
+                    : day.endTime?.format?.("HH:mm") || "17:00",
+                slotDurationMinutes: day.slotDuration || 30,
+                isActive: day.isActive
+            }))
+        };
+        return axiosInstance.post(ENDPOINTS.AVAILABILITY.SET, payload);
+    },
+
+    /**
+     * Create a new availability range (Legacy)
      */
     create: (data) => axiosInstance.post(ENDPOINTS.AVAILABILITY.SET, data),
 

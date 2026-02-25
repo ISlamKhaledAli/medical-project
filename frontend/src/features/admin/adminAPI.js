@@ -29,6 +29,16 @@ const adminAPI = {
      * Fetch dashboard statistics
      */
     fetchStats: () => axiosInstance.get(ENDPOINTS.APPOINTMENT.STATS),
+
+    /**
+     * Update appointment status (Admin/Doctor)
+     */
+    updateAppointmentStatus: (id, status) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.UPDATE_STATUS(id), { status }),
+
+    /**
+     * Delete an appointment
+     */
+    deleteAppointment: (id) => axiosInstance.delete(ENDPOINTS.APPOINTMENT.DELETE(id)),
 };
 
 export default adminAPI;

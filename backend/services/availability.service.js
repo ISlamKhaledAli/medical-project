@@ -2,7 +2,7 @@ import Availability from "../models/availability.model.js";
 import DoctorProfile from "../models/Doctor.model.js";
 import Appointment from "../models/Appointments.model.js";
 import ApiError from "../utils/ApiError.js";
-import { timeToMinutes } from "../utils/dateTime.js";
+import { timeToMinutes, normalizeDate } from "../utils/dateTime.js";
 
 /* =========================
    Validate Availability Input
@@ -10,7 +10,7 @@ import { timeToMinutes } from "../utils/dateTime.js";
 export const validateAvailability = ({
     startTime,
     endTime,
-    slotDuration,
+    slotDurationMinutes,
 }) => {
     const start = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
@@ -19,7 +19,7 @@ export const validateAvailability = ({
         throw new ApiError("End time must be after start time", 400);
     }
 
-    if ((end - start) % slotDuration !== 0) {
+    if ((end - start) % (slotDurationMinutes || 30) !== 0) {
         throw new ApiError(
             "Time range must align with slot duration",
             400
@@ -28,58 +28,62 @@ export const validateAvailability = ({
 };
 
 /* =========================
-   Create Availability
+   Set Weekly Availability
 ========================= */
-export const createAvailability = async ({
-    dayOfWeek,
-    startTime,
-    endTime,
-    slotDuration,
+export const setWeeklyAvailability = async ({
+    availability,
     currentUser,
 }) => {
-
     const doctorProfile = await DoctorProfile.findOne({
         user: currentUser._id,
     });
 
     if (!doctorProfile) {
-        throw new ApiError("Doctor profile not found. Please complete your profile first.", 404);
+        throw new ApiError("Doctor profile not found.", 404);
     }
 
     if (currentUser.status !== "approved") {
-        throw new ApiError("Your account is pending approval. You cannot manage availability yet.", 403);
+        throw new ApiError("Account pending approval.", 403);
     }
 
-
-
-    validateAvailability({ startTime, endTime, slotDuration });
-
-    // Prevent duplicate availability for same day
-    const existing = await Availability.findOne({
-        doctor: doctorProfile._id,
-        dayOfWeek,
+    // Validate each active day
+    availability.forEach(day => {
+        if (day.isActive) {
+            if (!day.startTime || !day.endTime) {
+                throw new ApiError(`Missing times for day ${day.dayOfWeek}`, 400);
+            }
+            validateAvailability({
+                startTime: day.startTime,
+                endTime: day.endTime,
+                slotDurationMinutes: day.slotDurationMinutes || day.slotDuration || 30
+            });
+        }
     });
 
-    if (existing) {
-        throw new ApiError(
-            "Availability already exists for this day",
-            400
-        );
-    }
+    const doctorId = doctorProfile._id;
 
-    const availability = await Availability.create({
-        doctor: doctorProfile._id,
-        dayOfWeek,
-        startTime,
-        endTime,
-        slotDuration,
-    });
+    const operations = availability.map(day => ({
+        updateOne: {
+            filter: { doctor: doctorId, dayOfWeek: day.dayOfWeek },
+            update: {
+                $set: {
+                    startTime: day.startTime,
+                    endTime: day.endTime,
+                    slotDurationMinutes: day.slotDurationMinutes || day.slotDuration || 30,
+                    isActive: day.isActive
+                }
+            },
+            upsert: true
+        }
+    }));
 
-    return availability;
+    await Availability.bulkWrite(operations);
+
+    return { message: "Schedule updated successfully" };
 };
 
 /* =========================
-   Update Availability
+   Update Availability (Legacy/Single)
 ========================= */
 export const updateAvailability = async ({
     availabilityId,
@@ -89,24 +93,11 @@ export const updateAvailability = async ({
     currentUser,
 }) => {
     const availability = await Availability.findById(availabilityId);
+    if (!availability) throw new ApiError("Availability not found", 404);
 
-    if (!availability) {
-        throw new ApiError("Availability not found", 404);
-    }
-
-    const doctorProfile = await DoctorProfile.findOne({
-        user: currentUser._id,
-    });
-
-    if (
-        !doctorProfile ||
-        availability.doctor.toString() !== doctorProfile._id.toString()
-    ) {
+    const doctorProfile = await DoctorProfile.findOne({ user: currentUser._id });
+    if (!doctorProfile || availability.doctor.toString() !== doctorProfile._id.toString()) {
         throw new ApiError("Not authorized", 403);
-    }
-
-    if (currentUser.status !== "approved") {
-        throw new ApiError("Your account is not approved. Cannot update availability.", 403);
     }
 
     validateAvailability({ startTime, endTime, slotDuration });
@@ -114,43 +105,30 @@ export const updateAvailability = async ({
     availability.startTime = startTime;
     availability.endTime = endTime;
     availability.slotDuration = slotDuration;
-
     await availability.save();
 
     return availability;
 };
 
 /* =========================
-   Delete Availability
+   Delete Availability (Toggles isActive instead)
 ========================= */
 export const deleteAvailability = async ({
     availabilityId,
     currentUser,
 }) => {
     const availability = await Availability.findById(availabilityId);
+    if (!availability) throw new ApiError("Availability not found", 404);
 
-    if (!availability) {
-        throw new ApiError("Availability not found", 404);
-    }
-
-    const doctorProfile = await DoctorProfile.findOne({
-        user: currentUser._id,
-    });
-
-    if (
-        !doctorProfile ||
-        availability.doctor.toString() !== doctorProfile._id.toString()
-    ) {
+    const doctorProfile = await DoctorProfile.findOne({ user: currentUser._id });
+    if (!doctorProfile || availability.doctor.toString() !== doctorProfile._id.toString()) {
         throw new ApiError("Not authorized", 403);
     }
 
-    if (currentUser.status !== "approved") {
-        throw new ApiError("Your account is not approved. Cannot delete availability.", 403);
-    }
+    availability.isActive = false;
+    await availability.save();
 
-    await availability.deleteOne();
-
-    return { message: "Availability deleted successfully" };
+    return { message: "Availability deactivated" };
 };
 
 /* =========================
@@ -158,88 +136,91 @@ export const deleteAvailability = async ({
 ========================= */
 export const generateTimeSlots = (availability) => {
     const slots = [];
+    if (!availability.startTime || !availability.endTime) return slots;
 
     const start = timeToMinutes(availability.startTime);
     const end = timeToMinutes(availability.endTime);
+    const duration = availability.slotDurationMinutes || availability.slotDuration || 30;
 
-    for (
-        let time = start;
-        time < end;
-        time += availability.slotDuration
-    ) {
-        const hours = Math.floor(time / 60)
-            .toString()
-            .padStart(2, "0");
-        const minutes = (time % 60)
-            .toString()
-            .padStart(2, "0");
+    for (let time = start; time < end; time += duration) {
+        const hours = Math.floor(time / 60).toString().padStart(2, "0");
+        const minutes = (time % 60).toString().padStart(2, "0");
 
-        const nextTime = time + availability.slotDuration;
-        const nextHours = Math.floor(nextTime / 60)
-            .toString()
-            .padStart(2, "0");
-        const nextMinutes = (nextTime % 60)
-            .toString()
-            .padStart(2, "0");
+        const startTime = `${hours}:${minutes}`;
+        const endTimeMinutes = time + duration;
+        const endHours = Math.floor(endTimeMinutes / 60).toString().padStart(2, "0");
+        const endMinutes = (endTimeMinutes % 60).toString().padStart(2, "0");
+        const endTime = `${endHours}:${endMinutes}`;
 
         slots.push({
-            startTime: `${hours}:${minutes}`,
-            endTime: `${nextHours}:${nextMinutes}`,
+            startTime,
+            endTime
         });
     }
-
     return slots;
 };
 
-export const getDoctorAvailability = async (doctorId, dateString) => {
-    // 1. Get ranges for the doctor
-    const ranges = await Availability.find({ doctor: doctorId });
-
-    // 2. Filter ranges by day of week if date provided
-    let filteredRanges = ranges;
-    if (dateString) {
-        const date = new Date(dateString);
-        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const dayIndex = date.getUTCDay();
-        const dayName = days[dayIndex];
-
-        filteredRanges = ranges.filter(r => {
-            const dbDay = typeof r.dayOfWeek === 'number' ? days[r.dayOfWeek] : r.dayOfWeek;
-            return dbDay === dayName;
-        });
+export const getDoctorAvailability = async (doctorId, dateString, excludeAppointmentId = null) => {
+    // 0. Validate doctorId format
+    if (!doctorId || !/^[0-9a-fA-F]{24}$/.test(doctorId)) {
+        throw new ApiError(`Invalid Doctor ID format: ${doctorId}`, 400);
     }
 
-    // 3. Get existing appointments for this doctor and date
-    // We use a regex or start/end of day to match the Date field if it's a string from frontend
-    let existingAppointments = [];
-    if (dateString) {
-        const start = new Date(dateString);
-        start.setUTCHours(0, 0, 0, 0);
-        const end = new Date(dateString);
-        end.setUTCHours(23, 59, 59, 999);
+    // 1. Get ALL ranges for the doctor to determine working days
+    const allRanges = await Availability.find({ doctor: doctorId, isActive: true });
+    const workingDays = allRanges.map(r => r.dayOfWeek);
 
-        existingAppointments = await Appointment.find({
-            doctor: doctorId,
-            appointmentDate: { $gte: start, $lte: end },
-            status: { $in: ["pending", "confirmed"] }
-        });
+    // 2. If no date provided, return working days AND the raw records for management
+    if (!dateString) {
+        return { workingDays, availabilityList: allRanges };
     }
 
-    // 4. Generate slots for each range
-    let allSlots = [];
-    filteredRanges.forEach(range => {
-        const slots = generateTimeSlots(range);
+    // 3. Filter ranges by specific date
+    const date = normalizeDate(dateString);
+    const dayIndex = date.getDay();
 
-        // Add isAvailable flag
-        const slotsWithStatus = slots.map(slot => {
-            const isBooked = existingAppointments.some(apt =>
-                apt.startTime === slot.startTime
-            );
-            return { ...slot, isAvailable: !isBooked };
-        });
+    const range = allRanges.find(r => r.dayOfWeek === dayIndex);
 
-        allSlots = [...allSlots, ...slotsWithStatus];
+    if (!range) {
+        return { workingDays, slots: [] };
+    }
+
+    // 4. Get active bookings for the target local day
+    const startOfTargetDay = normalizeDate(dateString);
+    const endOfTargetDay = new Date(startOfTargetDay);
+    endOfTargetDay.setHours(23, 59, 59, 999);
+
+    const bookingQuery = {
+        doctor: doctorId,
+        appointmentDate: { $gte: startOfTargetDay, $lte: endOfTargetDay },
+        status: { $in: ["pending", "confirmed"] }
+    };
+
+    if (excludeAppointmentId) {
+        bookingQuery._id = { $ne: excludeAppointmentId };
+    }
+
+    const existingAppointments = await Appointment.find(bookingQuery);
+
+    // 5. Generate slots and filter past ones if target date is today
+    const slots = generateTimeSlots(range);
+
+    // Check if target day is today in local time
+    const todayLocalString = new Date().toLocaleDateString("en-CA");
+    const isTargetToday = dateString === todayLocalString;
+    const currentMinutes = isTargetToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
+
+    const slotsWithStatus = slots.map(slot => {
+        const slotMinutes = timeToMinutes(slot.startTime);
+        const isBooked = existingAppointments.some(apt => apt.startTime === slot.startTime);
+        const isPast = isTargetToday && (slotMinutes <= currentMinutes);
+
+        return {
+            ...slot,
+            isAvailable: !isBooked && !isPast,
+            reason: isPast ? "Past" : isBooked ? "Booked" : null
+        };
     });
 
-    return allSlots;
+    return { workingDays, slots: slotsWithStatus };
 };

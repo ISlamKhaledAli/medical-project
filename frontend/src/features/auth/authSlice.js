@@ -122,8 +122,10 @@ export const changePassword = createAsyncThunk(
 const initialState = {
     user: null,
     accessToken: localStorage.getItem("accessToken") || null,
-    isLoading: false,
-    isInitialLoading: true, // For preventing flash during app start
+    isLoading: false, // Core/General loading
+    isLoginLoading: false,
+    isRegisterLoading: false,
+    isAuthChecking: true, // Renamed from isInitialLoading for clarity
     error: null,
     successMessage: null,
 };
@@ -138,7 +140,7 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.accessToken = null;
-            state.isInitialLoading = false;
+            state.isAuthChecking = false;
             localStorage.removeItem("accessToken");
         },
         setCredentials: (state, action) => {
@@ -158,19 +160,19 @@ const authSlice = createSlice({
             state.successMessage = null;
         },
         stopInitialLoading: (state) => {
-            state.isInitialLoading = false;
+            state.isAuthChecking = false;
         },
     },
     extraReducers: (builder) => {
         builder
             // Login
             .addCase(login.pending, (state) => {
-                state.isLoading = true;
+                state.isLoginLoading = true;
                 state.error = null;
             })
             .addCase(login.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.isInitialLoading = false;
+                state.isLoginLoading = false;
+                state.isAuthChecking = false;
                 const payload = action.payload?.data || action.payload;
                 state.user = payload?.user || payload;
                 state.accessToken = payload?.accessToken || action.payload?.accessToken;
@@ -179,32 +181,35 @@ const authSlice = createSlice({
                 }
             })
             .addCase(login.rejected, (state, action) => {
-                state.isLoading = false;
-                state.isInitialLoading = false;
+                state.isLoginLoading = false;
+                state.isAuthChecking = false;
                 state.error = action.payload;
             })
             // Register
             .addCase(register.pending, (state) => {
-                state.isLoading = true;
+                state.isRegisterLoading = true;
                 state.error = null;
                 state.successMessage = null;
             })
             .addCase(register.fulfilled, (state, action) => {
-                state.isLoading = false;
+                state.isRegisterLoading = false;
                 state.successMessage = action.payload.message || "Registration successful!";
             })
             .addCase(register.rejected, (state, action) => {
-                state.isLoading = false;
+                state.isRegisterLoading = false;
                 state.error = action.payload;
             })
-            // ... omitting other cases for brevity in targetContent match, but applying to getMe
+            // Get Me
+            .addCase(getMe.pending, (state) => {
+                state.isAuthChecking = true;
+            })
             .addCase(getMe.fulfilled, (state, action) => {
-                state.isInitialLoading = false;
+                state.isAuthChecking = false;
                 const payload = action.payload?.data || action.payload;
                 state.user = payload?.user || payload;
             })
             .addCase(getMe.rejected, (state, action) => {
-                state.isInitialLoading = false;
+                state.isAuthChecking = false;
                 // Only clear if it's clearly an auth failure
                 const isAuthError = action.payload === "Unauthorized" ||
                     action.payload === "Session expired" ||
@@ -242,14 +247,21 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload;
             })
+            // Doctor Onboarding Sync (Must be before Matchers)
+            .addCase("doctor/createProfile/fulfilled", (state) => {
+                if (state.user) {
+                    state.user.profileComplete = true;
+                }
+            })
             // Matchers for common auth thunks
             .addMatcher(
                 (action) =>
+                    action.type.endsWith("/pending") &&
                     [
-                        forgotPassword.pending,
-                        resetPassword.pending,
-                        resendVerification.pending,
-                    ].includes(action.type),
+                        "auth/forgotPassword",
+                        "auth/resetPassword",
+                        "auth/resendVerification",
+                    ].some(v => action.type.startsWith(v)),
                 (state) => {
                     state.isLoading = true;
                     state.error = null;
@@ -258,11 +270,12 @@ const authSlice = createSlice({
             )
             .addMatcher(
                 (action) =>
+                    action.type.endsWith("/fulfilled") &&
                     [
-                        forgotPassword.fulfilled,
-                        resetPassword.fulfilled,
-                        resendVerification.fulfilled,
-                    ].includes(action.type),
+                        "auth/forgotPassword",
+                        "auth/resetPassword",
+                        "auth/resendVerification",
+                    ].some(v => action.type.startsWith(v)),
                 (state, action) => {
                     state.isLoading = false;
                     state.successMessage = action.payload.message || "Operation successful";
@@ -270,11 +283,12 @@ const authSlice = createSlice({
             )
             .addMatcher(
                 (action) =>
+                    action.type.endsWith("/rejected") &&
                     [
-                        forgotPassword.rejected,
-                        resetPassword.rejected,
-                        resendVerification.rejected,
-                    ].includes(action.type),
+                        "auth/forgotPassword",
+                        "auth/resetPassword",
+                        "auth/resendVerification",
+                    ].some(v => action.type.startsWith(v)),
                 (state, action) => {
                     state.isLoading = false;
                     state.error = action.payload;
@@ -285,3 +299,5 @@ const authSlice = createSlice({
 
 export const { logout, setCredentials, clearError, stopInitialLoading } = authSlice.actions;
 export default authSlice.reducer;
+
+

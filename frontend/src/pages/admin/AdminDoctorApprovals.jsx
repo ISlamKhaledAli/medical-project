@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Container,
@@ -32,50 +32,61 @@ import {
     Refresh as RefreshIcon,
     Person as PersonIcon,
 } from "@mui/icons-material";
-import { fetchUsers, toggleUserStatus } from "../../features/admin/adminSlice";
+import { fetchUsers, toggleUserStatus, clearAdminError } from "../../features/admin/adminSlice";
+import { debugAdmin } from "../../utils/debugTrace";
 
 const AdminDoctorApprovals = () => {
     const dispatch = useDispatch();
     const { users, isLoading, actionLoadingStates, error } = useSelector((state) => state.admin);
 
     // Filter for pending doctors only
-    const pendingDoctors = users.filter(u => u.role?.toLowerCase() === "doctor" && u.status === "pending");
+    // Memoized to prevent unnecessary re-renders when other state changes
+    const pendingDoctors = useMemo(() => 
+        users.filter(u => u.role?.toLowerCase() === "doctor" && u.status === "pending"),
+    [users]);
 
     const [confirmAction, setConfirmAction] = useState(null); // { id, name, action: 'approve' | 'reject' }
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
-    useEffect(() => {
+    const handleRefresh = useCallback(() => {
+        debugAdmin("Refreshing pending doctor list");
         dispatch(fetchUsers({ role: "doctor", status: "pending" }));
     }, [dispatch]);
 
-    const handleRefresh = () => {
-        dispatch(fetchUsers({ role: "doctor", status: "pending" }));
-    };
+    useEffect(() => {
+        handleRefresh();
+        return () => {
+            dispatch(clearAdminError());
+        };
+    }, [handleRefresh, dispatch]);
 
     const handleAction = async () => {
         if (!confirmAction) return;
         const { id, action, name } = confirmAction;
         const status = action === "approve" ? "approved" : "rejected";
         
+        debugAdmin(`Initiating ${action} for doctor ${name} (ID: ${id})`);
+        
         // Close dialog immediately for better UX
         setConfirmAction(null);
 
-        const resultAction = await dispatch(toggleUserStatus({ id, status }));
-        
-        if (toggleUserStatus.fulfilled.match(resultAction)) {
+        try {
+            const resultAction = await dispatch(toggleUserStatus({ id, status })).unwrap();
+            debugAdmin(`${action} successful`, resultAction);
+            
             setSnackbar({
                 open: true,
                 message: `Doctor ${name} ${action === "approve" ? "approved" : "rejected"} successfully!`,
                 severity: "success"
             });
-            // Background sync for pagination/counts
-            setTimeout(() => {
-                handleRefresh();
-            }, 800);
-        } else {
+            
+            // Removed the setTimeout refresh hack. 
+            // The slice now handles optimistic removal and removal on fulfilled.
+        } catch (err) {
+            debugAdmin(`${action} failed`, err);
             setSnackbar({
                 open: true,
-                message: resultAction.payload || "Action failed",
+                message: err || "Action failed",
                 severity: "error"
             });
         }
@@ -96,7 +107,7 @@ const AdminDoctorApprovals = () => {
                     <Button 
                         variant="contained" 
                         disableElevation
-                        startIcon={<RefreshIcon />} 
+                        startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <RefreshIcon />} 
                         onClick={handleRefresh}
                         disabled={isLoading}
                         sx={{ borderRadius: 2, fontWeight: 700, px: 3 }}
@@ -164,7 +175,7 @@ const AdminDoctorApprovals = () => {
                                 </TableRow>
                             ) : (
                                 pendingDoctors.map((doc, index) => {
-                                    const isRowLoading = actionLoadingStates[doc._id];
+                                    const isRowLoading = !!actionLoadingStates[doc._id];
                                     return (
                                         <Grow in={true} key={doc._id} timeout={300 + (index * 100)}>
                                             <TableRow hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
@@ -190,16 +201,16 @@ const AdminDoctorApprovals = () => {
                                                     {doc.email}
                                                 </TableCell>
                                                 <TableCell sx={{ color: "text.secondary" }}>
-                                                    {new Date(doc.createdAt).toLocaleDateString("en-US", {
+                                                    {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("en-US", {
                                                         year: "numeric",
                                                         month: "short",
                                                         day: "numeric"
-                                                    })}
+                                                    }) : "N/A"}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Chip 
-                                                        label="PENDING REVIEW" 
-                                                        color="warning" 
+                                                        label={doc.status === "pending" ? "PENDING REVIEW" : doc.status} 
+                                                        color={doc.status === "pending" ? "warning" : "success"} 
                                                         size="small" 
                                                         variant="soft"
                                                         sx={{ 

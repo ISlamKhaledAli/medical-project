@@ -24,6 +24,7 @@ export const ENDPOINTS = {
     DETAILS: (id) => `/doctors/${id}`,
     UPDATE_PROFILE: "/doctors/profile", // Matches backend PATCH /profile
     CREATE_PROFILE: "/doctors/profile", // Matches backend POST /profile
+    ME: "/doctors/profile/me",
   },
 
   /* ================= SPECIALTY ================= */
@@ -50,7 +51,9 @@ export const ENDPOINTS = {
     DETAILS: (id) => `/appointments/${id}`,
     CANCEL: (id) => `/appointments/${id}/cancel`,
     RESCHEDULE: (id) => `/appointments/${id}/reschedule`,
+    UPDATE_STATUS: (id) => `/appointments/${id}/status`, // Centralized status update
     STATS: "/appointments/stats",
+    DELETE: (id) => `/appointments/${id}`, // Reserved for future/admin use
   },
 
   /* ================= ADMIN ================= */

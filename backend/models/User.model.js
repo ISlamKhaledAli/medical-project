@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema(
 
     refreshToken: String,
     passwordChangedAt: Date,
+    profileComplete: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
