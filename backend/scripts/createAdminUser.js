@@ -14,21 +14,37 @@ async function createAdmin() {
   const password = "A123456789d.";
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const admin = await User.create({
-    email: "admin@example.com",
-    password: hashedPassword,
-    role: "admin",
-    isVerified: true,
-    status: "approved",
-    isBlocked: false,
-    fullName: "Admin User"
-  });
+  // Check if admin already exists
+  const existingAdmin = await User.findOne({ email: "admin@example.com" });
 
-  console.log("Admin user created:", admin.email);
+  if (existingAdmin) {
+    // Update existing admin with correct password and settings
+    existingAdmin.password = hashedPassword;
+    existingAdmin.role = "admin";
+    existingAdmin.isVerified = true;
+    existingAdmin.status = "approved";
+    existingAdmin.isBlocked = false;
+    existingAdmin.fullName = "Admin User";
+    await existingAdmin.save();
+    console.log("Admin user updated:", existingAdmin.email);
+  } else {
+    // Create new admin
+    const admin = await User.create({
+      email: "admin@example.com",
+      password: hashedPassword,
+      role: "admin",
+      isVerified: true,
+      status: "approved",
+      isBlocked: false,
+      fullName: "Admin User",
+    });
+    console.log("Admin user created:", admin.email);
+  }
+
   await mongoose.disconnect();
 }
 
-createAdmin().catch(err => {
+createAdmin().catch((err) => {
   console.error("Error creating admin user:", err);
   process.exit(1);
 });
