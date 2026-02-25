@@ -28,27 +28,62 @@ const AvailabilitySlots = ({ slots, selectedSlot, onSelect, isLoading }) => {
                 Select a Time Slot
             </Typography>
             <Grid container spacing={2}>
-                {slots.map((slot) => (
-                    <Grid item xs={6} sm={4} md={3} key={slot._id || slot.startTime}>
-                        <Button
-                            fullWidth
-                            variant={selectedSlot?.startTime === slot.startTime ? "contained" : "outlined"}
-                            onClick={() => onSelect(slot)}
-                            disabled={!slot.isAvailable}
-                            sx={{
-                                borderRadius: 3,
-                                py: 1.5,
-                                fontWeight: 700,
-                                textTransform: "none",
-                                border: "1px solid",
-                                borderColor: selectedSlot?.startTime === slot.startTime ? "primary.main" : "rgba(0,0,0,0.1)",
-                                opacity: slot.isAvailable !== false ? 1 : 0.5 // Default to available if not specified
-                            }}
-                        >
-                            {slot.startTime} - {slot.endTime}
-                        </Button>
-                    </Grid>
-                ))}
+                {slots.map((slot) => {
+                    const isBooked = slot.isAvailable === false;
+                    
+                    return (
+                        <Grid item xs={6} sm={4} md={3} key={slot._id || slot.startTime}>
+                            <Button
+                                fullWidth
+                                variant={selectedSlot?.startTime === slot.startTime ? "contained" : "outlined"}
+                                onClick={() => onSelect(slot)}
+                                disabled={isBooked}
+                                sx={{
+                                    borderRadius: 3,
+                                    py: 1.5,
+                                    fontWeight: 700,
+                                    textTransform: "none",
+                                    position: "relative",
+                                    border: "1px solid",
+                                    borderColor: isBooked 
+                                        ? "rgba(0,0,0,0.05)" 
+                                        : selectedSlot?.startTime === slot.startTime 
+                                            ? "primary.main" 
+                                            : "rgba(0,0,0,0.1)",
+                                    bgcolor: isBooked ? "rgba(0,0,0,0.02)" : "inherit",
+                                    color: isBooked ? "text.disabled" : "inherit",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                        bgcolor: isBooked ? "rgba(0,0,0,0.02)" : "primary.light",
+                                        borderColor: isBooked ? "rgba(0,0,0,0.05)" : "primary.main",
+                                    }
+                                }}
+                            >
+                                <Box sx={{ textAlign: "center" }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                        {slot.startTime}
+                                    </Typography>
+                                    {isBooked && (
+                                        <Typography 
+                                            variant="caption" 
+                                            sx={{ 
+                                                fontSize: "0.6rem", 
+                                                display: "block", 
+                                                lineHeight: 1,
+                                                mt: 0.5,
+                                                color: "error.main",
+                                                fontWeight: 800,
+                                                textTransform: "uppercase"
+                                            }}
+                                        >
+                                            Booked
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Button>
+                        </Grid>
+                    );
+                })}
             </Grid>
         </Box>
     );

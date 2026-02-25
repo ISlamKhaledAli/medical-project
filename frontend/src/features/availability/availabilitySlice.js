@@ -1,17 +1,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import availabilityAPI from "./availabilityAPI";
 
-export const fetchDoctorAvailability = createAsyncThunk(
-    "availability/fetchSlots",
+/**
+ * Fetch doctor's availability slots and working days
+ */
+export const fetchDoctorSchedule = createAsyncThunk(
+    "availability/fetchSchedule",
     async ({ doctorId, date }, { rejectWithValue }) => {
         try {
             const response = await availabilityAPI.fetchSlots(doctorId, date);
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Failed to fetch availability");
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch schedule");
         }
     }
 );
+
+// Keep fetchDoctorAvailability as an alias or migration path if needed, 
+// but we'll use fetchDoctorSchedule going forward.
+export const fetchDoctorAvailability = fetchDoctorSchedule;
 
 export const createAvailability = createAsyncThunk(
     "availability/create",
@@ -49,11 +56,25 @@ export const deleteAvailability = createAsyncThunk(
     }
 );
 
+export const saveWeeklySchedule = createAsyncThunk(
+    "availability/saveWeekly",
+    async (days, { rejectWithValue }) => {
+        try {
+            const response = await availabilityAPI.saveWeekly(days);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to save schedule");
+        }
+    }
+);
+
 const initialState = {
     slots: [], // For patient-side slot picking
-    availabilityList: [], // For doctor-side schedule management
-    isLoading: false,
-    isActionLoading: false, // For CRUD operations
+    workingDays: [], // Array of dayOfWeek numbers (0-6)
+    weeklySchedule: [], // For doctor-side schedule management (raw records)
+    loading: false,
+    isActionLoading: false,
+    isScheduleLoaded: false, // Track if we've successfully fetched the doctor's working days
     error: null,
 };
 
@@ -64,70 +85,65 @@ const availabilitySlice = createSlice({
         clearSlots: (state) => {
             state.slots = [];
         },
+        clearSchedule: (state) => {
+            state.slots = [];
+            state.workingDays = [];
+            state.isScheduleLoaded = false;
+            state.error = null;
+        },
         clearAvailabilityError: (state) => {
             state.error = null;
         }
     },
     extraReducers: (builder) => {
         builder
-            // Fetch
-            .addCase(fetchDoctorAvailability.pending, (state) => {
-                state.isLoading = true;
+            // Fetch Schedule (Slots + Working Days)
+            .addCase(fetchDoctorSchedule.pending, (state) => {
+                state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchDoctorAvailability.fulfilled, (state, action) => {
-                state.isLoading = false;
-                // Backend returns { success: true, data: [...] } or just [...]
-                const slotsArray = action.payload.data || (Array.isArray(action.payload) ? action.payload : []);
-                state.slots = slotsArray;
-                state.availabilityList = slotsArray;
-            })
-            .addCase(fetchDoctorAvailability.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload;
-            })
-            // Create
-            .addCase(createAvailability.pending, (state) => {
-                state.isActionLoading = true;
-            })
-            .addCase(createAvailability.fulfilled, (state, action) => {
-                state.isActionLoading = false;
-                state.availabilityList.push(action.payload.data || action.payload);
-            })
-            .addCase(createAvailability.rejected, (state, action) => {
-                state.isActionLoading = false;
-                state.error = action.payload;
-            })
-            // Update
-            .addCase(updateAvailability.pending, (state) => {
-                state.isActionLoading = true;
-            })
-            .addCase(updateAvailability.fulfilled, (state, action) => {
-                state.isActionLoading = false;
-                const updated = action.payload.data || action.payload;
-                const index = state.availabilityList.findIndex(a => a._id === updated._id);
-                if (index !== -1) {
-                    state.availabilityList[index] = updated;
+            .addCase(fetchDoctorSchedule.fulfilled, (state, action) => {
+                state.loading = false;
+                const { workingDays, slots, availabilityList, weeklySchedule } = action.payload.data || action.payload || {};
+
+                // 1. Always update workingDays and slots
+                state.workingDays = workingDays || [];
+                state.slots = slots || [];
+                state.isScheduleLoaded = true;
+
+                // 2. Update weekly schedule if present
+                const scheduleData = weeklySchedule || availabilityList;
+                if (scheduleData) {
+                    state.weeklySchedule = scheduleData;
                 }
             })
-            .addCase(updateAvailability.rejected, (state, action) => {
-                state.isActionLoading = false;
+            .addCase(fetchDoctorSchedule.rejected, (state, action) => {
+                state.loading = false;
                 state.error = action.payload;
             })
-            // Delete
-            .addCase(deleteAvailability.pending, (state) => {
+            // Save Weekly Schedule
+            .addCase(saveWeeklySchedule.pending, (state) => {
                 state.isActionLoading = true;
             })
-            .addCase(deleteAvailability.fulfilled, (state, action) => {
+            .addCase(saveWeeklySchedule.fulfilled, (state) => {
                 state.isActionLoading = false;
-                state.availabilityList = state.availabilityList.filter(a => a._id !== action.payload);
+                state.isScheduleLoaded = false; // Reset to force re-fetch of updated schedule
             })
-            .addCase(deleteAvailability.rejected, (state, action) => {
+            .addCase(saveWeeklySchedule.rejected, (state, action) => {
                 state.isActionLoading = false;
                 state.error = action.payload;
+            })
+            // Legacy / Single operations support
+            .addCase(updateAvailability.fulfilled, (state) => {
+                state.isActionLoading = false;
+                state.isScheduleLoaded = false;
+            })
+            .addCase(deleteAvailability.fulfilled, (state) => {
+                state.isActionLoading = false;
+                state.isScheduleLoaded = false;
             });
     },
 });
 
-export const { clearSlots, clearAvailabilityError } = availabilitySlice.actions;
+export const { clearSlots, clearSchedule, clearAvailabilityError } = availabilitySlice.actions;
 export default availabilitySlice.reducer;

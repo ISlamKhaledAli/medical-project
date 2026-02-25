@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { Toaster } from "react-hot-toast";
 import { getMe, stopInitialLoading } from "./features/auth/authSlice";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalLoader from "./components/ui/GlobalLoader";
@@ -27,6 +28,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster position="top-right" reverseOrder={false} />
       <GlobalLoader />
       <AppRoutes />
     </ErrorBoundary>

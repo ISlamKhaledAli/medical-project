@@ -20,6 +20,9 @@ export const createDoctorProfile = async (userId, data) => {
     address: data.address,
   });
 
+  // Atomically update user profile flag
+  await User.findByIdAndUpdate(userId, { profileComplete: true });
+
   return profile;
 };
 

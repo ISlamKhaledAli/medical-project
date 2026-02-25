@@ -8,34 +8,30 @@ import {
    getDoctorById,
 } from "../controllers/doctor.controller.js";
 
-import { protect } from "../middleware/auth.middleware.js";
+import { protect, authorize } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 /* ========================
-   CREATE PROFILE
+   DOCTOR PROFILE ACTIONS
 ======================== */
-router.post("/profile", protect, createDoctorProfile);
-router.get("/profile", protect, getDoctorProfile);
+
+// Create profile (Onboarding)
+router.post("/profile", protect, authorize("doctor"), createDoctorProfile);
+
+// Get my profile
+router.get("/profile/me", protect, authorize("doctor"), getDoctorProfile);
+
+// Update profile
+router.patch("/profile", protect, authorize("doctor"), updateDoctorProfile);
+
+// Delete profile
+router.delete("/profile", protect, authorize("doctor"), deleteDoctorProfile);
 
 /* ========================
-   GET ALL DOCTORS
+   PUBLIC DOCTOR DATA
 ======================== */
 router.get("/", getAllDoctors);
-
-/* ========================
-   GET SINGLE DOCTOR
-======================== */
 router.get("/:id", getDoctorById);
-
-/* ========================
-   UPDATE PROFILE
-======================== */
-router.patch("/profile", protect, updateDoctorProfile);
-
-/* ========================
-   DELETE PROFILE
-======================== */
-router.delete("/profile", protect, deleteDoctorProfile);
 
 export default router;

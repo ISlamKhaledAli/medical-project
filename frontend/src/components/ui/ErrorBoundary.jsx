@@ -84,7 +84,7 @@ class ErrorBoundary extends React.Component {
                 variant="contained"
                 size="large"
                 startIcon={<ResetIcon />}
-                onClick={handleReset}
+                onClick={this.handleReset}
                 sx={{ 
                   borderRadius: 2, 
                   textTransform: "none", 

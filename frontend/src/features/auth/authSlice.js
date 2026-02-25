@@ -247,6 +247,12 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload;
             })
+            // Doctor Onboarding Sync (Must be before Matchers)
+            .addCase("doctor/createProfile/fulfilled", (state) => {
+                if (state.user) {
+                    state.user.profileComplete = true;
+                }
+            })
             // Matchers for common auth thunks
             .addMatcher(
                 (action) =>

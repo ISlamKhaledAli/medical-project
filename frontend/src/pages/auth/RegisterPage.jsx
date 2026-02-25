@@ -53,6 +53,7 @@ const RegisterPage = () => {
     userRole
   } = useAuth();
   
+  const navigate = useNavigate();
   const formRef = useRef(null);
 
   const [activeStep, setActiveStep] = useState(0);

@@ -28,22 +28,20 @@ import NotificationsPage from "../pages/common/NotificationsPage";
 import SettingsPage from "../pages/common/SettingsPage";
 import MainLayout from "../components/layout/MainLayout";
 
+import DoctorOnboardingPage from "../pages/doctor/DoctorOnboardingPage";
+
 const AppRoutes = () => {
-  console.log("Routes are rendering");
   return (
     <Routes>
-      {/* Public Auth Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
       
-      {/* Utility Routes */}
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/404" element={<NotFoundPage />} />
 
-      {/* Root Redirect Logic based on role */}
       <Route
         path="/"
         element={
@@ -53,7 +51,6 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Protected Routes wrapped in MainLayout */}
       <Route
         element={
           <ProtectedRoute>
@@ -63,7 +60,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        {/* Patient Routes */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT]} />}>
           <Route path="/patient" element={<PatientHome />} />
           <Route path="/patient/doctors" element={<DoctorListPage />} />
@@ -73,16 +69,21 @@ const AppRoutes = () => {
           <Route path="/patient/profile" element={<PatientProfilePage />} />
         </Route>
 
-        {/* Doctor Routes */}
+        {/* Onboarding Route (Doctors only) */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCTOR]} />}>
-          <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
-          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-          <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
-          <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
-          <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+          <Route path="/doctor/onboarding" element={<DoctorOnboardingPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCTOR]} />}>
+          <Route element={<DoctorOnboardingGuard />}>
+            <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
+            <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+            <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
+            <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
+            <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+          </Route>
         </Route>
         
-        {/* Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path="/admin" element={<StatsDashboard />} />
           <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
@@ -92,21 +93,32 @@ const AppRoutes = () => {
           <Route path="/admin/appointments" element={<AllAppointmentsPage />} />
         </Route>
 
-        {/* Shared Protected Routes */}
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
-      {/* Redirect unknown routes */}
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
 };
 
-// Helper component for root redirection
+// Guard to force doctor onboarding
+const DoctorOnboardingGuard = () => {
+  const { user } = useSelector((state) => state.auth);
+  if (user?.role === 'doctor' && !user?.profileComplete) {
+    return <Navigate to="/doctor/onboarding" replace />;
+  }
+  return <Outlet />;
+};
+
 const RootRedirect = () => {
     const { user } = useSelector((state) => state.auth);
     const role = user?.role?.toLowerCase();
+    
+    if (role === ROLES.DOCTOR.toLowerCase() && !user?.profileComplete) {
+      return <Navigate to="/doctor/onboarding" replace />;
+    }
+    
     if (role === ROLES.ADMIN.toLowerCase()) return <Navigate to="/admin" replace />;
     if (role === ROLES.DOCTOR.toLowerCase()) return <Navigate to="/doctor/dashboard" replace />;
     return <Navigate to="/patient" replace />;

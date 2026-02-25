@@ -17,12 +17,9 @@ export const toggleUserStatus = createAsyncThunk(
     "admin/toggleStatus",
     async ({ id, status }, { rejectWithValue }) => {
         try {
-            console.log(`[Thunk:toggleUserStatus] ID: ${id}, Status: ${status}`);
             const response = await adminAPI.toggleUserStatus(id, status);
-            console.log(`[Thunk:toggleUserStatus] Success response:`, response.data);
             return response.data;
         } catch (error) {
-            console.error(`[Thunk:toggleUserStatus] Error:`, error.response?.data);
             return rejectWithValue(error.response?.data?.message || "Action failed");
         }
     }
@@ -36,6 +33,45 @@ export const fetchAllAppointments = createAsyncThunk(
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to fetch appointments");
+        }
+    }
+);
+
+export const approveAppointment = createAsyncThunk(
+    "admin/approveAppointment",
+    async (id, { rejectWithValue }) => {
+        try {
+            // Using updateStatus from appointmentAPI logic
+            const response = await adminAPI.updateAppointmentStatus(id, "approved");
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Approval failed");
+        }
+    }
+);
+
+export const cancelAppointment = createAsyncThunk(
+    "admin/cancelAppointment",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await adminAPI.updateAppointmentStatus(id, "cancelled");
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Cancellation failed");
+        }
+    }
+);
+
+export const deleteAppointment = createAsyncThunk(
+    "admin/deleteAppointment",
+    async (id, { rejectWithValue }) => {
+        try {
+            // Placeholder: Assume delete endpoint exists or will be added
+            // Using a generic admin call if needed, or mapping to appointmentAPI
+            const response = await adminAPI.deleteAppointment(id);
+            return { id, message: response.data.message };
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Deletion failed");
         }
     }
 );
@@ -163,6 +199,50 @@ const adminSlice = createSlice({
             })
             .addCase(fetchAllAppointments.rejected, (state, action) => {
                 state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Approve Appointment
+            .addCase(approveAppointment.pending, (state, action) => {
+                state.actionLoadingStates[action.meta.arg] = true;
+            })
+            .addCase(approveAppointment.fulfilled, (state, action) => {
+                const updated = action.payload.data || action.payload;
+                delete state.actionLoadingStates[updated._id];
+                const index = state.appointments.findIndex(a => a._id === updated._id);
+                if (index !== -1) {
+                    state.appointments[index] = updated;
+                }
+            })
+            .addCase(approveAppointment.rejected, (state, action) => {
+                delete state.actionLoadingStates[action.meta.arg];
+                state.error = action.payload;
+            })
+            // Cancel Appointment
+            .addCase(cancelAppointment.pending, (state, action) => {
+                state.actionLoadingStates[action.meta.arg] = true;
+            })
+            .addCase(cancelAppointment.fulfilled, (state, action) => {
+                const updated = action.payload.data || action.payload;
+                delete state.actionLoadingStates[updated._id];
+                const index = state.appointments.findIndex(a => a._id === updated._id);
+                if (index !== -1) {
+                    state.appointments[index] = updated;
+                }
+            })
+            .addCase(cancelAppointment.rejected, (state, action) => {
+                delete state.actionLoadingStates[action.meta.arg];
+                state.error = action.payload;
+            })
+            // Delete Appointment
+            .addCase(deleteAppointment.pending, (state, action) => {
+                state.actionLoadingStates[action.meta.arg] = true;
+            })
+            .addCase(deleteAppointment.fulfilled, (state, action) => {
+                delete state.actionLoadingStates[action.payload.id];
+                state.appointments = state.appointments.filter(a => a._id !== action.payload.id);
+            })
+            .addCase(deleteAppointment.rejected, (state, action) => {
+                delete state.actionLoadingStates[action.meta.arg];
                 state.error = action.payload;
             })
             // Stats

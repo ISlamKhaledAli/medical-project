@@ -25,7 +25,12 @@ const appointmentAPI = {
     /**
      * Update appointment status (Doctor/Admin only)
      */
-    updateStatus: (id, status) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.DETAILS(id) + "/status", { status }),
+    updateStatus: (id, status) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.UPDATE_STATUS(id), { status }),
+
+    /**
+     * Delete an appointment (Admin only)
+     */
+    delete: (id) => axiosInstance.delete(ENDPOINTS.APPOINTMENT.DELETE(id)),
 };
 
 export default appointmentAPI;

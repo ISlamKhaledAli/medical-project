@@ -8,6 +8,7 @@ import {
     getAllAppointmentsHandler,
     getAppointmentStatsHandler,
     getAppointmentByIdHandler,
+    deleteAppointmentHandler,
 } from "../controllers/appointment.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
@@ -64,6 +65,13 @@ router.get(
     "/:id",
     protect,
     getAppointmentByIdHandler
+);
+
+router.delete(
+    "/:id",
+    protect,
+    authorize("admin"),
+    deleteAppointmentHandler
 );
 
 export default router;

@@ -28,7 +28,6 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { saveWeeklySchedule, fetchDoctorSchedule, clearSchedule } from "../../features/availability/availabilitySlice";
-
 import { fetchMyProfile } from "../../features/doctor/doctorSlice";
 
 const DAYS = [
@@ -41,10 +40,9 @@ const DAYS = [
     { label: "Saturday", value: 6 },
 ];
 
-const ScheduleManagementPage = () => {
+const ScheduleSetupPage = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
-    const { doctorDetails } = useSelector((state) => state.doctor);
     const { workingDays, weeklySchedule, isActionLoading, loading, isScheduleLoaded } = useSelector((state) => state.availability);
 
     const [error, setError] = useState(null);
@@ -64,12 +62,10 @@ const ScheduleManagementPage = () => {
         const loadInitialData = async () => {
             try {
                 setError(null);
-                // 1. Fetch doctor profile to get the doctor's _id
                 const profileResult = await dispatch(fetchMyProfile()).unwrap();
                 const doctorId = profileResult.data?._id || profileResult._id;
                 
                 if (doctorId) {
-                    // 2. Fetch the actual schedule using the doctor's ID
                     dispatch(fetchDoctorSchedule({ doctorId }));
                 }
             } catch (err) {
@@ -91,11 +87,9 @@ const ScheduleManagementPage = () => {
                 const existing = weeklySchedule.find(a => a.dayOfWeek === day.value);
                 if (existing) {
                     return {
-                        ...day,
                         dayOfWeek: day.value,
                         dayName: day.label,
                         isActive: existing.isActive !== false,
-                        // Convert string "HH:mm" from backend to dayjs object for the picker
                         startTime: existing.startTime ? dayjs(`2000-01-01T${existing.startTime}`) : dayjs().hour(9).minute(0),
                         endTime: existing.endTime ? dayjs(`2000-01-01T${existing.endTime}`) : dayjs().hour(17).minute(0),
                         slotDuration: existing.slotDuration || existing.slotDurationMinutes || 30,
@@ -190,7 +184,7 @@ const ScheduleManagementPage = () => {
                             Weekly Schedule
                         </Typography>
                         <Typography color="text.secondary">
-                            Set your recurring weekly working hours.
+                            Set your recurring weekly working hours and slot durations.
                         </Typography>
                     </Box>
                     <Button
@@ -201,7 +195,7 @@ const ScheduleManagementPage = () => {
                         disabled={isActionLoading}
                         sx={{ borderRadius: 3, px: 4, fontWeight: 700 }}
                     >
-                        Save Changes
+                        Save Schedule
                     </Button>
                 </Box>
 
@@ -217,11 +211,11 @@ const ScheduleManagementPage = () => {
                         icon={<WarningIcon />}
                         sx={{ mb: 4, borderRadius: 3, fontWeight: 700 }}
                     >
-                        You have no schedule set. Patients cannot see or book appointments with you.
+                        You have no schedule set. Patients cannot book appointments with you until you set your availability.
                     </Alert>
                 )}
 
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
                     {schedule.map((day, index) => (
                         <Grid item xs={12} key={day.dayOfWeek}>
                             <Paper
@@ -236,13 +230,12 @@ const ScheduleManagementPage = () => {
                                 }}
                             >
                                 <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 3 }}>
-                                    <Box sx={{ minWidth: 160 }}>
+                                    <Box sx={{ minWidth: 150 }}>
                                         <FormControlLabel
                                             control={
                                                 <Switch
                                                     checked={day.isActive}
                                                     onChange={() => handleToggle(index)}
-                                                    color="primary"
                                                 />
                                             }
                                             label={
@@ -257,18 +250,18 @@ const ScheduleManagementPage = () => {
                                         display: "flex", 
                                         flexGrow: 1, 
                                         gap: 2, 
-                                        opacity: day.isActive ? 1 : 0.3, 
+                                        opacity: day.isActive ? 1 : 0.4, 
                                         pointerEvents: day.isActive ? "auto" : "none",
                                         alignItems: "center"
                                     }}>
                                         <TimePicker
-                                            label="Start"
+                                            label="Start Time"
                                             value={day.startTime}
                                             onChange={(val) => handleChange(index, "startTime", val)}
                                             slotProps={{ textField: { size: "small", sx: { width: 140 } } }}
                                         />
                                         <TimePicker
-                                            label="End"
+                                            label="End Time"
                                             value={day.endTime}
                                             onChange={(val) => handleChange(index, "endTime", val)}
                                             slotProps={{ textField: { size: "small", sx: { width: 140 } } }}
@@ -276,24 +269,24 @@ const ScheduleManagementPage = () => {
                                         
                                         <TextField
                                             select
-                                            label="Duration"
+                                            label="Slot Duration"
                                             value={day.slotDuration}
                                             onChange={(e) => handleChange(index, "slotDuration", e.target.value)}
                                             size="small"
-                                            sx={{ minWidth: 130 }}
+                                            sx={{ minWidth: 150 }}
                                         >
-                                            <MenuItem value={15}>15 min</MenuItem>
-                                            <MenuItem value={30}>30 min</MenuItem>
-                                            <MenuItem value={45}>45 min</MenuItem>
-                                            <MenuItem value={60}>60 min</MenuItem>
+                                            <MenuItem value={15}>15 Minutes</MenuItem>
+                                            <MenuItem value={30}>30 Minutes</MenuItem>
+                                            <MenuItem value={45}>45 Minutes</MenuItem>
+                                            <MenuItem value={60}>60 Minutes</MenuItem>
                                         </TextField>
 
-                                        <Box sx={{ ml: "auto" }}>
-                                            <Tooltip title="Preview of generated slots">
+                                        <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
+                                            <Tooltip title="Estimated slots per day">
                                                 <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary", bgcolor: "rgba(0,0,0,0.03)", px: 2, py: 0.5, borderRadius: 2 }}>
                                                     <TimeIcon sx={{ fontSize: "1rem", mr: 1 }} />
-                                                    <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                                                        {day.isActive ? `${calculateSlots(day.startTime, day.endTime, day.slotDuration)} slots` : "--"}
+                                                    <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                                        {day.isActive ? `${calculateSlots(day.startTime, day.endTime, day.slotDuration)} slots` : "No slots"}
                                                     </Typography>
                                                 </Box>
                                             </Tooltip>
@@ -309,4 +302,4 @@ const ScheduleManagementPage = () => {
     );
 };
 
-export default ScheduleManagementPage;
+export default ScheduleSetupPage;

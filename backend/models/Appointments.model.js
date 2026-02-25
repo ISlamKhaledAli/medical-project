@@ -17,7 +17,7 @@ const appointmentSchema = new mongoose.Schema(
     endTime: String,
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "completed", "cancelled", "rejected"],
       default: "pending",
     },
     doctorNotes: String,
@@ -25,9 +25,9 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Non-unique: cancelled/rejected appointments should not block rebooking
 appointmentSchema.index(
-  { doctor: 1, appointmentDate: 1, startTime: 1 },
-  { unique: true },
+  { doctor: 1, appointmentDate: 1, startTime: 1 }
 );
 
 export default mongoose.model("Appointment", appointmentSchema);

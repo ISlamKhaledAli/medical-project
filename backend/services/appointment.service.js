@@ -16,7 +16,6 @@ export const validateSlotAvailability = async ({
     doctorId,
     appointmentDate,
     startTime,
-    endTime,
 }) => {
     const doctorProfile = await DoctorProfile.findById(doctorId).populate("user");
 
@@ -32,56 +31,88 @@ export const validateSlotAvailability = async ({
         throw new ApiError("Doctor is blocked", 403);
     }
 
-    // Future check
-    const appointmentDateTime = new Date(appointmentDate);
+    // 1. Normalize date without timezone shifting
+    const normalizedDate = normalizeDate(appointmentDate);
+    const dayOfWeek = normalizedDate.getDay();
+
+    // 2. Fetch availability for the specific day
+    const availability = await Availability.findOne({
+        doctor: doctorId,
+        dayOfWeek: dayOfWeek,
+        isActive: true,
+    });
+
+    console.log("Validation Debug Info:", {
+        doctorId,
+        appointmentDate,
+        startTime,
+        normalizedDate: normalizedDate.toISOString().split("T")[0],
+        calculatedDayOfWeek: dayOfWeek,
+        foundAvailability: availability ? {
+            dayOfWeek: availability.dayOfWeek,
+            startTime: availability.startTime,
+            endTime: availability.endTime,
+            slotDurationMinutes: availability.slotDurationMinutes
+        } : "NONE"
+    });
+
+    if (!availability) {
+        throw new ApiError("NOT_WORKING_DAY: Doctor does not work on this day", 400);
+    }
+
+    const requestedStart = timeToMinutes(startTime);
+    const availableStart = timeToMinutes(availability.startTime);
+    const availableEnd = timeToMinutes(availability.endTime);
+    const slotDuration = availability.slotDurationMinutes || 30;
+    const minutesFromStart = requestedStart - availableStart;
+
+    console.log("Alignment Debug Info:", {
+        availableStart,
+        availableEnd,
+        requestedStart,
+        minutesFromStart,
+        slotDuration,
+        isAligned: minutesFromStart % slotDuration === 0
+    });
+
+    // 3. Confirm time is between startTime and endTime
+    if (requestedStart < availableStart || requestedStart >= availableEnd) {
+        throw new ApiError("OUTSIDE_WORKING_HOURS: Selected time is outside doctor's working hours", 400);
+    }
+
+    // 4. Check alignment: (minutesFromStart % slotDuration === 0)
+    if (minutesFromStart % slotDuration !== 0) {
+        throw new ApiError(`SLOT_NOT_ALIGNED: Selected slot ${startTime} does not align with doctor's ${slotDuration} min schedule`, 400);
+    }
+
+    // 5. Past check (Combine Date + Time)
     const [h, m] = startTime.split(":");
-    appointmentDateTime.setHours(h, m, 0, 0);
+    const appointmentDateTime = new Date(normalizedDate);
+    appointmentDateTime.setHours(parseInt(h), parseInt(m), 0, 0);
 
     if (appointmentDateTime <= new Date()) {
         throw new ApiError("Cannot book past appointment", 400);
     }
 
-    // Day check
-    const day = new Date(appointmentDate).getDay();
-
-    const availability = await Availability.findOne({
-        doctor: doctorId,
-        dayOfWeek: day,
-    });
-
-    if (!availability) {
-        throw new ApiError("Doctor not available on this day", 400);
-    }
-
-    const requestedStart = timeToMinutes(startTime);
-    const requestedEnd = timeToMinutes(endTime);
-    const availableStart = timeToMinutes(availability.startTime);
-    const availableEnd = timeToMinutes(availability.endTime);
-
-    if (requestedStart < availableStart || requestedEnd > availableEnd) {
-        throw new ApiError("Requested time outside availability", 400);
-    }
-
-    if (requestedEnd - requestedStart !== availability.slotDuration) {
-        throw new ApiError("Invalid slot duration", 400);
-    }
-
-    if ((requestedStart - availableStart) % availability.slotDuration !== 0) {
-        throw new ApiError("Slot not aligned with schedule", 400);
-    }
-
+    // 6. Already booked check
     const existingAppointment = await Appointment.findOne({
         doctor: doctorId,
-        appointmentDate,
+        appointmentDate: normalizedDate,
         startTime,
-        status: { $ne: "cancelled" },
+        status: { $in: ["pending", "confirmed"] },
     });
 
     if (existingAppointment) {
-        throw new ApiError("Slot already booked", 400);
+        throw new ApiError("This time slot is already booked", 400);
     }
 
-    return true;
+    // Internal calculation of endTime for storage
+    const requestedEndMinutes = requestedStart + slotDuration;
+    const endH = Math.floor(requestedEndMinutes / 60).toString().padStart(2, "0");
+    const endM = (requestedEndMinutes % 60).toString().padStart(2, "0");
+    const endTime = `${endH}:${endM}`;
+
+    return { endTime };
 };
 
 // Create Appointment
@@ -92,18 +123,16 @@ export const createAppointment = async ({
     patientId,
     appointmentDate,
     startTime,
-    endTime,
     currentUser,
 }) => {
     if (currentUser.role !== "patient") {
         throw new ApiError("Only patients can book", 403);
     }
 
-    await validateSlotAvailability({
+    const { endTime } = await validateSlotAvailability({
         doctorId,
         appointmentDate,
         startTime,
-        endTime,
     });
 
     const appointment = await Appointment.create({
@@ -152,7 +181,7 @@ export const changeAppointmentStatus = async ({
     }
 
     const allowedTransitions = {
-        pending: ["confirmed", "cancelled"],
+        pending: ["confirmed", "cancelled", "rejected"],
         confirmed: ["completed", "cancelled"],
     };
 
@@ -177,6 +206,11 @@ export const cancelAppointment = async ({
 
     if (!appointment) {
         throw new ApiError("Appointment not found", 404);
+    }
+
+    // Ownership check (Security)
+    if (currentUser.role === "patient" && appointment.patient.toString() !== currentUser._id.toString()) {
+        throw new ApiError("Not authorized to cancel this appointment", 403);
     }
 
     // Prevent cancelling terminal states
@@ -250,12 +284,16 @@ export const rescheduleAppointment = async ({
         throw new ApiError("Cannot reschedule after appointment has started", 400);
     }
 
+    // Ownership check (Security)
+    if (currentUser.role === "patient" && appointment.patient.toString() !== currentUser._id.toString()) {
+        throw new ApiError("Not authorized to reschedule this appointment", 403);
+    }
+
     // Validate new slot
-    await validateSlotAvailability({
+    const { endTime: calculatedEndTime } = await validateSlotAvailability({
         doctorId: appointment.doctor,
         appointmentDate: newDate,
         startTime: newStartTime,
-        endTime: newEndTime,
     });
 
     // Save old values for notification before updating
@@ -265,7 +303,7 @@ export const rescheduleAppointment = async ({
     // Update appointment
     appointment.appointmentDate = normalizeDate(newDate);
     appointment.startTime = newStartTime;
-    appointment.endTime = newEndTime;
+    appointment.endTime = calculatedEndTime;
     appointment.status = "pending"; // reset status
 
     await appointment.save();
@@ -487,4 +525,15 @@ export const getAppointmentById = async ({
     }
 
     throw new ApiError("Not authorized to access this appointment", 403);
+};
+
+// Delete Appointment (Admin/System)
+export const removeAppointment = async ({ appointmentId }) => {
+    const appointment = await Appointment.findByIdAndDelete(appointmentId);
+
+    if (!appointment) {
+        throw new ApiError("Appointment not found", 404);
+    }
+
+    return true;
 };
