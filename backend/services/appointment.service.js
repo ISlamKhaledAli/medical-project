@@ -16,6 +16,7 @@ export const validateSlotAvailability = async ({
     doctorId,
     appointmentDate,
     startTime,
+    excludeAppointmentId = null,
 }) => {
     const doctorProfile = await DoctorProfile.findById(doctorId).populate("user");
 
@@ -46,6 +47,7 @@ export const validateSlotAvailability = async ({
         doctorId,
         appointmentDate,
         startTime,
+        excludeAppointmentId,
         normalizedDate: normalizedDate.toISOString().split("T")[0],
         calculatedDayOfWeek: dayOfWeek,
         foundAvailability: availability ? {
@@ -95,12 +97,18 @@ export const validateSlotAvailability = async ({
     }
 
     // 6. Already booked check
-    const existingAppointment = await Appointment.findOne({
+    const query = {
         doctor: doctorId,
         appointmentDate: normalizedDate,
         startTime,
         status: { $in: ["pending", "confirmed"] },
-    });
+    };
+
+    if (excludeAppointmentId) {
+        query._id = { $ne: excludeAppointmentId };
+    }
+
+    const existingAppointment = await Appointment.findOne(query);
 
     if (existingAppointment) {
         throw new ApiError("This time slot is already booked", 400);
@@ -294,6 +302,7 @@ export const rescheduleAppointment = async ({
         doctorId: appointment.doctor,
         appointmentDate: newDate,
         startTime: newStartTime,
+        excludeAppointmentId: appointmentId,
     });
 
     // Save old values for notification before updating

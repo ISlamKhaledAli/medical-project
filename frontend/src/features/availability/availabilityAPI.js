@@ -5,7 +5,10 @@ const availabilityAPI = {
     /**
      * Fetch available slots for a doctor on a specific date
      */
-    fetchSlots: (doctorId, date) => axiosInstance.get(ENDPOINTS.AVAILABILITY.DOCTOR(doctorId), { params: { date } }),
+    fetchSlots: (doctorId, date, excludeAppointmentId = null) =>
+        axiosInstance.get(ENDPOINTS.AVAILABILITY.DOCTOR(doctorId), {
+            params: { date, excludeAppointmentId }
+        }),
 
     /**
      * Set bulk weekly availability

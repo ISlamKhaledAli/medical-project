@@ -6,9 +6,9 @@ import availabilityAPI from "./availabilityAPI";
  */
 export const fetchDoctorSchedule = createAsyncThunk(
     "availability/fetchSchedule",
-    async ({ doctorId, date }, { rejectWithValue }) => {
+    async ({ doctorId, date, excludeAppointmentId }, { rejectWithValue }) => {
         try {
-            const response = await availabilityAPI.fetchSlots(doctorId, date);
+            const response = await availabilityAPI.fetchSlots(doctorId, date, excludeAppointmentId);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to fetch schedule");

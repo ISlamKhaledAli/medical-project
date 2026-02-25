@@ -61,7 +61,10 @@ const BookAppointmentPage = () => {
         if (doctorId && isValidId(doctorId)) {
             dispatch(fetchDoctorById(doctorId));
             // Fetch working days on mount
-            dispatch(fetchDoctorSchedule({ doctorId }));
+            dispatch(fetchDoctorSchedule({ 
+                doctorId, 
+                excludeAppointmentId: rescheduleId 
+            }));
         } else if (doctorId) {
             console.error("Malformed or invalid doctorId in URL:", doctorId);
         }
@@ -102,7 +105,8 @@ const BookAppointmentPage = () => {
             try {
                 dispatch(fetchDoctorSchedule({ 
                     doctorId, 
-                    date: selectedDate.toLocaleDateString("en-CA")
+                    date: selectedDate.toLocaleDateString("en-CA"),
+                    excludeAppointmentId: rescheduleId
                 }));
             } catch (err) {
                 console.error("Error formatting date for schedule fetch:", err);

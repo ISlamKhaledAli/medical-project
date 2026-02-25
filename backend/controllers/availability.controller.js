@@ -71,8 +71,9 @@ export const deleteAvailabilityHandler = wrapAsync(async (req, res) => {
 });
 
 export const getDoctorAvailabilityHandler = wrapAsync(async (req, res) => {
-    console.log("Fetching availability:", { doctorId: req.params.doctorId, date: req.query.date });
-    const availability = await getDoctorAvailability(req.params.doctorId, req.query.date);
+    const { date, excludeAppointmentId } = req.query;
+    console.log("Fetching availability:", { doctorId: req.params.doctorId, date, excludeAppointmentId });
+    const availability = await getDoctorAvailability(req.params.doctorId, date, excludeAppointmentId);
 
     res.json({
         success: true,

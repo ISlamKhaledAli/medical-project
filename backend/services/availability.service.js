@@ -160,7 +160,7 @@ export const generateTimeSlots = (availability) => {
     return slots;
 };
 
-export const getDoctorAvailability = async (doctorId, dateString) => {
+export const getDoctorAvailability = async (doctorId, dateString, excludeAppointmentId = null) => {
     // 0. Validate doctorId format
     if (!doctorId || !/^[0-9a-fA-F]{24}$/.test(doctorId)) {
         throw new ApiError(`Invalid Doctor ID format: ${doctorId}`, 400);
@@ -190,11 +190,17 @@ export const getDoctorAvailability = async (doctorId, dateString) => {
     const endOfTargetDay = new Date(startOfTargetDay);
     endOfTargetDay.setHours(23, 59, 59, 999);
 
-    const existingAppointments = await Appointment.find({
+    const bookingQuery = {
         doctor: doctorId,
         appointmentDate: { $gte: startOfTargetDay, $lte: endOfTargetDay },
         status: { $in: ["pending", "confirmed"] }
-    });
+    };
+
+    if (excludeAppointmentId) {
+        bookingQuery._id = { $ne: excludeAppointmentId };
+    }
+
+    const existingAppointments = await Appointment.find(bookingQuery);
 
     // 5. Generate slots and filter past ones if target date is today
     const slots = generateTimeSlots(range);
