@@ -17,6 +17,7 @@ import specialtyRoutes from "./routes/specialty.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { initSocket } from "./sockets/socket.js";
+import cookieParser from "cookie-parser";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -33,6 +34,8 @@ app.use(express.json());
 
 // Serve static test pages
 app.use(express.static(join(__dirname, "public")));
+
+app.use(cookieParser());
 
 await connectDB();
 
