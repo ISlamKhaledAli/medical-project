@@ -3,12 +3,12 @@ import { useSelector } from "react-redux";
 import { ROLES } from "../../constants/roles";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, accessToken, isInitialLoading } = useSelector((state) => state.auth);
+  const { user, accessToken, isAuthChecking } = useSelector((state) => state.auth);
   
   console.log("Token:", accessToken);
   console.log("User:", user);
 
-  if (isInitialLoading) {
+  if (isAuthChecking) {
     return <div>Loading...</div>;
   }
 

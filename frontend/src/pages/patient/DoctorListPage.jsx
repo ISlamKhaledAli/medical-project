@@ -25,10 +25,12 @@ const DoctorListPage = () => {
     const dispatch = useDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const { doctors, isLoading, error, pagination, filters } = useSelector((state) => state.doctor);
+    const { isAuthChecking, user, accessToken } = useSelector((state) => state.auth);
     
     // Local state for immediate search input feedback
     const [searchTerm, setSearchTerm] = useState(filters.name || "");
     const debouncedSearch = useDebounce(searchTerm, 500);
+    const [isInitialized, setIsInitialized] = useState(false);
     
     // AbortController ref to cancel stale requests
     const abortControllerRef = useRef(null);
@@ -44,10 +46,17 @@ const DoctorListPage = () => {
         
         dispatch(setFilters({ name, specialty }));
         dispatch(setPage(page));
+        setIsInitialized(true);
     }, [dispatch, searchParams]); // searchParams change happens only when updateURL or manual URL edit happens
 
     // 2. Fetch doctors when debounced filters or page change
     useEffect(() => {
+        // FETCH GUARDS
+        // 1. Wait for auth initialization
+        // 2. Wait for URL parameters to be synced to Redux
+        // 3. Ensure user is authenticated
+        if (isAuthChecking || !isInitialized || !accessToken) return;
+
         // Cancel previous request if it exists
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -63,7 +72,7 @@ const DoctorListPage = () => {
             limit: pagination.limit
         };
 
-        const fetchAction = dispatch(fetchDoctors({ ...params, signal: abortControllerRef.current.signal }));
+        dispatch(fetchDoctors({ ...params, signal: abortControllerRef.current.signal }));
         
         return () => {
             // Cleanup: abort if component unmounts or effect re-runs
@@ -71,7 +80,7 @@ const DoctorListPage = () => {
                 abortControllerRef.current.abort();
             }
         };
-    }, [dispatch, debouncedSearch, filters.specialty, pagination.page, pagination.limit]);
+    }, [dispatch, debouncedSearch, filters.specialty, pagination.page, pagination.limit, isAuthChecking, isInitialized, accessToken]);
 
     // 3. Update URL when filters or page change
     const updateURL = useCallback((newFilters, newPage) => {
