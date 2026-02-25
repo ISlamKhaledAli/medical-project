@@ -3,9 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { getMe, stopInitialLoading } from "./features/auth/authSlice";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalLoader from "./components/ui/GlobalLoader";
+import useSocket from "./hooks/useSocket";
 
 function App() {
+  console.log("App Is Mounting");
   const dispatch = useDispatch();
+  
+  // Initialize socket connection globally
+  useSocket();
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");

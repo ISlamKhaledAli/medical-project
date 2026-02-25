@@ -28,11 +28,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "doctor", "patient"],
       default: "patient",
+      lowercase: true,
     },
-    isApproved: {
-      type: Boolean,
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
       default: function () {
-        return this.role === "patient";
+        return this.role === "doctor" ? "pending" : "approved";
       },
     },
     isBlocked: { type: Boolean, default: false },

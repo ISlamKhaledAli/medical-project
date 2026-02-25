@@ -25,7 +25,7 @@ import {
     Payments as FeeIcon,
     WorkHistory as ExpIcon
 } from "@mui/icons-material";
-import { fetchDoctorById, updateDoctorProfile } from "../../features/doctor/doctorSlice";
+import { fetchMyProfile, createDoctorProfile, updateDoctorProfile } from "../../features/doctor/doctorSlice";
 import SpecialtySelect from "../../components/doctor/SpecialtySelect";
 
 const DoctorProfilePage = () => {
@@ -36,7 +36,7 @@ const DoctorProfilePage = () => {
     const [formData, setFormData] = useState({
         specialty: "",
         bio: "",
-        experience: "",
+        experienceYears: "",
         consultationFee: "",
         address: ""
     });
@@ -44,17 +44,15 @@ const DoctorProfilePage = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        if (user?._id) {
-            dispatch(fetchDoctorById(user._id));
-        }
-    }, [dispatch, user]);
+        dispatch(fetchMyProfile());
+    }, [dispatch]);
 
     useEffect(() => {
         if (doctorDetails) {
             setFormData({
                 specialty: doctorDetails.specialty?._id || doctorDetails.specialty || "",
                 bio: doctorDetails.bio || "",
-                experience: doctorDetails.experience || "",
+                experienceYears: doctorDetails.experienceYears || "",
                 consultationFee: doctorDetails.consultationFee || "",
                 address: doctorDetails.address || ""
             });
@@ -69,7 +67,14 @@ const DoctorProfilePage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const result = await dispatch(updateDoctorProfile(formData));
+        
+        let result;
+        if (doctorDetails) {
+            result = await dispatch(updateDoctorProfile(formData));
+        } else {
+            result = await dispatch(createDoctorProfile(formData));
+        }
+
         if (!result.error) {
             setSuccess(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -95,7 +100,19 @@ const DoctorProfilePage = () => {
                 </Alert>
             )}
 
-            {error && (
+            {user?.status === "pending" && (
+                <Alert severity="warning" sx={{ mb: 4, borderRadius: 2 }}>
+                    <strong>Account Pending Approval:</strong> Your profile is currently being reviewed by administrators. You will be able to manage availability once approved.
+                </Alert>
+            )}
+
+            {user?.status === "rejected" && (
+                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+                    <strong>Account Rejected:</strong> Your application has been rejected. Please contact support if you believe this is an error.
+                </Alert>
+            )}
+
+            {error && error !== "Doctor profile not found." && (
                 <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
                     {error}
                 </Alert>
@@ -167,8 +184,8 @@ const DoctorProfilePage = () => {
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            name="experience"
-                                            value={formData.experience}
+                                            name="experienceYears"
+                                            value={formData.experienceYears}
                                             onChange={handleChange}
                                         />
                                     </Grid>

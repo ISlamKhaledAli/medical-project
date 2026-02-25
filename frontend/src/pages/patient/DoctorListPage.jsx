@@ -197,7 +197,7 @@ const DoctorListPage = () => {
                         ))
                     ) : doctors.length > 0 ? (
                         doctors.map((doctor) => (
-                            <Grid item xs={12} sm={6} md={4} key={doctor.id}>
+                            <Grid item xs={12} sm={6} md={4} key={doctor._id}>
                                 <DoctorCard doctor={doctor} />
                             </Grid>
                         ))

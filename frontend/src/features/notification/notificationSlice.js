@@ -59,12 +59,12 @@ const notificationSlice = createSlice({
             })
             .addCase(fetchNotifications.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const notifications = Array.isArray(action.payload) ? action.payload : [];
-                state.notifications = notifications;
-                state.unreadCount = notifications.filter(n => !n.isRead).length;
+                const data = action.payload.data || [];
+                state.notifications = data;
+                state.unreadCount = action.payload.unreadCount || data.filter(n => !n.isRead).length;
             })
             .addCase(markAsRead.fulfilled, (state, action) => {
-                const index = state.notifications.findIndex(n => n.id === action.payload);
+                const index = state.notifications.findIndex(n => n._id === action.payload);
                 if (index !== -1 && !state.notifications[index].isRead) {
                     state.notifications[index].isRead = true;
                     state.unreadCount = Math.max(0, state.unreadCount - 1);

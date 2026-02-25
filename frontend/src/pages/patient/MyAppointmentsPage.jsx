@@ -105,7 +105,7 @@ const MyAppointmentsPage = () => {
                                 ))
                             ) : appointments.length > 0 ? (
                                 appointments.map((appointment) => (
-                                    <TableRow key={appointment.id} hover>
+                                    <TableRow key={appointment._id || appointment.id} hover>
                                         <TableCell>
                                             <Box sx={{ display: "flex", alignItems: "center" }}>
                                                 <Avatar 
@@ -117,13 +117,13 @@ const MyAppointmentsPage = () => {
                                                 </Typography>
                                             </Box>
                                         </TableCell>
-                                        <TableCell>{appointment.doctor?.specialty}</TableCell>
+                                        <TableCell>{appointment.doctor?.specialty?.name || appointment.doctor?.specialty}</TableCell>
                                         <TableCell>
                                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                {format(new Date(appointment.date), "PPP")}
+                                                {format(new Date(appointment.appointmentDate), "PPP")}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                {appointment.timeSlot}
+                                                {appointment.startTime} - {appointment.endTime}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
@@ -182,7 +182,7 @@ const MyAppointmentsPage = () => {
                 <DialogTitle sx={{ fontWeight: 900 }}>Cancel Appointment?</DialogTitle>
                 <DialogContent>
                     <Typography color="text.secondary">
-                        Are you sure you want to cancel your appointment with Dr. {selectedAppointment?.doctor?.name} on {selectedAppointment && format(new Date(selectedAppointment.date), "PPP")}? This action cannot be undone.
+                        Are you sure you want to cancel your appointment with Dr. {selectedAppointment?.doctor?.name} on {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "PPP")}? This action cannot be undone.
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>

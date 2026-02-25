@@ -3,6 +3,7 @@ import {
     getAllUsersHandler,
     getUserByIdHandler,
     approveDoctorHandler,
+    rejectDoctorHandler,
     blockUserHandler,
     unblockUserHandler,
     deleteUserHandler,
@@ -27,6 +28,13 @@ router.patch(
     "/users/:id/approve",
     validateObjectId("id"),
     approveDoctorHandler,
+);
+
+// PATCH /api/admin/users/:id/reject — reject a doctor
+router.patch(
+    "/users/:id/reject",
+    validateObjectId("id"),
+    rejectDoctorHandler,
 );
 
 // PATCH /api/admin/users/:id/block — block a user

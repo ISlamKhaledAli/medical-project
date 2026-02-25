@@ -1,4 +1,4 @@
-import Specialty from "../models/Specialty.model.js";
+import Specialty from "../models/specialties.model.js";
 import DoctorProfile from "../models/Doctor.model.js";
 
 export const createSpecialty = (data) =>

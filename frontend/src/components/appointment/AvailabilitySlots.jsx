@@ -29,10 +29,10 @@ const AvailabilitySlots = ({ slots, selectedSlot, onSelect, isLoading }) => {
             </Typography>
             <Grid container spacing={2}>
                 {slots.map((slot) => (
-                    <Grid item xs={6} sm={4} md={3} key={slot.id || slot.time}>
+                    <Grid item xs={6} sm={4} md={3} key={slot._id || slot.startTime}>
                         <Button
                             fullWidth
-                            variant={selectedSlot?.time === slot.time ? "contained" : "outlined"}
+                            variant={selectedSlot?.startTime === slot.startTime ? "contained" : "outlined"}
                             onClick={() => onSelect(slot)}
                             disabled={!slot.isAvailable}
                             sx={{
@@ -41,11 +41,11 @@ const AvailabilitySlots = ({ slots, selectedSlot, onSelect, isLoading }) => {
                                 fontWeight: 700,
                                 textTransform: "none",
                                 border: "1px solid",
-                                borderColor: selectedSlot?.time === slot.time ? "primary.main" : "rgba(0,0,0,0.1)",
-                                opacity: slot.isAvailable ? 1 : 0.5
+                                borderColor: selectedSlot?.startTime === slot.startTime ? "primary.main" : "rgba(0,0,0,0.1)",
+                                opacity: slot.isAvailable !== false ? 1 : 0.5 // Default to available if not specified
                             }}
                         >
-                            {slot.time}
+                            {slot.startTime} - {slot.endTime}
                         </Button>
                     </Grid>
                 ))}

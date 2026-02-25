@@ -1,23 +1,24 @@
 import axiosInstance from "../../api/axiosInstance";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const authAPI = {
-    login: (credentials) => axiosInstance.post("/auth/login", credentials),
+    login: (credentials) => axiosInstance.post(ENDPOINTS.AUTH.LOGIN, credentials),
 
-    register: (data) => axiosInstance.post("/auth/register", data),
+    register: (data) => axiosInstance.post(ENDPOINTS.AUTH.REGISTER, data),
 
-    getMe: () => axiosInstance.get("/auth/me"),
+    getMe: () => axiosInstance.get(ENDPOINTS.AUTH.ME),
 
-    logout: () => axiosInstance.post("/auth/logout"),
+    logout: () => axiosInstance.post(ENDPOINTS.AUTH.LOGOUT),
 
-    forgotPassword: (email) => axiosInstance.post("/auth/forgot-password", { email }),
+    forgotPassword: (email) => axiosInstance.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email }),
 
-    resetPassword: (data) => axiosInstance.post(`/auth/reset-password/${data.token}`, { password: data.password }),
+    resetPassword: (data) => axiosInstance.put(ENDPOINTS.AUTH.RESET_PASSWORD(data.token), { password: data.password }),
 
-    resendVerification: (email) => axiosInstance.post("/auth/resend-verification", { email }),
+    resendVerification: (email) => axiosInstance.post(ENDPOINTS.AUTH.RESEND_VERIFICATION, { email }),
 
-    updateProfile: (data) => axiosInstance.patch("/auth/profile/update", data),
+    updateProfile: (data) => axiosInstance.patch(ENDPOINTS.USER.PROFILE, data),
 
-    changePassword: (data) => axiosInstance.patch("/auth/change-password", data),
+    changePassword: (data) => axiosInstance.patch(ENDPOINTS.USER.CHANGE_PASSWORD, data),
 };
 
 export default authAPI;

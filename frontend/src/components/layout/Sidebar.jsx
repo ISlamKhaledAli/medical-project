@@ -19,7 +19,9 @@ import {
     Settings as SettingsIcon,
     BarChart as AnalyticsIcon,
     ChevronLeft as ChevronLeftIcon,
-    Person as ProfileIcon
+    Person as ProfileIcon,
+    Category as SpecialityIcon,
+    AssignmentTurnedIn as ApprovalIcon
 } from "@mui/icons-material";
 
 import { ROLES } from "../../constants/roles";
@@ -50,8 +52,10 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
         ];
 
         const adminItems = [
-            { id: "dashboard", icon: <DashboardIcon />, path: "/admin", label: "Admin Console" },
+            { id: "dashboard", icon: <DashboardIcon />, path: "/admin/dashboard", label: "Admin Console" },
+            { id: "approvals", icon: <ApprovalIcon />, path: "/admin/doctor-approvals", label: "Doctor Approvals" },
             { id: "users", icon: <PeopleIcon />, path: "/admin/users", label: "Manage Users" },
+            { id: "specialties", icon: <SpecialityIcon />, path: "/admin/specialties", label: "Manage Specialties" },
             { id: "appointments", icon: <AppointmentsIcon />, path: "/admin/appointments", label: "All Appointments" },
         ];
 

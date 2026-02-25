@@ -14,6 +14,7 @@ export const createUser = async (userData) => {
   const user = await User.create({
     ...userData,
     password: hashedPassword,
+    status: userData.role?.toLowerCase() === "doctor" ? "pending" : "approved",
   });
 
   return user;
@@ -27,8 +28,12 @@ export const validateLogin = async (email, password) => {
     throw new Error("Your account has been blocked by an administrator.");
   }
 
-  if (!user.isApproved) {
-    throw new Error("Your account is pending admin approval.");
+  if (user.status !== "approved") {
+    throw new Error(
+      user.status === "pending"
+        ? "Your account is pending admin approval."
+        : "Your account has been rejected. Please contact support."
+    );
   }
 
   if (!user.isVerified) {

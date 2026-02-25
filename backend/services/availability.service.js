@@ -1,5 +1,6 @@
 import Availability from "../models/availability.model.js";
 import DoctorProfile from "../models/Doctor.model.js";
+import Appointment from "../models/Appointments.model.js";
 import ApiError from "../utils/ApiError.js";
 import { timeToMinutes } from "../utils/dateTime.js";
 
@@ -36,17 +37,20 @@ export const createAvailability = async ({
     slotDuration,
     currentUser,
 }) => {
-    if (currentUser.role !== "doctor") {
-        throw new ApiError("Only doctors can set availability", 403);
-    }
 
     const doctorProfile = await DoctorProfile.findOne({
         user: currentUser._id,
     });
 
     if (!doctorProfile) {
-        throw new ApiError("Doctor profile not found", 404);
+        throw new ApiError("Doctor profile not found. Please complete your profile first.", 404);
     }
+
+    if (currentUser.status !== "approved") {
+        throw new ApiError("Your account is pending approval. You cannot manage availability yet.", 403);
+    }
+
+
 
     validateAvailability({ startTime, endTime, slotDuration });
 
@@ -101,6 +105,10 @@ export const updateAvailability = async ({
         throw new ApiError("Not authorized", 403);
     }
 
+    if (currentUser.status !== "approved") {
+        throw new ApiError("Your account is not approved. Cannot update availability.", 403);
+    }
+
     validateAvailability({ startTime, endTime, slotDuration });
 
     availability.startTime = startTime;
@@ -134,6 +142,10 @@ export const deleteAvailability = async ({
         availability.doctor.toString() !== doctorProfile._id.toString()
     ) {
         throw new ApiError("Not authorized", 403);
+    }
+
+    if (currentUser.status !== "approved") {
+        throw new ApiError("Your account is not approved. Cannot delete availability.", 403);
     }
 
     await availability.deleteOne();
@@ -179,13 +191,55 @@ export const generateTimeSlots = (availability) => {
     return slots;
 };
 
-/* =========================
-   Get Doctor Availability
-========================= */
-export const getDoctorAvailability = async (doctorId) => {
-    const availability = await Availability.find({
-        doctor: doctorId,
+export const getDoctorAvailability = async (doctorId, dateString) => {
+    // 1. Get ranges for the doctor
+    const ranges = await Availability.find({ doctor: doctorId });
+
+    // 2. Filter ranges by day of week if date provided
+    let filteredRanges = ranges;
+    if (dateString) {
+        const date = new Date(dateString);
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayIndex = date.getUTCDay();
+        const dayName = days[dayIndex];
+
+        filteredRanges = ranges.filter(r => {
+            const dbDay = typeof r.dayOfWeek === 'number' ? days[r.dayOfWeek] : r.dayOfWeek;
+            return dbDay === dayName;
+        });
+    }
+
+    // 3. Get existing appointments for this doctor and date
+    // We use a regex or start/end of day to match the Date field if it's a string from frontend
+    let existingAppointments = [];
+    if (dateString) {
+        const start = new Date(dateString);
+        start.setUTCHours(0, 0, 0, 0);
+        const end = new Date(dateString);
+        end.setUTCHours(23, 59, 59, 999);
+
+        existingAppointments = await Appointment.find({
+            doctor: doctorId,
+            appointmentDate: { $gte: start, $lte: end },
+            status: { $in: ["pending", "confirmed"] }
+        });
+    }
+
+    // 4. Generate slots for each range
+    let allSlots = [];
+    filteredRanges.forEach(range => {
+        const slots = generateTimeSlots(range);
+
+        // Add isAvailable flag
+        const slotsWithStatus = slots.map(slot => {
+            const isBooked = existingAppointments.some(apt =>
+                apt.startTime === slot.startTime
+            );
+            return { ...slot, isAvailable: !isBooked };
+        });
+
+        allSlots = [...allSlots, ...slotsWithStatus];
     });
 
-    return availability;
+    return allSlots;
 };

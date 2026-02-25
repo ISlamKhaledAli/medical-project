@@ -79,8 +79,9 @@ const BookAppointmentPage = () => {
     const handleBook = async () => {
         const appointmentData = {
             doctorId,
-            date: format(selectedDate, "yyyy-MM-dd"),
-            timeSlot: selectedSlot.time
+            appointmentDate: format(selectedDate, "yyyy-MM-dd"), // Backend uses appointmentDate
+            startTime: selectedSlot.startTime,
+            endTime: selectedSlot.endTime
         };
         const result = await dispatch(createAppointment(appointmentData));
         if (createAppointment.fulfilled.match(result)) {
@@ -103,9 +104,9 @@ const BookAppointmentPage = () => {
                     <SuccessIcon color="success" sx={{ fontSize: "5rem", mb: 3 }} />
                     <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>Booking Confirmed!</Typography>
                     <Typography color="text.secondary" sx={{ mb: 4 }}>
-                        Your appointment with Dr. {doctor?.name} on {format(selectedDate, "PPP")} at {selectedSlot?.time} has been successfully scheduled.
+                        Your appointment with Dr. {doctor.user?.fullName || doctor.user?.name} on {format(selectedDate, "PPP")} at {selectedSlot?.startTime} has been successfully scheduled.
                     </Typography>
-                    <Button variant="contained" size="large" onClick={() => navigate("/my-appointments")} sx={{ borderRadius: 3, fontWeight: 700 }}>
+                    <Button variant="contained" size="large" onClick={() => navigate("/patient/appointments")} sx={{ borderRadius: 3, fontWeight: 700 }}>
                         View My Appointments
                     </Button>
                 </Paper>
@@ -179,11 +180,11 @@ const BookAppointmentPage = () => {
                             <Box sx={{ p: 4, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 4, border: "1px dashed rgba(0,0,0,0.1)", textAlign: "left" }}>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                                     <Typography color="text.secondary">Doctor</Typography>
-                                    <Typography sx={{ fontWeight: 700 }}>Dr. {doctor?.name}</Typography>
+                                    <Typography sx={{ fontWeight: 700 }}>Dr. {doctor.user?.fullName || doctor.user?.name}</Typography>
                                 </Box>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                                     <Typography color="text.secondary">Specialty</Typography>
-                                    <Typography sx={{ fontWeight: 700 }}>{doctor?.specialty}</Typography>
+                                    <Typography sx={{ fontWeight: 700 }}>{doctor.specialty?.name || doctor.specialty}</Typography>
                                 </Box>
                                 <Divider sx={{ my: 2 }} />
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -192,7 +193,7 @@ const BookAppointmentPage = () => {
                                 </Box>
                                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                                     <Typography color="text.secondary">Time</Typography>
-                                    <Typography sx={{ fontWeight: 700 }}>{selectedSlot?.time}</Typography>
+                                    <Typography sx={{ fontWeight: 700 }}>{selectedSlot?.startTime}</Typography>
                                 </Box>
                             </Box>
                         </Box>

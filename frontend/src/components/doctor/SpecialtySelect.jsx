@@ -8,11 +8,11 @@ import {
     CircularProgress, 
     Box 
 } from "@mui/material";
-import { fetchSpecialties } from "../../features/doctor/specialtySlice";
+import { fetchSpecialties } from "../../features/specialty/specialtySlice";
 
 const SpecialtySelect = ({ value, onChange }) => {
     const dispatch = useDispatch();
-    const { specialties, isLoading } = useSelector((state) => state.specialty);
+    const { specialties, loading } = useSelector((state) => state.specialty);
 
     useEffect(() => {
         if (specialties.length === 0) {
@@ -20,7 +20,7 @@ const SpecialtySelect = ({ value, onChange }) => {
         }
     }, [dispatch, specialties.length]);
 
-    if (isLoading && specialties.length === 0) {
+    if (loading && specialties.length === 0) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", p: 1 }}>
                 <CircularProgress size={24} />
@@ -41,8 +41,8 @@ const SpecialtySelect = ({ value, onChange }) => {
             >
                 <MenuItem value=""><em>All Specialties</em></MenuItem>
                 {specialties.map((specialty) => (
-                    <MenuItem key={specialty.id || specialty} value={specialty.name || specialty}>
-                        {specialty.name || specialty}
+                    <MenuItem key={specialty._id} value={specialty._id}>
+                        {specialty.name}
                     </MenuItem>
                 ))}
             </Select>

@@ -2,7 +2,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 import authReducer from "../features/auth/authSlice";
 import uiReducer from "../features/ui/uiSlice";
 import doctorReducer from "../features/doctor/doctorSlice";
-import specialtyReducer from "../features/doctor/specialtySlice";
+import specialtyReducer from "../features/specialty/specialtySlice";
 import availabilityReducer from "../features/availability/availabilitySlice";
 import appointmentReducer from "../features/appointment/appointmentSlice";
 import adminReducer from "../features/admin/adminSlice";

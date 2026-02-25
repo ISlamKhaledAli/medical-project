@@ -29,6 +29,30 @@ export const fetchDoctorById = createAsyncThunk(
     }
 );
 
+export const fetchMyProfile = createAsyncThunk(
+    "doctor/fetchMyProfile",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await doctorAPI.fetchMyProfile();
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch profile");
+        }
+    }
+);
+
+export const createDoctorProfile = createAsyncThunk(
+    "doctor/createProfile",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await doctorAPI.createProfile(data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to create profile");
+        }
+    }
+);
+
 export const updateDoctorProfile = createAsyncThunk(
     "doctor/updateProfile",
     async (data, { rejectWithValue }) => {
@@ -77,7 +101,15 @@ const doctorSlice = createSlice({
     reducers: {
         setFilters: (state, action) => {
             state.filters = { ...state.filters, ...action.payload };
-            state.pagination.page = 1; // Reset to page 1 on filter change
+            state.pagination.page = 1;
+        },
+        setNameFilter: (state, action) => {
+            state.filters.name = action.payload;
+            state.pagination.page = 1;
+        },
+        setSpecialtyFilter: (state, action) => {
+            state.filters.specialty = action.payload;
+            state.pagination.page = 1;
         },
         setPage: (state, action) => {
             state.pagination.page = action.payload;
@@ -95,8 +127,13 @@ const doctorSlice = createSlice({
             })
             .addCase(fetchDoctors.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.doctors = action.payload.doctors;
-                state.pagination = action.payload.pagination || state.pagination;
+                state.doctors = action.payload.data || [];
+                state.pagination = {
+                    page: action.payload.page || 1,
+                    totalPages: action.payload.pages || 1,
+                    totalCount: action.payload.total || 0,
+                    limit: state.pagination.limit
+                };
             })
             .addCase(fetchDoctors.rejected, (state, action) => {
                 state.isLoading = false;
@@ -109,9 +146,35 @@ const doctorSlice = createSlice({
             })
             .addCase(fetchDoctorById.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.doctorDetails = action.payload;
+                state.doctorDetails = action.payload.data || action.payload;
             })
             .addCase(fetchDoctorById.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Fetch My Profile
+            .addCase(fetchMyProfile.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(fetchMyProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.doctorDetails = action.payload.data || action.payload;
+            })
+            .addCase(fetchMyProfile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+            // Create Profile
+            .addCase(createDoctorProfile.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(createDoctorProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.doctorDetails = action.payload.data || action.payload;
+            })
+            .addCase(createDoctorProfile.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
@@ -122,7 +185,7 @@ const doctorSlice = createSlice({
             })
             .addCase(updateDoctorProfile.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.doctorDetails = action.payload;
+                state.doctorDetails = action.payload.data || action.payload;
             })
             .addCase(updateDoctorProfile.rejected, (state, action) => {
                 state.isLoading = false;
@@ -131,5 +194,5 @@ const doctorSlice = createSlice({
     },
 });
 
-export const { setFilters, setPage, clearDoctorDetails } = doctorSlice.actions;
+export const { setFilters, setNameFilter, setSpecialtyFilter, setPage, clearDoctorDetails } = doctorSlice.actions;
 export default doctorSlice.reducer;

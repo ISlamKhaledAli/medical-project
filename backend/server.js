@@ -12,6 +12,8 @@ import userRoutes from "./routes/user.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 import availabilityRoutes from "./routes/availability.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import doctorRoutes from "./routes/doctor.routes.js";
+import specialtyRoutes from "./routes/specialty.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { initSocket } from "./sockets/socket.js";
@@ -37,12 +39,14 @@ await connectDB();
 // Initialize Socket.IO on the HTTP server
 initSocket(httpServer);
 
+app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-// app.use("/api/doctors", doctorRoutes);
+app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/availability", availabilityRoutes);
-// app.use("/api/specialties", specialtyRoutes);
+app.use("/api/specialties", specialtyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 
@@ -50,4 +54,5 @@ app.use(globalErrorHandler);
 
 httpServer.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
+  console.log("🚀 Server fully initialized and listening");
 });

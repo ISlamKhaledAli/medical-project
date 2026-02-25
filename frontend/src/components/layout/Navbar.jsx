@@ -116,12 +116,12 @@ const Navbar = ({ onMenuClick }) => {
                     >
                         <Avatar 
                             src={user?.avatar} 
-                            alt={user?.name}
+                            alt={user?.fullName || user?.name}
                             sx={{ width: 40, height: 40, border: "2px solid white", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
                         />
                         <Box sx={{ display: { xs: "none", sm: "block" } }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1 }}>
-                                {user?.name || "User Name"}
+                                {user?.fullName || user?.name || "User"}
                             </Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>
                                 {user?.role || "Patient"}

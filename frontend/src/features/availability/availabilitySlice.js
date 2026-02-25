@@ -77,9 +77,10 @@ const availabilitySlice = createSlice({
             })
             .addCase(fetchDoctorAvailability.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const data = Array.isArray(action.payload) ? action.payload : [];
-                state.slots = data;
-                state.availabilityList = data;
+                // Backend returns { success: true, data: [...] } or just [...]
+                const slotsArray = action.payload.data || (Array.isArray(action.payload) ? action.payload : []);
+                state.slots = slotsArray;
+                state.availabilityList = slotsArray;
             })
             .addCase(fetchDoctorAvailability.rejected, (state, action) => {
                 state.isLoading = false;
@@ -91,7 +92,7 @@ const availabilitySlice = createSlice({
             })
             .addCase(createAvailability.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                state.availabilityList.push(action.payload);
+                state.availabilityList.push(action.payload.data || action.payload);
             })
             .addCase(createAvailability.rejected, (state, action) => {
                 state.isActionLoading = false;
@@ -103,9 +104,10 @@ const availabilitySlice = createSlice({
             })
             .addCase(updateAvailability.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const index = state.availabilityList.findIndex(a => a._id === action.payload._id);
+                const updated = action.payload.data || action.payload;
+                const index = state.availabilityList.findIndex(a => a._id === updated._id);
                 if (index !== -1) {
-                    state.availabilityList[index] = action.payload;
+                    state.availabilityList[index] = updated;
                 }
             })
             .addCase(updateAvailability.rejected, (state, action) => {

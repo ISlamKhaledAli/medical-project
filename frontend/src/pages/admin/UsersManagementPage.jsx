@@ -14,7 +14,8 @@ import {
     Avatar,
     Chip,
     IconButton,
-    Button
+    Button,
+    Stack,
 } from "@mui/material";
 import { 
     Block as BlockIcon, 
@@ -50,27 +51,34 @@ const UsersManagementPage = () => {
                 <Table>
                     <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 800 }}>User</TableCell>
-                            <TableCell sx={{ fontWeight: 800 }}>Email</TableCell>
+                            <TableCell sx={{ fontWeight: 800 }}>User Info</TableCell>
                             <TableCell sx={{ fontWeight: 800 }}>Role</TableCell>
-                            <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+                            <TableCell sx={{ fontWeight: 800 }}>Account Status</TableCell>
                             <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {users.map((user) => {
                             const isBlocked = user.isBlocked;
-                            const status = isBlocked ? "blocked" : "active";
+                            const accountStatus = user.status || (user.role === "doctor" ? "pending" : "approved");
                             
                             return (
                                 <TableRow key={user._id} hover>
                                     <TableCell>
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <Avatar sx={{ mr: 2 }}>{user?.fullName?.[0] || user?.name?.[0] || "U"}</Avatar>
-                                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{user?.fullName || user?.name || "Unknown User"}</Typography>
+                                            <Avatar sx={{ mr: 2, bgcolor: user.role === "doctor" ? "primary.light" : "secondary.light" }}>
+                                                {user?.fullName?.[0] || user?.name?.[0] || "U"}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                                    {user?.fullName || user?.name || "Unknown User"}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {user.email}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     </TableCell>
-                                    <TableCell>{user.email}</TableCell>
                                     <TableCell>
                                         <Chip 
                                             label={user.role} 
@@ -80,19 +88,34 @@ const UsersManagementPage = () => {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <Chip 
-                                            label={status} 
-                                            size="small" 
-                                            color={isBlocked ? "error" : "success"}
-                                            sx={{ fontWeight: 700 }} 
-                                        />
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                            <Chip 
+                                                label={accountStatus} 
+                                                size="small" 
+                                                color={
+                                                    accountStatus === "approved" ? "success" : 
+                                                    accountStatus === "pending" ? "warning" : "error"
+                                                }
+                                                sx={{ fontWeight: 700, textTransform: "capitalize", maxWidth: "fit-content" }} 
+                                            />
+                                            {isBlocked && (
+                                                <Chip 
+                                                    label="Blocked" 
+                                                    size="small" 
+                                                    color="error"
+                                                    variant="outlined"
+                                                    sx={{ fontWeight: 700, maxWidth: "fit-content" }} 
+                                                />
+                                            )}
+                                        </Box>
                                     </TableCell>
                                     <TableCell align="right">
                                         <Button
                                             size="small"
+                                            variant="outlined"
                                             startIcon={isBlocked ? <ApproveIcon /> : <BlockIcon />}
                                             color={isBlocked ? "success" : "error"}
-                                            onClick={() => handleToggleStatus(user._id, status)}
+                                            onClick={() => handleToggleStatus(user._id, isBlocked ? "active" : "blocked")}
                                             sx={{ fontWeight: 700 }}
                                         >
                                             {isBlocked ? "Unblock" : "Block"}

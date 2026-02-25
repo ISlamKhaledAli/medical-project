@@ -3,6 +3,7 @@ import {
   getSpecialtiesAPI,
   createSpecialtyAPI,
   deleteSpecialtyAPI,
+  updateSpecialtyAPI,
 } from "./specialtyAPI";
 
 /* FETCH */
@@ -14,7 +15,7 @@ export const fetchSpecialties = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          "Failed to fetch specialties"
+        "Failed to fetch specialties"
       );
     }
   }
@@ -29,7 +30,7 @@ export const createSpecialty = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          "Failed to create specialty"
+        "Failed to create specialty"
       );
     }
   }
@@ -44,7 +45,22 @@ export const deleteSpecialty = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          "Failed to delete specialty"
+        "Failed to delete specialty"
+      );
+    }
+  }
+);
+
+/* UPDATE */
+export const updateSpecialty = createAsyncThunk(
+  "specialty/updateSpecialty",
+  async ({ id, body }, { rejectWithValue }) => {
+    try {
+      return await updateSpecialtyAPI(id, body);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+        "Failed to update specialty"
       );
     }
   }
@@ -66,7 +82,7 @@ const specialtySlice = createSlice({
       })
       .addCase(fetchSpecialties.fulfilled, (state, action) => {
         state.loading = false;
-        state.specialties = action.payload;
+        state.specialties = action.payload.data || [];
       })
       .addCase(fetchSpecialties.rejected, (state, action) => {
         state.loading = false;
@@ -74,8 +90,35 @@ const specialtySlice = createSlice({
       })
 
       /* CREATE */
+      .addCase(createSpecialty.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(createSpecialty.fulfilled, (state, action) => {
-        state.specialties.push(action.payload);
+        state.loading = false;
+        state.specialties.push(action.payload.data || action.payload);
+      })
+      .addCase(createSpecialty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      /* UPDATE */
+      .addCase(updateSpecialty.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateSpecialty.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload.data || action.payload;
+        const index = state.specialties.findIndex(
+          (s) => s._id === updated._id
+        );
+        if (index !== -1) {
+          state.specialties[index] = updated;
+        }
+      })
+      .addCase(updateSpecialty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       /* DELETE */

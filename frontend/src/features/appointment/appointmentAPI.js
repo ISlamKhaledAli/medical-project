@@ -1,36 +1,31 @@
 import axiosInstance from "../../api/axiosInstance";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const appointmentAPI = {
     /**
      * Fetch user's appointments
      */
-    fetchMy: () => axiosInstance.get("/appointments/my"),
+    fetchMy: () => axiosInstance.get(ENDPOINTS.APPOINTMENT.MY),
 
     /**
      * Create a new appointment
-     * @param {Object} data - { doctorId, date, timeSlot }
      */
-    create: (data) => axiosInstance.post("/appointments", data),
+    create: (data) => axiosInstance.post(ENDPOINTS.APPOINTMENT.CREATE, data),
 
     /**
      * Cancel an appointment
-     * @param {string} id 
      */
-    cancel: (id) => axiosInstance.patch(`/appointments/${id}/cancel`),
+    cancel: (id) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.CANCEL(id)),
 
     /**
      * Reschedule an appointment
-     * @param {string} id 
-     * @param {Object} data - { date, timeSlot }
      */
-    reschedule: (id, data) => axiosInstance.patch(`/appointments/${id}/reschedule`, data),
+    reschedule: (id, data) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.RESCHEDULE(id), data),
 
     /**
      * Update appointment status (Doctor/Admin only)
-     * @param {string} id 
-     * @param {string} status 
      */
-    updateStatus: (id, status) => axiosInstance.patch(`/appointments/${id}/status`, { status }),
+    updateStatus: (id, status) => axiosInstance.patch(ENDPOINTS.APPOINTMENT.DETAILS(id) + "/status", { status }),
 };
 
 export default appointmentAPI;

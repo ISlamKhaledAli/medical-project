@@ -24,30 +24,50 @@ export const createDoctorProfile = async (userId, data) => {
 };
 
 /**
+ * Get the doctor profile for the logged-in user.
+ */
+export const getDoctorProfile = async (userId) => {
+  const profile = await DoctorProfile.findOne({ user: userId })
+    .populate("user", "fullName email")
+    .populate("specialty", "name");
+
+  if (!profile) throw new ApiError("Doctor profile not found.", 404);
+  return profile;
+};
+
+/**
  * Get all doctor profiles (public).
  */
 export const getAllDoctors = async (queryParams = {}) => {
   const { page = 1, limit = 20, specialty } = queryParams;
   const filter = {};
 
-  if (specialty) filter.specialty = specialty;
+  if (specialty && specialty !== "" && specialty !== "all" && specialty !== "undefined") {
+    filter.specialty = specialty;
+  }
 
   const skip = (page - 1) * limit;
 
+  // IMPORTANT: Only return doctors whose associated user is approved
   const doctors = await DoctorProfile.find(filter)
-    .populate("user", "fullName email")
+    .populate({
+      path: "user",
+      match: { status: "approved" },
+      select: "fullName email status"
+    })
     .populate("specialty", "name")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(Number(limit));
+    .sort({ createdAt: -1 });
 
-  const total = await DoctorProfile.countDocuments(filter);
+  // Filter out any profiles where the populated user is null (meaning not approved)
+  const approvedDoctors = doctors.filter(doc => doc.user !== null);
+
+  const paginatedDoctors = approvedDoctors.slice(skip, skip + Number(limit));
 
   return {
-    total,
+    total: approvedDoctors.length,
     page: Number(page),
-    pages: Math.ceil(total / limit),
-    data: doctors,
+    pages: Math.ceil(approvedDoctors.length / limit),
+    data: paginatedDoctors,
   };
 };
 
@@ -56,10 +76,16 @@ export const getAllDoctors = async (queryParams = {}) => {
  */
 export const getDoctorById = async (doctorId) => {
   const doctor = await DoctorProfile.findById(doctorId)
-    .populate("user", "fullName email")
+    .populate("user", "fullName email status")
     .populate("specialty", "name");
 
   if (!doctor) throw new ApiError("Doctor profile not found.", 404);
+
+  // Public check: Only approved doctors details should be public
+  if (doctor.user.status !== "approved") {
+    throw new ApiError("Doctor not yet available for consultation.", 403);
+  }
+
   return doctor;
 };
 

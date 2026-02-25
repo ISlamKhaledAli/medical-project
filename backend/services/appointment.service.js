@@ -24,7 +24,7 @@ export const validateSlotAvailability = async ({
         throw new ApiError("Doctor not found", 404);
     }
 
-    if (!doctorProfile.user.isApproved) {
+    if (doctorProfile.user.status !== "approved") {
         throw new ApiError("Doctor not approved yet", 403);
     }
 
@@ -309,7 +309,7 @@ export const getMyAppointments = async ({
         });
 
         if (!doctorProfile) {
-            throw new ApiError("Doctor profile not found", 404);
+            return [];
         }
 
         filter.doctor = doctorProfile._id;
@@ -320,8 +320,14 @@ export const getMyAppointments = async ({
     }
 
     const appointments = await Appointment.find(filter)
-        .populate("doctor")
-        .populate("patient", "name email")
+        .populate({
+            path: "doctor",
+            populate: [
+                { path: "user", select: "fullName" },
+                { path: "specialty", select: "name" }
+            ]
+        })
+        .populate("patient", "fullName email")
         .sort({ appointmentDate: 1, startTime: 1 });
 
     return appointments;
@@ -385,8 +391,8 @@ export const getAllAppointments = async ({
 export const calculateAdminStats = async () => {
     const totalAppointments = await Appointment.countDocuments();
     const totalUsers = await User.countDocuments();
-    const activeDoctors = await User.countDocuments({ role: "doctor", isApproved: true });
-    const pendingApprovals = await User.countDocuments({ role: "doctor", isApproved: false });
+    const activeDoctors = await User.countDocuments({ role: "doctor", status: "approved" });
+    const pendingApprovals = await User.countDocuments({ role: "doctor", status: "pending" });
 
     const statusStats = await Appointment.aggregate([
         {

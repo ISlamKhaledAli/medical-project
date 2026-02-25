@@ -42,10 +42,10 @@ const DoctorCard = ({ doctor }) => {
                     />
                     <Box sx={{ flex: 1 }}>
                         <Typography variant="h6" sx={{ fontWeight: 800, color: "#1a237e", mb: 0.5 }}>
-                            {doctor.name}
+                            Dr. {doctor.user?.fullName || doctor.user?.name}
                         </Typography>
                         <Chip 
-                            label={doctor.specialty} 
+                            label={doctor.specialty?.name || doctor.specialty} 
                             size="small" 
                             color="primary" 
                             variant="soft" 
@@ -85,7 +85,7 @@ const DoctorCard = ({ doctor }) => {
                     <Button 
                         fullWidth 
                         variant="outlined" 
-                        onClick={() => navigate(`/doctors/${doctor.id}`)}
+                        onClick={() => navigate(`/patient/doctors/${doctor._id}`)}
                         sx={{ 
                             borderRadius: 2, 
                             textTransform: "none", 
@@ -99,7 +99,7 @@ const DoctorCard = ({ doctor }) => {
                     <Button 
                         fullWidth 
                         variant="contained" 
-                        onClick={() => navigate(`/book/${doctor.id}`)}
+                        onClick={() => navigate(`/patient/book/${doctor._id}`)}
                         sx={{ 
                             borderRadius: 2, 
                             textTransform: "none", 

@@ -170,11 +170,12 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.isInitialLoading = false; // Just in case
-                state.user = action.payload?.user || action.payload;
-                state.accessToken = action.payload?.accessToken;
-                if (action.payload?.accessToken) {
-                    localStorage.setItem("accessToken", action.payload.accessToken);
+                state.isInitialLoading = false;
+                const payload = action.payload?.data || action.payload;
+                state.user = payload?.user || payload;
+                state.accessToken = payload?.accessToken || action.payload?.accessToken;
+                if (state.accessToken) {
+                    localStorage.setItem("accessToken", state.accessToken);
                 }
             })
             .addCase(login.rejected, (state, action) => {
@@ -186,23 +187,21 @@ const authSlice = createSlice({
             .addCase(register.pending, (state) => {
                 state.isLoading = true;
                 state.error = null;
+                state.successMessage = null;
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.successMessage = action.payload.message || "Registration successful. Please verify your email.";
+                state.successMessage = action.payload.message || "Registration successful!";
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
-            // Get Me
-            .addCase(getMe.pending, (state) => {
-                state.error = null;
-            })
+            // ... omitting other cases for brevity in targetContent match, but applying to getMe
             .addCase(getMe.fulfilled, (state, action) => {
                 state.isInitialLoading = false;
-                // Support both { user: ... } and direct user object
-                state.user = action.payload?.user || action.payload;
+                const payload = action.payload?.data || action.payload;
+                state.user = payload?.user || payload;
             })
             .addCase(getMe.rejected, (state, action) => {
                 state.isInitialLoading = false;
@@ -224,7 +223,7 @@ const authSlice = createSlice({
             })
             .addCase(updateProfile.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload.user;
+                state.user = action.payload.data || action.payload.user || action.payload;
             })
             .addCase(updateProfile.rejected, (state, action) => {
                 state.isLoading = false;

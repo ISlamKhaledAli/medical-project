@@ -32,9 +32,13 @@ export const register = async (req, res, next) => {
       await sendEmail({ email: user.email, subject: "Verify Email", message });
       console.log("✉️ Verification email sent successfully");
 
+      const successMsg = user.role === "doctor"
+        ? "Registration successful! Your account is pending admin approval. Please check your email for verification."
+        : "Registration successful. Please check your email to verify your account.";
+
       res.status(201).json({
         success: true,
-        message: "Registration successful. Please check your email to verify your account.",
+        message: successMsg,
       });
     } catch (emailError) {
       console.error("📧 Email sending failed:", emailError.message);

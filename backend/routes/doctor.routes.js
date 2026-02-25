@@ -1,10 +1,11 @@
 import { Router } from "express";
 import {
-  createDoctorProfile,
-  updateDoctorProfile,
-  deleteDoctorProfile,
-  getAllDoctors,
-  getDoctorById,
+   createDoctorProfile,
+   getDoctorProfile,
+   updateDoctorProfile,
+   deleteDoctorProfile,
+   getAllDoctors,
+   getDoctorById,
 } from "../controllers/doctor.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -15,6 +16,7 @@ const router = Router();
    CREATE PROFILE
 ======================== */
 router.post("/profile", protect, createDoctorProfile);
+router.get("/profile", protect, getDoctorProfile);
 
 /* ========================
    GET ALL DOCTORS

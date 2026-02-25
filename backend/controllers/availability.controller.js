@@ -44,7 +44,7 @@ export const deleteAvailabilityHandler = wrapAsync(async (req, res) => {
 });
 
 export const getDoctorAvailabilityHandler = wrapAsync(async (req, res) => {
-    const availability = await getDoctorAvailability(req.params.doctorId);
+    const availability = await getDoctorAvailability(req.params.doctorId, req.query.date);
 
     res.json({
         success: true,

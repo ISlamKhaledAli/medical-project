@@ -84,8 +84,8 @@ const NotificationBell = () => {
                     {notifications.slice(0, 5).length > 0 ? (
                         notifications.slice(0, 5).map((notification) => (
                             <ListItem 
-                                key={notification.id} 
-                                onClick={() => handleMarkAsRead(notification.id)}
+                                key={notification._id || notification.id} 
+                                onClick={() => handleMarkAsRead(notification._id || notification.id)}
                                 sx={{ 
                                     cursor: "pointer", 
                                     bgcolor: notification.isRead ? "transparent" : "rgba(25, 118, 210, 0.04)",
@@ -99,7 +99,7 @@ const NotificationBell = () => {
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText 
-                                    primary={notification.title}
+                                    primary={notification.type ? notification.type.charAt(0).toUpperCase() + notification.type.slice(1) : "Notification"}
                                     secondary={
                                         <>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>

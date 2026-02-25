@@ -84,10 +84,10 @@ const DoctorDetailsPage = () => {
                             sx={{ width: 150, height: 150, mx: "auto", mb: 3, border: "5px solid white", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} 
                         />
                         <Typography variant="h5" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
-                            {doctor.name}
+                            Dr. {doctor.user?.fullName || doctor.user?.name}
                         </Typography>
                         <Chip 
-                            label={doctor.specialty} 
+                            label={doctor.specialty?.name || doctor.specialty} 
                             color="primary" 
                             size="small"
                             sx={{ fontWeight: 700, mb: 3 }} 
@@ -117,7 +117,7 @@ const DoctorDetailsPage = () => {
                             fullWidth 
                             variant="contained" 
                             size="large"
-                            onClick={() => navigate(`/book/${doctor.id}`)}
+                            onClick={() => navigate(`/patient/book/${doctor._id}`)}
                             sx={{ borderRadius: 3, py: 1.5, fontWeight: 800, fontSize: "1rem" }}
                         >
                             Book Appointment
@@ -130,7 +130,7 @@ const DoctorDetailsPage = () => {
                     <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)", mb: 4 }}>
                         <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>About Doctor</Typography>
                         <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8, mb: 4 }}>
-                            {doctor.bio || "Dr. " + doctor.name + " is a distinguished specialist with a focus on clinical excellence and patient care. Over the past 15 years, they have pioneered various treatment protocols and maintained a consistent record of successful outcomes."}
+                            {doctor.bio || `Dr. ${doctor.user?.fullName || doctor.user?.name} is a distinguished specialist with a focus on clinical excellence and patient care. Over the past 15 years, they have pioneered various treatment protocols and maintained a consistent record of successful outcomes.`}
                         </Typography>
 
                         <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Qualifications</Typography>
@@ -148,7 +148,7 @@ const DoctorDetailsPage = () => {
                                     </Box>
                                     <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
                                         <EducationIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                        <Typography variant="body2">Fellowship in {doctor.specialty} - Johns Hopkins</Typography>
+                                        <Typography variant="body2">Fellowship in {doctor.specialty?.name || doctor.specialty} - Johns Hopkins</Typography>
                                     </Box>
                                 </>
                             )}

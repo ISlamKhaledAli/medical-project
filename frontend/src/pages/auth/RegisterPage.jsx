@@ -145,8 +145,9 @@ const RegisterPage = () => {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Register clicked", { role: formData.role, email: formData.email });
     
     const payload = {
       fullName: formData.fullName.trim(),
@@ -155,7 +156,15 @@ const RegisterPage = () => {
       role: formData.role,
     };
 
-    dispatch(register(payload));
+    try {
+      const result = await dispatch(register(payload)).unwrap();
+      console.log("Dispatch result:", result);
+      // If the backend returns a success message, the slice will store it in successMessage
+      // and the component will render the success view automatically due to the ternary in return.
+      console.log("Registration process completed successfully");
+    } catch (err) {
+      console.error("Registration failed in component:", err);
+    }
   };
 
   // Removed local strength functions in favor of shared utilities

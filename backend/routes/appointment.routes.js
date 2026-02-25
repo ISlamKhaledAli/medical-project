@@ -28,14 +28,14 @@ router.patch(
     updateAppointmentStatus
 );
 
-router.delete(
-    "/:id",
+router.patch(
+    "/:id/cancel",
     protect,
     cancelAppointmentHandler
 );
 
 router.patch(
-    "/:id",
+    "/:id/reschedule",
     protect,
     rescheduleAppointmentHandler
 );

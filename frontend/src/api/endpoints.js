@@ -3,61 +3,72 @@ export const ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
-    REFRESH: "/auth/refresh",
+    REFRESH: "/auth/refresh-token", // Fixed from /refresh
     LOGOUT: "/auth/logout",
-    VERIFY_EMAIL: "/auth/verify-email",
+    VERIFY_EMAIL: (token) => `/auth/verifyemail/${token}`, // Standardized path
     FORGOT_PASSWORD: "/auth/forgot-password",
-    RESET_PASSWORD: "/auth/reset-password",
+    RESET_PASSWORD: (token) => `/auth/reset-password/${token}`, // Standardized path
+    RESEND_VERIFICATION: "/auth/resend-verification",
     ME: "/auth/me",
+  },
+
+  /* ================= USER ================= */
+  USER: {
+    PROFILE: "/users/profile",
+    CHANGE_PASSWORD: "/users/change-password",
   },
 
   /* ================= DOCTOR ================= */
   DOCTOR: {
-    LIST: "/doctors", // GET (list + filtering + pagination)
-    DETAILS: (id) => `/doctors/${id}`, // GET by id
-    UPDATE: (id) => `/doctors/${id}`, // PATCH
-    DELETE: (id) => `/doctors/${id}`, // DELETE
+    LIST: "/doctors",
+    DETAILS: (id) => `/doctors/${id}`,
+    UPDATE_PROFILE: "/doctors/profile", // Matches backend PATCH /profile
+    CREATE_PROFILE: "/doctors/profile", // Matches backend POST /profile
   },
 
   /* ================= SPECIALTY ================= */
   SPECIALTY: {
-    LIST: "/specialties", // GET
-    CREATE: "/specialties", // POST
-    UPDATE: (id) => `/specialties/${id}`, // PATCH
-    DELETE: (id) => `/specialties/${id}`, // DELETE
+    LIST: "/specialties",
+    CREATE: "/specialties",
+    UPDATE: (id) => `/specialties/${id}`,
+    DELETE: (id) => `/specialties/${id}`,
   },
 
   /* ================= AVAILABILITY ================= */
   AVAILABILITY: {
-    DOCTOR: (doctorId) => `/availability/${doctorId}`, // GET doctor availability
-    SET: "/availability", // POST
-    UPDATE: (id) => `/availability/${id}`, // PATCH
-    DELETE: (id) => `/availability/${id}`, // DELETE
+    DOCTOR: (doctorId) => `/availability/${doctorId}`,
+    SET: "/availability",
+    UPDATE: (id) => `/availability/${id}`,
+    DELETE: (id) => `/availability/${id}`,
   },
 
   /* ================= APPOINTMENT ================= */
   APPOINTMENT: {
-    LIST: "/appointments", // GET all my appointments
-    CREATE: "/appointments", // POST new appointment
-    DETAILS: (id) => `/appointments/${id}`, // GET by id
-    CANCEL: (id) => `/appointments/${id}/cancel`, // PATCH cancel
-    RESCHEDULE: (id) => `/appointments/${id}/reschedule`, // PATCH reschedule
+    LIST: "/appointments",
+    MY: "/appointments/my",
+    CREATE: "/appointments",
+    DETAILS: (id) => `/appointments/${id}`,
+    CANCEL: (id) => `/appointments/${id}/cancel`,
+    RESCHEDULE: (id) => `/appointments/${id}/reschedule`,
+    STATS: "/appointments/stats",
   },
 
   /* ================= ADMIN ================= */
   ADMIN: {
-    USERS: "/admin/users", // GET
+    USERS: "/admin/users",
     APPROVE_USER: (id) => `/admin/users/${id}/approve`,
+    REJECT_USER: (id) => `/admin/users/${id}/reject`,
     BLOCK_USER: (id) => `/admin/users/${id}/block`,
     UNBLOCK_USER: (id) => `/admin/users/${id}/unblock`,
     DELETE_USER: (id) => `/admin/users/${id}`,
-    STATS: "/admin/stats",
+    UPDATE_ROLE: (id) => `/admin/users/${id}/role`,
   },
 
   /* ================= NOTIFICATION ================= */
   NOTIFICATION: {
     LIST: "/notifications",
     MARK_AS_READ: (id) => `/notifications/${id}/read`,
+    MARK_ALL_READ: "/notifications/read-all",
     DELETE: (id) => `/notifications/${id}`,
   },
 };

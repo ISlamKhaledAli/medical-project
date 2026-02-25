@@ -16,15 +16,17 @@ export const getAllUsers = async ({ queryParams }) => {
         limit = 10,
         role,
         isBlocked,
-        isApproved,
+        status,
         search,
     } = queryParams;
 
     const filter = {};
 
-    if (role) filter.role = role;
+    if (role) filter.role = role.toLowerCase();
     if (isBlocked !== undefined) filter.isBlocked = isBlocked === "true";
-    if (isApproved !== undefined) filter.isApproved = isApproved === "true";
+    if (status) filter.status = status;
+
+
 
     if (search) {
         filter.$or = [
@@ -82,27 +84,69 @@ export const approveDoctor = async ({ userId, currentUserId }) => {
         throw new ApiError("User not found", 404);
     }
 
-    if (user.role !== "doctor") {
-        throw new ApiError("This user is not a doctor", 400);
+    try {
+        if (user.role?.toLowerCase() !== "doctor") {
+            console.error(`[APPROVE_DOCTOR_ERROR] User ID: ${userId}, Actual Role: ${user.role}`);
+            throw new ApiError(`User with role (${user.role}) is not a doctor`, 400);
+        }
+
+        if (user.status === "approved") {
+            throw new ApiError("Doctor is already approved", 409);
+        }
+
+        user.status = "approved";
+        await user.save();
+
+        // Fire-and-forget notification
+        try {
+            await createNotification({
+                userId: user._id,
+                type: "booking",
+                message:
+                    "Your doctor account has been approved. You can now receive appointments.",
+            });
+        } catch (err) {
+            console.error("Notification failed (approveDoctor):", err.message);
+        }
+
+        return user;
+    } catch (error) {
+        console.error(`[APPROVE_DOCTOR_FATAL] ID: ${userId}, Error:`, error);
+        throw error;
+    }
+};
+
+//Reject Doctor
+
+export const rejectDoctor = async ({ userId, currentUserId }) => {
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new ApiError("User not found", 404);
     }
 
-    if (user.isApproved) {
-        throw new ApiError("Doctor is already approved", 400);
+    if (user.role?.toLowerCase() !== "doctor") {
+        console.error(`[REJECT_DOCTOR_ERROR] User ID: ${userId}, Actual Role: ${user.role}`);
+        throw new ApiError(`User with role (${user.role}) is not a doctor`, 400);
     }
 
-    user.isApproved = true;
+    if (user.status === "rejected") {
+        throw new ApiError("Doctor is already rejected", 409);
+    }
+
+    user.status = "rejected";
     await user.save();
 
     // Fire-and-forget notification
     try {
         await createNotification({
             userId: user._id,
-            type: "booking",
+            type: "cancel",
             message:
-                "Your doctor account has been approved. You can now receive appointments.",
+                "Your doctor application has been rejected. Please contact support for more details.",
         });
     } catch (err) {
-        console.error("Notification failed (approveDoctor):", err.message);
+        console.error("Notification failed (rejectDoctor):", err.message);
     }
 
     return user;
@@ -121,38 +165,43 @@ export const blockUser = async ({ userId, currentUserId }) => {
         throw new ApiError("User not found", 404);
     }
 
-    if (user.role === "admin") {
-        throw new ApiError("Cannot block an admin account", 400);
-    }
-
-    if (user.isBlocked) {
-        throw new ApiError("User is already blocked", 400);
-    }
-
-    // Cancel future active appointments for this user
-    await cancelUserActiveAppointments({ user });
-
-    // Block user and invalidate refresh token
-    user.isBlocked = true;
-    user.refreshToken = null;
-    await user.save();
-
-    // Fire-and-forget notification
     try {
-        await createNotification({
-            userId: user._id,
-            type: "cancel",
-            message:
-                "Your account has been blocked by an administrator. Please contact support.",
-        });
-    } catch (err) {
-        console.error("Notification failed (blockUser):", err.message);
+        if (user.role === "admin") {
+            throw new ApiError("Cannot block an admin account", 400);
+        }
+
+        if (user.isBlocked) {
+            throw new ApiError("User is already blocked", 400);
+        }
+
+        // Cancel future active appointments for this user
+        await cancelUserActiveAppointments({ user });
+
+        // Block user and invalidate refresh token
+        user.isBlocked = true;
+        user.refreshToken = null;
+        await user.save();
+
+        // Fire-and-forget notification
+        try {
+            await createNotification({
+                userId: user._id,
+                type: "cancel",
+                message:
+                    "Your account has been blocked by an administrator. Please contact support.",
+            });
+        } catch (err) {
+            console.error("Notification failed (blockUser):", err.message);
+        }
+
+        // Force-disconnect all active sockets for this user
+        disconnectUser(userId);
+
+        return user;
+    } catch (error) {
+        console.error(`[BLOCK_USER_FATAL] ID: ${userId}, Error:`, error);
+        throw error;
     }
-
-    // Force-disconnect all active sockets for this user
-    disconnectUser(userId);
-
-    return user;
 };
 
 //Unblock User
@@ -276,9 +325,9 @@ export const updateUserRole = async ({ userId, newRole, currentUserId }) => {
 
     // Auto-approve patients and admins, require approval for new doctors
     if (newRole === "patient" || newRole === "admin") {
-        user.isApproved = true;
+        user.status = "approved";
     } else if (newRole === "doctor") {
-        user.isApproved = false;
+        user.status = "pending";
     }
 
     await user.save();
@@ -288,7 +337,7 @@ export const updateUserRole = async ({ userId, newRole, currentUserId }) => {
 
 
 //Helper: Cancel Active Appointments for a User
-   
+
 
 const cancelUserActiveAppointments = async ({ user }) => {
     const activeStatuses = { $in: ["pending", "confirmed"] };

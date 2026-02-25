@@ -19,7 +19,7 @@ async function createAdmin() {
     password: hashedPassword,
     role: "admin",
     isVerified: true,
-    isApproved: true,
+    status: "approved",
     isBlocked: false,
     fullName: "Admin User"
   });

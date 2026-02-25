@@ -85,7 +85,7 @@ const appointmentSlice = createSlice({
             })
             .addCase(fetchMyAppointments.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.appointments = Array.isArray(action.payload) ? action.payload : [];
+                state.appointments = action.payload.data || [];
             })
             .addCase(fetchMyAppointments.rejected, (state, action) => {
                 state.isLoading = false;
@@ -98,7 +98,8 @@ const appointmentSlice = createSlice({
             })
             .addCase(createAppointment.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                state.appointments.unshift(action.payload);
+                const newAppt = action.payload.data || action.payload;
+                state.appointments.unshift(newAppt);
             })
             .addCase(createAppointment.rejected, (state, action) => {
                 state.isActionLoading = false;
@@ -110,9 +111,10 @@ const appointmentSlice = createSlice({
             })
             .addCase(cancelAppointment.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const index = state.appointments.findIndex(a => a.id === action.payload.id);
+                const updatedAppt = action.payload.data || action.payload;
+                const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
                 if (index !== -1) {
-                    state.appointments[index].status = "cancelled";
+                    state.appointments[index] = updatedAppt;
                 }
             })
             .addCase(cancelAppointment.rejected, (state, action) => {
@@ -125,9 +127,10 @@ const appointmentSlice = createSlice({
             })
             .addCase(rescheduleAppointment.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const index = state.appointments.findIndex(a => a.id === action.payload.id);
+                const updatedAppt = action.payload.data || action.payload;
+                const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
                 if (index !== -1) {
-                    state.appointments[index] = action.payload;
+                    state.appointments[index] = updatedAppt;
                 }
             })
             .addCase(rescheduleAppointment.rejected, (state, action) => {
@@ -140,9 +143,10 @@ const appointmentSlice = createSlice({
             })
             .addCase(updateAppointmentStatus.fulfilled, (state, action) => {
                 state.isActionLoading = false;
-                const index = state.appointments.findIndex(a => a._id === action.payload._id || a.id === action.payload.id);
+                const updatedAppt = action.payload.data || action.payload;
+                const index = state.appointments.findIndex(a => a._id === updatedAppt._id || a.id === updatedAppt.id);
                 if (index !== -1) {
-                    state.appointments[index] = action.payload;
+                    state.appointments[index] = updatedAppt;
                 }
             })
             .addCase(updateAppointmentStatus.rejected, (state, action) => {

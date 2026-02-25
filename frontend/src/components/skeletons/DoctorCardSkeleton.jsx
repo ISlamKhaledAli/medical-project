@@ -1,4 +1,4 @@
-export const DoctorCardSkeleton = () => {
+const DoctorCardSkeleton = () => {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse h-full">
       <div className="flex items-center gap-4 mb-4">
@@ -16,3 +16,5 @@ export const DoctorCardSkeleton = () => {
     </div>
   );
 };
+
+export default DoctorCardSkeleton;

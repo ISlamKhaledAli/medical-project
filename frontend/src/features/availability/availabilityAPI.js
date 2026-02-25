@@ -1,31 +1,26 @@
 import axiosInstance from "../../api/axiosInstance";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const availabilityAPI = {
     /**
      * Fetch available slots for a doctor on a specific date
-     * @param {string} doctorId 
-     * @param {string} date - ISO date string (YYYY-MM-DD)
      */
-    fetchSlots: (doctorId, date) => axiosInstance.get(`/availability/${doctorId}`, { params: { date } }),
+    fetchSlots: (doctorId, date) => axiosInstance.get(ENDPOINTS.AVAILABILITY.DOCTOR(doctorId), { params: { date } }),
 
     /**
      * Create a new availability range
-     * @param {Object} data - { dayOfWeek, startTime, endTime, slotDuration }
      */
-    create: (data) => axiosInstance.post("/availability", data),
+    create: (data) => axiosInstance.post(ENDPOINTS.AVAILABILITY.SET, data),
 
     /**
      * Update an availability range
-     * @param {string} id 
-     * @param {Object} data 
      */
-    update: (id, data) => axiosInstance.patch(`/availability/${id}`, data),
+    update: (id, data) => axiosInstance.patch(ENDPOINTS.AVAILABILITY.UPDATE(id), data),
 
     /**
      * Delete an availability range
-     * @param {string} id 
      */
-    delete: (id) => axiosInstance.delete(`/availability/${id}`),
+    delete: (id) => axiosInstance.delete(ENDPOINTS.AVAILABILITY.DELETE(id)),
 };
 
 export default availabilityAPI;
