@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNotification } from '../features/notification/notificationSlice';
+import { addIncomingMessage, setTyping, clearTyping, fetchConversations } from '../features/chat/chatSlice';
 
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
 
@@ -28,6 +29,8 @@ const useSocket = () => {
 
         socketRef.current.on('connect', () => {
             console.log('🔌 Socket connected:', socketRef.current.id);
+            // Load chat conversations once connected
+            dispatch(fetchConversations());
         });
 
         socketRef.current.on('newNotification', (data) => {
@@ -35,9 +38,27 @@ const useSocket = () => {
             dispatch(addNotification(data));
         });
 
+        // ─── Chat Events ───────────────────────────────────
+        socketRef.current.on('newMessage', (message) => {
+            console.log('💬 New message received:', message);
+            dispatch(addIncomingMessage(message));
+        });
+
+        socketRef.current.on('userTyping', ({ senderId }) => {
+            dispatch(setTyping(senderId));
+        });
+
+        socketRef.current.on('userStopTyping', ({ senderId }) => {
+            dispatch(clearTyping(senderId));
+        });
+
+        socketRef.current.on('chatError', (data) => {
+            console.error('❌ Chat error:', data.message);
+        });
+        // ────────────────────────────────────────────────────
+
         socketRef.current.on('forceDisconnect', (data) => {
             console.warn('⚠️ Server forced disconnect:', data.message);
-            // Handle global logout if necessary
         });
 
         socketRef.current.on('disconnect', (reason) => {

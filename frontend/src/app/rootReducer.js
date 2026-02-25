@@ -7,6 +7,7 @@ import availabilityReducer from "../features/availability/availabilitySlice";
 import appointmentReducer from "../features/appointment/appointmentSlice";
 import adminReducer from "../features/admin/adminSlice";
 import notificationReducer from "../features/notification/notificationSlice";
+import chatReducer from "../features/chat/chatSlice";
 
 // Combine all app reducers
 const appReducer = combineReducers({
@@ -18,6 +19,7 @@ const appReducer = combineReducers({
     appointment: appointmentReducer,
     admin: adminReducer,
     notification: notificationReducer,
+    chat: chatReducer,
 });
 
 /**

@@ -74,4 +74,12 @@ export const ENDPOINTS = {
     MARK_ALL_READ: "/notifications/read-all",
     DELETE: (id) => `/notifications/${id}`,
   },
+
+  /* ================= CHAT ================= */
+  CHAT: {
+    CONVERSATIONS: "/chat/conversations",
+    MESSAGES: (partnerId) => `/chat/${partnerId}`,
+    SEND: (partnerId) => `/chat/${partnerId}`,
+    MARK_READ: (partnerId) => `/chat/${partnerId}/read`,
+  },
 };

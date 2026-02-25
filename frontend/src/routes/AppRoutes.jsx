@@ -26,6 +26,7 @@ import PatientHome from "../pages/patient/PatientHome";
 import PatientProfilePage from "../pages/patient/PatientProfilePage";
 import NotificationsPage from "../pages/common/NotificationsPage";
 import SettingsPage from "../pages/common/SettingsPage";
+import ChatPage from "../pages/common/ChatPage";
 import MainLayout from "../components/layout/MainLayout";
 
 import DoctorOnboardingPage from "../pages/doctor/DoctorOnboardingPage";
@@ -66,6 +67,7 @@ const AppRoutes = () => {
           <Route path="/patient/doctors/:id" element={<DoctorDetailsPage />} />
           <Route path="/patient/book/:doctorId" element={<BookAppointmentPage />} />
           <Route path="/patient/appointments" element={<MyAppointmentsPage />} />
+          <Route path="/patient/chat" element={<ChatPage />} />
           <Route path="/patient/profile" element={<PatientProfilePage />} />
         </Route>
 
@@ -80,6 +82,7 @@ const AppRoutes = () => {
             <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
             <Route path="/doctor/schedule" element={<ScheduleManagementPage />} />
             <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
+            <Route path="/doctor/chat" element={<ChatPage />} />
             <Route path="/doctor/profile" element={<DoctorProfilePage />} />
           </Route>
         </Route>

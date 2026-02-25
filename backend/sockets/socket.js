@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { authenticateSocket } from "./socketAuth.js";
+import { sendMessage } from "../services/chat.service.js";
 
 /**
  * Singleton Socket.IO instance.
@@ -46,6 +47,33 @@ export const initSocket = (httpServer) => {
         socket.join(userId);
 
         console.log(`🔌 Socket connected: userId=${userId}  socketId=${socket.id}`);
+
+        // ─── Chat Events ───────────────────────────────────────
+        socket.on("sendMessage", async ({ receiverId, text }) => {
+            try {
+                const message = await sendMessage(userId, receiverId, text);
+                // Emit to the receiver's room
+                io.to(receiverId).emit("newMessage", message);
+                // Also emit back to sender so their UI updates
+                socket.emit("newMessage", message);
+            } catch (err) {
+                socket.emit("chatError", { message: err.message });
+            }
+        });
+
+        socket.on("typing", ({ receiverId }) => {
+            io.to(receiverId).emit("userTyping", { senderId: userId });
+        });
+
+        socket.on("stopTyping", ({ receiverId }) => {
+            io.to(receiverId).emit("userStopTyping", { senderId: userId });
+        });
+
+        socket.on("markRead", ({ partnerId }) => {
+            // Notify partner that messages have been read
+            io.to(partnerId).emit("messagesRead", { readBy: userId });
+        });
+        // ────────────────────────────────────────────────────────
 
         socket.on("disconnect", (reason) => {
             console.log(`❌ Socket disconnected: userId=${userId}  reason=${reason}`);

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { 
+import {
     Box, 
     List, 
     ListItem, 
@@ -8,7 +8,8 @@ import {
     ListItemIcon, 
     Tooltip,
     Drawer,
-    IconButton
+    IconButton,
+    Badge
 } from "@mui/material";
 import {
     Dashboard as DashboardIcon,
@@ -31,6 +32,8 @@ const DRAWER_WIDTH = 100;
 
 const Sidebar = ({ open, toggleDrawer, isMobile }) => {
     const { user } = useSelector((state) => state.auth);
+    const conversations = useSelector((state) => state.chat?.conversations || []);
+    const totalUnreadChat = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -41,6 +44,7 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
             { id: "home", icon: <DashboardIcon />, path: "/patient", label: "Home" },
             { id: "doctors", icon: <PeopleIcon />, path: "/patient/doctors", label: "Find Doctors" },
             { id: "appointments", icon: <AppointmentsIcon />, path: "/patient/appointments", label: "My Appointments" },
+            { id: "chat", icon: <MailIcon />, path: "/patient/chat", label: "Chat" },
             { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Profile Settings" },
         ];
 
@@ -48,6 +52,7 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
             { id: "dashboard", icon: <DashboardIcon />, path: "/doctor/dashboard", label: "Dashboard" },
             { id: "appointments", icon: <AppointmentsIcon />, path: "/doctor/appointments", label: "Appointments" },
             { id: "schedule", icon: <CalendarIcon />, path: "/doctor/schedule", label: "Manage Schedule" },
+            { id: "chat", icon: <MailIcon />, path: "/doctor/chat", label: "Chat" },
             { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Professional Profile" },
         ];
 
@@ -111,7 +116,13 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                                             color: "inherit",
                                         }}
                                     >
-                                        {item.icon}
+                                        {item.id === "chat" ? (
+                                            <Badge badgeContent={totalUnreadChat} color="error" max={99}>
+                                                {item.icon}
+                                            </Badge>
+                                        ) : (
+                                            item.icon
+                                        )}
                                     </ListItemIcon>
                                 </ListItemButton>
                             </Tooltip>

@@ -15,6 +15,7 @@ import notificationRoutes from "./routes/notification.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import specialtyRoutes from "./routes/specialty.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { initSocket } from "./sockets/socket.js";
 import cookieParser from "cookie-parser";
@@ -52,6 +53,7 @@ app.use("/api/availability", availabilityRoutes);
 app.use("/api/specialties", specialtyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(globalErrorHandler);
 
