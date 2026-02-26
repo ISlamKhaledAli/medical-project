@@ -7,13 +7,13 @@ export const verificationSuccessTemplate = (clientUrl) => `
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Email Verified | MEDIC TOTAL</title>
+    <title>Email Verified | MediSystem</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        background: #F8FAFC;
+        background: #F5F7FA;
         min-height: 100vh;
         display: flex;
         align-items: center;
@@ -24,32 +24,32 @@ export const verificationSuccessTemplate = (clientUrl) => `
       body::before {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; height: 400px;
-        background: linear-gradient(135deg, #1565C0 0%, #1A237E 100%);
+        top: 0; left: 0; right: 0; height: 380px;
+        background: linear-gradient(135deg, #1565C0 0%, #0D47A1 100%);
         z-index: 1;
       }
       .card {
-        background: #fff;
+        background: #ffffff;
         border-radius: 24px;
         padding: 60px 48px;
         text-align: center;
         max-width: 480px;
         width: 90%;
-        box-shadow: 0 25px 50px -12px rgba(26, 35, 126, 0.15);
+        box-shadow: 0 32px 64px -12px rgba(21, 101, 192, 0.15);
         animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         position: relative;
         z-index: 2;
-        border: 1px solid rgba(26, 35, 126, 0.05);
+        border: 1px solid rgba(21, 101, 192, 0.05);
       }
       @keyframes slideUp {
         from { opacity: 0; transform: translateY(40px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .icon-container {
-        width: 88px;
-        height: 88px;
-        background: #ECFDF5;
-        border-radius: 24px;
+        width: 96px;
+        height: 96px;
+        background: #F0FDF4;
+        border-radius: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -61,9 +61,9 @@ export const verificationSuccessTemplate = (clientUrl) => `
         100% { transform: scale(1); opacity: 1; }
       }
       .icon-container svg {
-        width: 44px;
-        height: 44px;
-        stroke: #059669;
+        width: 48px;
+        height: 48px;
+        stroke: #10B981;
         stroke-width: 3;
         fill: none;
       }
@@ -71,23 +71,23 @@ export const verificationSuccessTemplate = (clientUrl) => `
         color: #1A237E;
         font-size: 32px;
         font-weight: 900;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         letter-spacing: -0.03em;
       }
       p {
         color: #546E7A;
         font-size: 16px;
-        line-height: 1.6;
+        line-height: 1.65;
         margin-bottom: 40px;
         font-weight: 500;
       }
       .btn {
         display: inline-block;
         background: #1565C0;
-        color: #fff;
+        color: #ffffff;
         text-decoration: none;
         padding: 16px 48px;
-        border-radius: 14px;
+        border-radius: 10px;
         font-weight: 800;
         font-size: 16px;
         transition: all 0.3s ease;
@@ -100,12 +100,12 @@ export const verificationSuccessTemplate = (clientUrl) => `
         box-shadow: 0 15px 30px -5px rgba(21, 101, 192, 0.4);
       }
       .footer {
-        margin-top: 40px;
+        margin-top: 48px;
         color: #94A3B8;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
       }
     </style>
   </head>
@@ -117,9 +117,9 @@ export const verificationSuccessTemplate = (clientUrl) => `
         </svg>
       </div>
       <h1>Account Verified!</h1>
-      <p>Your email address has been successfully validated. You are now part of MEDIC TOTAL. Access your dashboard clinical tools now.</p>
+      <p>Your email address has been successfully validated. You are now part of MediSystem. Access your dashboard clinical tools now.</p>
       <a href="${clientUrl}/login" class="btn">Login to Dashboard</a>
-      <p class="footer">MEDIC TOTAL &mdash; Healthcare Redefined</p>
+      <p class="footer">MediSystem &mdash; Healthcare Redefined</p>
     </div>
   </body>
   </html>
@@ -134,13 +134,13 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verification Failed | MEDIC TOTAL</title>
+    <title>Verification Failed | MediSystem</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        background: #F8FAFC;
+        background: #F5F7FA;
         min-height: 100vh;
         display: flex;
         align-items: center;
@@ -151,32 +151,32 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
       body::before {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; height: 400px;
-        background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%);
+        top: 0; left: 0; right: 0; height: 380px;
+        background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
         z-index: 1;
       }
       .card {
-        background: #fff;
+        background: #ffffff;
         border-radius: 24px;
         padding: 60px 48px;
         text-align: center;
         max-width: 480px;
         width: 90%;
-        box-shadow: 0 25px 50px -12px rgba(190, 18, 60, 0.15);
+        box-shadow: 0 32px 64px -12px rgba(211, 47, 47, 0.15);
         animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         position: relative;
         z-index: 2;
-        border: 1px solid rgba(190, 18, 60, 0.05);
+        border: 1px solid rgba(211, 47, 47, 0.05);
       }
       @keyframes slideUp {
         from { opacity: 0; transform: translateY(40px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .icon-container {
-        width: 88px;
-        height: 88px;
-        background: #FFF1F2;
-        border-radius: 24px;
+        width: 96px;
+        height: 96px;
+        background: #FEF2F2;
+        border-radius: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -188,9 +188,9 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
         100% { transform: scale(1); opacity: 1; }
       }
       .icon-container svg {
-        width: 44px;
-        height: 44px;
-        stroke: #E11D48;
+        width: 48px;
+        height: 48px;
+        stroke: #EF4444;
         stroke-width: 3;
         fill: none;
       }
@@ -198,33 +198,34 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
         color: #1A237E;
         font-size: 32px;
         font-weight: 900;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         letter-spacing: -0.03em;
       }
       .error-msg {
-        color: #BE123C;
+        color: #B91C1C;
         font-size: 14px;
         font-weight: 700;
-        background: #FFF1F2;
-        padding: 12px 20px;
+        background: #FEF2F2;
+        padding: 14px 24px;
         border-radius: 12px;
-        margin-bottom: 24px;
+        margin-bottom: 32px;
         display: inline-block;
+        border: 1px solid rgba(185, 28, 28, 0.1);
       }
       p {
         color: #546E7A;
         font-size: 16px;
-        line-height: 1.6;
+        line-height: 1.65;
         margin-bottom: 40px;
         font-weight: 500;
       }
       .btn {
         display: inline-block;
         background: #1565C0;
-        color: #fff;
+        color: #ffffff;
         text-decoration: none;
         padding: 16px 48px;
-        border-radius: 14px;
+        border-radius: 10px;
         font-weight: 800;
         font-size: 16px;
         transition: all 0.3s ease;
@@ -237,12 +238,12 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
         box-shadow: 0 15px 30px -5px rgba(21, 101, 192, 0.4);
       }
       .footer {
-        margin-top: 40px;
+        margin-top: 48px;
         color: #94A3B8;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
       }
     </style>
   </head>
@@ -258,7 +259,7 @@ export const verificationFailureTemplate = (clientUrl, errMsg) => `
       <div class="error-msg">${errMsg}</div>
       <p>The verification link may have expired or is invalid. Please try logging in again to receive a fresh verification link.</p>
       <a href="${clientUrl}/login" class="btn">Back to Login</a>
-      <p class="footer">MEDIC TOTAL &mdash; Healthcare Redefined</p>
+      <p class="footer">MediSystem &mdash; Healthcare Redefined</p>
     </div>
   </body>
   </html>
