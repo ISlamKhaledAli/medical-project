@@ -17,7 +17,10 @@ import {
     Avatar,
     Chip,
     IconButton,
-    Tooltip
+    Tooltip,
+    Stack,
+    Divider,
+    CircularProgress
 } from "@mui/material";
 import { 
     CalendarMonth as CalendarIcon,
@@ -26,10 +29,14 @@ import {
     ArrowForward as ViewMoreIcon,
     Schedule as ScheduleIcon,
     Person as ProfileIcon,
-    Check as ConfirmIcon
+    Check as ConfirmIcon,
+    Message as MessageIcon,
+    TrendingUp as WeeklyIcon,
+    AccessTime as TimeIcon
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { fetchMyAppointments, updateAppointmentStatus } from "../../features/appointment/appointmentSlice";
+import { fetchConversations } from "../../features/chat/chatSlice";
 import TableSkeleton from "../../components/skeletons/TableSkeleton";
 import StatusBadge from "../../components/appointment/StatusBadge";
 import EmptyState from "../../components/ui/EmptyState";
@@ -61,28 +68,50 @@ const DoctorDashboard = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     const { appointments, isLoading } = useSelector((state) => state.appointment);
+    const { conversations, isLoadingConversations } = useSelector((state) => state.chat);
 
     useEffect(() => {
         dispatch(fetchMyAppointments());
+        dispatch(fetchConversations());
     }, [dispatch]);
 
     // Derived Statistics
     const stats = useMemo(() => {
         const today = new Date().toISOString().split("T")[0];
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const startOfWeekStr = startOfWeek.toISOString().split("T")[0];
         
         return {
             today: (appointments || []).filter(a => a?.appointmentDate?.startsWith(today)).length,
             pending: (appointments || []).filter(a => a?.status === "pending").length,
             completed: (appointments || []).filter(a => a?.status === "completed").length,
+            thisWeek: (appointments || []).filter(a => 
+                a?.appointmentDate?.startsWith(startOfWeekStr) && 
+                a?.status !== "cancelled"
+            ).length,
         };
     }, [appointments]);
 
     // Filter upcoming 5
     const upcomingAppointments = useMemo(() => {
-        return appointments
+        return (appointments || [])
             .filter(a => ["pending", "confirmed"].includes(a.status))
             .slice(0, 5);
     }, [appointments]);
+
+    // Today's appointments for timeline
+    const todayAppointments = useMemo(() => {
+        const today = new Date().toISOString().split("T")[0];
+        return (appointments || [])
+            .filter(a => a?.appointmentDate?.startsWith(today))
+            .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+    }, [appointments]);
+
+    // Recent conversations (last 3)
+    const recentConversations = useMemo(() => {
+        return (conversations || []).slice(0, 3);
+    }, [conversations]);
 
     const handleUpdateStatus = (id, status) => {
         dispatch(updateAppointmentStatus({ id, status }));
@@ -113,7 +142,7 @@ const DoctorDashboard = () => {
 
             {/* Stats Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard 
                         title="Today's Appointments" 
                         value={stats.today} 
@@ -122,7 +151,7 @@ const DoctorDashboard = () => {
                         subtitle="Real-time"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard 
                         title="Pending Confirmations" 
                         value={stats.pending} 
@@ -130,7 +159,16 @@ const DoctorDashboard = () => {
                         color="warning" 
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard 
+                        title="This Week" 
+                        value={stats.thisWeek} 
+                        icon={<WeeklyIcon />} 
+                        color="info" 
+                        subtitle="Appointments"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard 
                         title="Total Completed" 
                         value={stats.completed} 
@@ -143,8 +181,165 @@ const DoctorDashboard = () => {
 
             {/* Main Content Grid */}
             <Grid container spacing={3}>
-                {/* Upcoming Appointments */}
+                {/* Today's Schedule Timeline */}
                 <Grid item xs={12} lg={8}>
+                    <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+                        <CardContent>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <TimeIcon color="primary" /> Today's Schedule
+                                </Typography>
+                                <Button 
+                                    endIcon={<ViewMoreIcon />} 
+                                    component={RouterLink}
+                                    to="/doctor/appointments"
+                                    sx={{ textTransform: "none", fontWeight: 600 }}
+                                >
+                                    View All
+                                </Button>
+                            </Box>
+
+                            {isLoading ? (
+                                <TableSkeleton rows={5} />
+                            ) : todayAppointments.length === 0 ? (
+                                <Box sx={{ py: 4, textAlign: "center" }}>
+                                    <Typography color="text.secondary">No appointments scheduled for today.</Typography>
+                                </Box>
+                            ) : (
+                                <Stack spacing={2}>
+                                    {todayAppointments.map((apt, index) => (
+                                        <Paper 
+                                            key={apt._id || apt.id}
+                                            elevation={0}
+                                            sx={{ 
+                                                p: 2, 
+                                                borderRadius: 2, 
+                                                border: "1px solid rgba(0,0,0,0.05)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                bgcolor: index % 2 === 0 ? "rgba(0,0,0,0.01)" : "transparent"
+                                            }}
+                                        >
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Box sx={{ 
+                                                    minWidth: 60, 
+                                                    textAlign: 'center',
+                                                    py: 1,
+                                                    px: 1.5,
+                                                    borderRadius: 2,
+                                                    bgcolor: "primary.light",
+                                                    color: "primary.main"
+                                                }}>
+                                                    <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
+                                                        {apt.startTime || '--:--'}
+                                                    </Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                        {apt.patient?.name || "Anonymous Patient"}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {apt.startTime || "--:--"} - {apt.endTime || "--:--"}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <StatusBadge status={apt.status} />
+                                                {apt.status === "pending" && (
+                                                    <Tooltip title="Confirm Appointment">
+                                                        <IconButton 
+                                                            color="success" 
+                                                            size="small"
+                                                            onClick={() => handleUpdateStatus(apt._id || apt.id, "confirmed")}
+                                                            sx={{ bgcolor: "success.light", "&:hover": { bgcolor: "success.main", color: "white" } }}
+                                                        >
+                                                            <ConfirmIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                            </Stack>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Recent Messages */}
+                <Grid item xs={12} lg={4}>
+                    <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", height: '100%' }}>
+                        <CardContent>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MessageIcon color="primary" /> Recent Messages
+                                </Typography>
+                                <Button 
+                                    size="small"
+                                    component={RouterLink}
+                                    to="/doctor/chat"
+                                    sx={{ textTransform: "none", fontWeight: 600 }}
+                                >
+                                    View All
+                                </Button>
+                            </Box>
+
+                            {isLoadingConversations ? (
+                                <Box sx={{ py: 2 }}><CircularProgress size={24} /></Box>
+                            ) : recentConversations.length === 0 ? (
+                                <Box sx={{ py: 4, textAlign: "center" }}>
+                                    <Typography color="text.secondary" variant="body2">
+                                        No recent messages.
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Stack spacing={2}>
+                                    {recentConversations.map((conv) => (
+                                        <Paper 
+                                            key={conv._id || conv.partnerId}
+                                            elevation={0}
+                                            sx={{ 
+                                                p: 2, 
+                                                borderRadius: 2, 
+                                                border: "1px solid rgba(0,0,0,0.05)",
+                                                cursor: 'pointer',
+                                                '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' }
+                                            }}
+                                            component={RouterLink}
+                                            to={`/doctor/chat/${conv.partnerId}`}
+                                        >
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Avatar sx={{ bgcolor: "primary.main" }}>
+                                                    {conv.partner?.fullName?.[0] || conv.partner?.name?.[0] || 'U'}
+                                                </Avatar>
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                                                        {conv.partner?.fullName || conv.partner?.name || 'Unknown'}
+                                                        {conv.unreadCount > 0 && (
+                                                            <Chip 
+                                                                label={conv.unreadCount} 
+                                                                size="small" 
+                                                                color="error" 
+                                                                sx={{ height: 20, fontSize: '0.7rem' }} 
+                                                            />
+                                                        )}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {conv.lastMessage?.text || "No messages yet"}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Upcoming Appointments - Keep for reference but hide if redundant */}
+                <Grid item xs={12}>
                     <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                         <CardContent>
                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -225,8 +420,6 @@ const DoctorDashboard = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-
-
             </Grid>
         </Box>
     );

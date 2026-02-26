@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
-import { 
+import { useNavigate } from "react-router-dom";
+import {
     AppBar, 
     Toolbar, 
     Box, 
@@ -27,11 +28,13 @@ import { useState } from "react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { fetchConversations } from "../../features/chat/chatSlice";
 import NotificationBell from "./NotificationBell";
+import { ROLES } from "../../constants/roles";
 
 const Navbar = ({ onMenuClick }) => {
     const { user } = useSelector((state) => state.auth);
     const { conversations } = useSelector((state) => state.chat);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
 
     const totalUnreadMessages = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
@@ -49,25 +52,19 @@ const Navbar = ({ onMenuClick }) => {
         handleClose();
     };
 
-    const handleProfileClickMenu = () => {
+    const handleChatClick = () => {
+        dispatch(fetchConversations());
+        navigate('/chat');
+    };
+
+    const handleProfileMenuClick = () => {
         handleClose();
-        // Navigate to profile based on user role
-        if (user?.role === 'doctor') {
-            navigate('/doctor/profile');
-        } else if (user?.role === 'patient') {
-            navigate('/patient/profile');
-        } else if (user?.role === 'admin') {
-            navigate('/admin/dashboard');
-        }
+        navigate('/doctor/profile');
     };
 
     const handleSettingsClick = () => {
         handleClose();
         navigate('/settings');
-    };
-
-    const handleChatClick = () => {
-        navigate('/chat');
     };
 
     return (
@@ -186,11 +183,14 @@ const Navbar = ({ onMenuClick }) => {
                             }
                         }}
                     >
-                        <MenuItem onClick={handleClose}>
-                            <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
-                            Profile
-                        </MenuItem>
-                        <MenuItem onClick={handleClose}>
+                        {/* Only show Profile menu item for doctors */}
+                        {user?.role === ROLES.DOCTOR && (
+                            <MenuItem onClick={handleProfileMenuClick}>
+                                <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+                                Profile
+                            </MenuItem>
+                        )}
+                        <MenuItem onClick={handleSettingsClick}>
                             <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
                             Account Settings
                         </MenuItem>

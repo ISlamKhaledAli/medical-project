@@ -59,16 +59,23 @@ const SettingsPage = () => {
     };
 
     // Define tabs based on role
-    const tabs = [
-        { label: "Profile", icon: <ProfileIcon />, component: <ProfileSettings /> },
-        { label: "Password", icon: <PasswordIcon />, component: <PasswordSettings /> },
-        { label: "Notifications", icon: <NotifyIcon />, component: <NotificationSettings /> },
-    ];
+    const tabs = [];
 
+    // Profile tab - only for doctors
+    if (user?.role === ROLES.DOCTOR) {
+        tabs.push({ label: "Profile", icon: <ProfileIcon />, component: <ProfileSettings /> });
+    }
+
+    // Password and Notifications - available to all authenticated users
+    tabs.push({ label: "Password", icon: <PasswordIcon />, component: <PasswordSettings /> });
+    tabs.push({ label: "Notifications", icon: <NotifyIcon />, component: <NotificationSettings /> });
+
+    // Professional Info - only for doctors
     if (user?.role === ROLES.DOCTOR) {
         tabs.push({ label: "Professional Info", icon: <DoctorIcon />, component: <DoctorSettings /> });
     }
 
+    // System Config - only for admins
     if (user?.role === ROLES.ADMIN) {
         tabs.push({ label: "System Config", icon: <AdminIcon />, component: <AdminSettings /> });
     }
