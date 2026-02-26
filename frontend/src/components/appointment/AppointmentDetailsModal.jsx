@@ -45,7 +45,7 @@ const AppointmentDetailsModal = ({ open, onClose, appointment }) => {
                 sx: { borderRadius: 3, p: 1 }
             }}
         >
-            <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <DialogTitle component="div" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>Appointment Details</Typography>
                 <IconButton onClick={onClose} size="small">
                     <CloseIcon />

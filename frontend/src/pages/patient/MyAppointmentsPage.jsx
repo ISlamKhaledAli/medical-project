@@ -266,7 +266,7 @@ const MyAppointmentsPage = () => {
                 onClose={handleCloseDialogs}
                 PaperProps={{ sx: { borderRadius: 4, width: '100%', maxWidth: 450 } }}
             >
-                <DialogTitle sx={{ p: 3, pb: 0 }}>
+                <DialogTitle component="div" sx={{ p: 3, pb: 0 }}>
                     <Stack direction="row" spacing={2} alignItems="center">
                         <Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main', display: 'flex' }}>
                             <AlertTriangle size={24} />

@@ -299,7 +299,7 @@ export default function AdminSpecialtyPage() {
 
             {/* Delete Confirmation */}
             <Dialog open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} PaperProps={{ sx: { borderRadius: 4, maxWidth: 400 } }}>
-                <DialogTitle sx={{ p: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <DialogTitle component="div" sx={{ p: 3, pb: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
                     <AlertTriangle color={theme.palette.error.main} />
                     <Typography variant="h6" sx={{ fontWeight: 900 }}>Decommission Domain?</Typography>
                 </DialogTitle>

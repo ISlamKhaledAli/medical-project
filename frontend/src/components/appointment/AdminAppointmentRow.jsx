@@ -166,7 +166,7 @@ const AdminAppointmentRow = ({
 
             {/* Critical Delete Confirmation */}
             <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { borderRadius: 4 } }}>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <DialogTitle component="div" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <AlertTriangle color={theme.palette.error.main} /> 
                     <Typography variant="h6" sx={{ fontWeight: 900 }}>Purge Clinical Record?</Typography>
                 </DialogTitle>

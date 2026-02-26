@@ -256,7 +256,7 @@ const AdminDoctorApprovals = () => {
                 onClose={() => setConfirmAction(null)}
                 PaperProps={{ sx: { borderRadius: 4, width: '100%', maxWidth: 450 } }}
             >
-                <DialogTitle sx={{ p: 3, pb: 0 }}>
+                <DialogTitle component="div" sx={{ p: 3, pb: 0 }}>
                     <Stack direction="row" spacing={2} alignItems="center">
                         <Box sx={{ 
                             p: 1.5, 
