@@ -2,33 +2,44 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-    Container, 
     Grid, 
     Box, 
     Typography, 
     Avatar, 
     Button, 
-    Paper, 
     Chip, 
     Rating, 
     Divider,
-    IconButton,
-    CircularProgress
+    Stack,
+    alpha,
+    useTheme,
+    Paper
 } from "@mui/material";
 import { 
-    ArrowBack as BackIcon, 
-    LocationOn as LocationIcon, 
-    LocalHospital as HospitalIcon,
-    School as EducationIcon,
-    Language as LanguageIcon,
-    AccessTime as TimeIcon
-} from "@mui/icons-material";
+    MapPin, 
+    Building,
+    GraduationCap,
+    Languages,
+    Clock,
+    Award,
+    CalendarCheck,
+    ChevronLeft,
+    CheckCircle2,
+    Heart,
+    DollarSign,
+    Users
+} from "lucide-react";
 import { fetchDoctorById, clearDoctorDetails } from "../../features/doctor/doctorSlice";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import GlobalLoader from "../../components/ui/GlobalLoader";
+import ErrorState from "../../components/ui/ErrorState";
 
 const DoctorDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { doctorDetails: doctor, isLoading, error } = useSelector((state) => state.doctor);
 
     useEffect(() => {
@@ -36,168 +47,216 @@ const DoctorDetailsPage = () => {
         return () => dispatch(clearDoctorDetails());
     }, [dispatch, id]);
 
-    if (isLoading) {
-        return (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    if (isLoading) return <GlobalLoader message="Retrieving clinical profile..." />;
 
-    if (error || !doctor) {
-        return (
-            <Container sx={{ py: 10, textAlign: "center" }}>
-                <Typography color="error" variant="h5" sx={{ mb: 2 }}>
-                    {error || "Doctor not found"}
-                </Typography>
-                <Button variant="contained" onClick={() => navigate("/doctors")}>Back to List</Button>
-            </Container>
-        );
-    }
+    if (error || !doctor) return (
+        <Box sx={{ p: 4 }}>
+            <ErrorState 
+                message={error || "The requested specialist profile is unavailable."} 
+                onRetry={() => dispatch(fetchDoctorById(id))} 
+            />
+        </Box>
+    );
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Button 
-                startIcon={<BackIcon />} 
-                onClick={() => navigate(-1)}
-                sx={{ mb: 4, textTransform: "none", fontWeight: 700, color: "text.secondary" }}
-            >
-                Back
-            </Button>
+        <Box>
+            <PageHeader 
+                title={`Dr. ${doctor.user?.fullName}`}
+                subtitle={`${doctor.specialty?.name || "Specialist"} • ${doctor.experienceYears || "15+"} Years Experience`}
+                breadcrumbs={[
+                    { label: "Doctors", path: "/patient/doctors" },
+                    { label: "Profile Details", active: true }
+                ]}
+                action={{
+                    label: "Return to Search",
+                    icon: ChevronLeft,
+                    onClick: () => navigate("/patient/doctors")
+                }}
+            />
 
             <Grid container spacing={4}>
-                {/* Left Side: Profile Card */}
-                <Grid item xs={12} md={4}>
-                    <Paper 
-                        elevation={0} 
+                {/* Profile Card Sidebar */}
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <SectionCard 
                         sx={{ 
-                            p: 4, 
-                            borderRadius: 4, 
-                            textAlign: "center",
-                            border: "1px solid rgba(0,0,0,0.05)",
-                            position: "sticky",
-                            top: 100
+                            position: "sticky", 
+                            top: 100,
+                            textAlign: "center"
                         }}
                     >
                         <Avatar 
-                            src={doctor.image} 
-                            sx={{ width: 150, height: 150, mx: "auto", mb: 3, border: "5px solid white", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} 
-                        />
-                        <Typography variant="h5" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
-                            Dr. {doctor.user?.fullName || doctor.user?.name}
-                        </Typography>
-                        <Chip 
-                            label={doctor.specialty?.name || doctor.specialty} 
-                            color="primary" 
-                            size="small"
-                            sx={{ fontWeight: 700, mb: 3 }} 
-                        />
+                            src={doctor.user?.profileImage} 
+                            sx={{ 
+                                width: 140, 
+                                height: 140, 
+                                mx: "auto", 
+                                mb: 3, 
+                                border: `6px solid ${alpha(theme.palette.primary.main, 0.05)}`,
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                                borderRadius: 5
+                            }} 
+                        >
+                            {doctor.user?.fullName?.[0]}
+                        </Avatar>
                         
-                        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mb: 3 }}>
-                            <Rating value={doctor.rating || 4.8} readOnly precision={0.5} />
-                            <Typography variant="body2" sx={{ ml: 1, fontWeight: 700 }}>
-                                {doctor.rating || 4.8}
-                            </Typography>
-                        </Box>
-
-                        <Divider sx={{ mb: 3 }} />
-
-                        <Box sx={{ textAlign: "left", mb: 4 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                <LocationIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                <Typography variant="body2">{doctor.address || "Medical Plaza, NYC"}</Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 900, mb: 1 }}>
+                            Dr. {doctor.user?.fullName}
+                        </Typography>
+                        
+                        <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 3 }}>
+                            <Chip 
+                                label={doctor.specialty?.name} 
+                                size="small"
+                                sx={{ 
+                                    fontWeight: 800, 
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                    color: 'primary.main',
+                                    borderRadius: 1.5
+                                }} 
+                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.5, py: 0.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.dark' }}>
+                                <Rating value={doctor.rating || 4.8} readOnly precision={0.5} size="small" />
+                                <Typography variant="caption" sx={{ fontWeight: 800 }}>{doctor.rating || 4.8}</Typography>
                             </Box>
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                <HospitalIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                <Typography variant="body2">{doctor.hospital || "Central Hope Hospital"}</Typography>
+                        </Stack>
+
+                        <Divider sx={{ mb: 3, borderStyle: 'dashed' }} />
+
+                        <Stack spacing={2} sx={{ textAlign: 'left', mb: 4 }}>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <MapPin size={18} color={theme.palette.primary.main} />
+                                <Box>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block' }}>Clinical Address</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{doctor.address || "Medical Plaza, NYC East 42nd"}</Typography>
+                                </Box>
                             </Box>
-                        </Box>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Building size={18} color={theme.palette.primary.main} />
+                                <Box>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block' }}>Primary Hospital</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{doctor.hospitalName || "Central Hope Research Hospital"}</Typography>
+                                </Box>
+                            </Box>
+                        </Stack>
 
                         <Button 
                             fullWidth 
                             variant="contained" 
                             size="large"
                             onClick={() => navigate(`/patient/book/${doctor._id}`)}
-                            sx={{ borderRadius: 3, py: 1.5, fontWeight: 800, fontSize: "1rem" }}
+                            sx={{ 
+                                borderRadius: 3, 
+                                py: 2, 
+                                fontWeight: 900, 
+                                fontSize: "1rem",
+                                textTransform: 'none',
+                                boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.2)}`
+                            }}
                         >
-                            Book Appointment
+                            Book Consultation
                         </Button>
-                    </Paper>
+                    </SectionCard>
                 </Grid>
 
-                {/* Right Side: Details & Tabs */}
-                <Grid item xs={12} md={8}>
-                    <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)", mb: 4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>About Doctor</Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8, mb: 4 }}>
-                            {doctor.bio || `Dr. ${doctor.user?.fullName || doctor.user?.name} is a distinguished specialist with a focus on clinical excellence and patient care. Over the past 15 years, they have pioneered various treatment protocols and maintained a consistent record of successful outcomes.`}
-                        </Typography>
+                {/* Detailed Information */}
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <Stack spacing={4}>
+                        <SectionCard title="Professional Narrative" icon={Award}>
+                            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.9, fontWeight: 500 }}>
+                                {doctor.bio || `Dr. ${doctor.user?.fullName} is a board-certified ${doctor.specialty?.name} with over 15 years of clinical experience. Known for a patient-centric approach and commitment to medical education, they specialize in complex diagnosis and personalized treatment protocols.`}
+                            </Typography>
 
-                        <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Qualifications</Typography>
-                        <Box sx={{ mb: 4 }}>
-                            {doctor.qualifications?.map((q, idx) => (
-                                <Box key={idx} sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
-                                    <EducationIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                    <Typography variant="body2">{q}</Typography>
-                                </Box>
-                            )) || (
-                                <>
-                                    <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
-                                        <EducationIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                        <Typography variant="body2">MBBS, MD - Harvard Medical School</Typography>
-                                    </Box>
-                                    <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
-                                        <EducationIcon sx={{ color: "primary.main", mr: 2, fontSize: "1.2rem" }} />
-                                        <Typography variant="body2">Fellowship in {doctor.specialty?.name || doctor.specialty} - Johns Hopkins</Typography>
-                                    </Box>
-                                </>
-                            )}
-                        </Box>
+                            <Grid container spacing={2} sx={{ mt: 3 }}>
+                                {[
+                                    { label: 'Experience', value: `${doctor.experienceYears || '15+'} Years`, icon: Award, color: 'primary' },
+                                    { label: 'Followers', value: '2.5k+', icon: Users, color: 'info' },
+                                    { label: 'Consultation', value: `$${doctor.fee || '150'}`, icon: DollarSign, color: 'success' },
+                                    { label: 'Linguistic', value: 'English, FR', icon: Languages, color: 'warning' }
+                                ].map((stat, i) => (
+                                    <Grid size={{ xs: 6, sm: 3 }} key={i}>
+                                        <Paper 
+                                            elevation={0} 
+                                            sx={{ 
+                                                p: 2, 
+                                                borderRadius: 3, 
+                                                bgcolor: alpha(theme.palette[stat.color].main, 0.04),
+                                                border: '1px solid',
+                                                borderColor: alpha(theme.palette[stat.color].main, 0.1),
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            <stat.icon size={18} color={theme.palette[stat.color].main} style={{ marginBottom: 4 }} />
+                                            <Typography variant="h6" sx={{ fontWeight: 900, mb: 0.5 }}>{stat.value}</Typography>
+                                            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>{stat.label}</Typography>
+                                        </Paper>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </SectionCard>
 
-                        <Divider sx={{ mb: 4 }} />
+                        <SectionCard title="Credentials & Academic Root" icon={GraduationCap}>
+                            <Stack spacing={2.5}>
+                                {(doctor.qualifications || [
+                                    "MBBS, MD - Harvard Medical School",
+                                    `Fellowship in ${doctor.specialty?.name} - Johns Hopkins Medicine`,
+                                    "Board Certified Internal Medicine Specialist"
+                                ]).map((q, idx) => (
+                                    <Box key={idx} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main' }}>
+                                            <CheckCircle2 size={16} />
+                                        </Box>
+                                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{q}</Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </SectionCard>
 
                         <Grid container spacing={3}>
-                            <Grid item xs={6} sm={3}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>Experience</Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 700 }}>15+ Years</Typography>
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <SectionCard title="Practice Velocity" icon={Clock}>
+                                    <Stack spacing={2}>
+                                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
+                                            <Box key={day} sx={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{day}</Typography>
+                                                <Typography variant="caption" sx={{ fontWeight: 600, px: 2, py: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.background.default, 0.8), border: '1px solid', borderColor: 'divider' }}>
+                                                    09:00 AM - 05:00 PM
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </SectionCard>
                             </Grid>
-                            <Grid item xs={6} sm={3}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>Patients</Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 700 }}>2,500+</Typography>
-                            </Grid>
-                            <Grid item xs={6} sm={3}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>Language</Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 700 }}>English, Spanish</Typography>
-                            </Grid>
-                            <Grid item xs={6} sm={3}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>Fee</Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 700, color: "success.main" }}>$150.00</Typography>
+                            
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <SectionCard title="Quick Booking" icon={CalendarCheck}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontWeight: 500 }}>
+                                        Secure your slot today. We offer same-day emergency consultations for critical concerns.
+                                    </Typography>
+                                    <Stack spacing={2}>
+                                        <Button 
+                                            variant="soft" 
+                                            fullWidth 
+                                            sx={{ borderRadius: 2.5, py: 1.5, fontWeight: 800, textTransform: 'none' }}
+                                            onClick={() => navigate(`/patient/book/${doctor._id}`)}
+                                        >
+                                            View Real-time Availability
+                                        </Button>
+                                        <Button 
+                                            variant="text" 
+                                            fullWidth 
+                                            startIcon={<Heart size={18} />}
+                                            sx={{ fontWeight: 800, textTransform: 'none', color: 'error.main' }}
+                                        >
+                                            Add to Personal Care Team
+                                        </Button>
+                                    </Stack>
+                                </SectionCard>
                             </Grid>
                         </Grid>
-                    </Paper>
-
-                    {/* Schedule Snippet */}
-                    <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 800 }}>Clinic Hours</Typography>
-                            <Box sx={{ display: "flex", alignItems: "center", color: "success.main" }}>
-                                <TimeIcon sx={{ fontSize: "1rem", mr: 0.5 }} />
-                                <Typography variant="caption" sx={{ fontWeight: 700 }}>Available Today</Typography>
-                            </Box>
-                        </Box>
-                        
-                        <Grid container spacing={2}>
-                            {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => (
-                                <Grid item xs={12} key={day} sx={{ display: "flex", justifyContent: "space-between" }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{day}</Typography>
-                                    <Typography variant="body2" color="text.secondary">09:00 AM - 05:00 PM</Typography>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Paper>
+                    </Stack>
                 </Grid>
             </Grid>
-        </Container>
+        </Box>
     );
 };
 

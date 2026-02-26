@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-    Container,
-    Paper,
     Typography,
     Box,
     Grid,
@@ -10,10 +8,14 @@ import {
     FormControlLabel,
     MenuItem,
     Button,
-    CircularProgress,
     Alert,
     Tooltip,
     TextField,
+    alpha,
+    useTheme,
+    Stack,
+    Paper,
+    Divider
 } from "@mui/material";
 import { 
     LocalizationProvider, 
@@ -22,13 +24,23 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import {
-    Save as SaveIcon,
-    AccessTime as TimeIcon,
-    Warning as WarningIcon,
-} from "@mui/icons-material";
+    Save,
+    Clock,
+    AlertTriangle,
+    Calendar,
+    Settings2,
+    CheckCircle2,
+    Info,
+    Sparkles,
+    MousePointerClick
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { saveWeeklySchedule, fetchDoctorSchedule, clearSchedule } from "../../features/availability/availabilitySlice";
 import { fetchMyProfile } from "../../features/doctor/doctorSlice";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import GlobalLoader from "../../components/ui/GlobalLoader";
+import ErrorState from "../../components/ui/ErrorState";
 
 const DAYS = [
     { label: "Sunday", value: 0 },
@@ -42,8 +54,8 @@ const DAYS = [
 
 const ScheduleSetupPage = () => {
     const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.auth);
-    const { workingDays, weeklySchedule, isActionLoading, loading, isScheduleLoaded } = useSelector((state) => state.availability);
+    const theme = useTheme();
+    const { weeklySchedule, isActionLoading, loading, isScheduleLoaded, workingDays } = useSelector((state) => state.availability);
 
     const [error, setError] = useState(null);
     const [schedule, setSchedule] = useState(
@@ -57,7 +69,6 @@ const ScheduleSetupPage = () => {
         }))
     );
 
-    // Initial Load: Fetch doctor's profile and their schedule
     useEffect(() => {
         const loadInitialData = async () => {
             try {
@@ -69,8 +80,7 @@ const ScheduleSetupPage = () => {
                     dispatch(fetchDoctorSchedule({ doctorId }));
                 }
             } catch (err) {
-                console.error("Failed to load doctor profile or schedule:", err);
-                setError(err || "Failed to load schedule");
+                setError(err || "Failed to initialize clinical schedule patterns");
             }
         };
 
@@ -87,6 +97,7 @@ const ScheduleSetupPage = () => {
                 const existing = weeklySchedule.find(a => a.dayOfWeek === day.value);
                 if (existing) {
                     return {
+                        ...day,
                         dayOfWeek: day.value,
                         dayName: day.label,
                         isActive: existing.isActive !== false,
@@ -132,13 +143,12 @@ const ScheduleSetupPage = () => {
         setError(null);
         const activeDays = schedule.filter(d => d.isActive);
         
-        // 1. Validation
+        if (activeDays.length === 0) {
+            toast.error("Please activate at least one clinical working day");
+            return;
+        }
+
         for (const day of activeDays) {
-            if (!day.startTime || !day.endTime) {
-                toast.error(`Please set both start and end time for ${day.dayName}`);
-                return;
-            }
-            
             const startMin = day.startTime.hour() * 60 + day.startTime.minute();
             const endMin = day.endTime.hour() * 60 + day.endTime.minute();
             
@@ -148,7 +158,6 @@ const ScheduleSetupPage = () => {
             }
         }
 
-        // 2. Format payload
         const payload = schedule.map(day => ({
             dayOfWeek: day.dayOfWeek,
             isActive: day.isActive,
@@ -159,145 +168,268 @@ const ScheduleSetupPage = () => {
 
         try {
             await dispatch(saveWeeklySchedule(payload)).unwrap();
-            toast.success("Schedule saved successfully!");
+            toast.success("Clinical availability configured!");
         } catch (err) {
-            console.error("Save failed:", err);
-            setError(err || "Failed to save schedule");
-            toast.error(err || "Failed to save schedule");
+            setError(err || "Failed to commit clinical patterns");
+            toast.error(err || "Failed to finalize setup");
         }
     };
 
-    if (loading && !isScheduleLoaded) {
-        return (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    if (loading && !isScheduleLoaded) return <GlobalLoader message="Initializing clinical configuration..." />;
+
+    const hasNoSchedule = workingDays.length === 0 && isScheduleLoaded;
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-                    <Box>
-                        <Typography variant="h4" sx={{ fontWeight: 900, color: "primary.main" }}>
-                            Weekly Schedule
-                        </Typography>
-                        <Typography color="text.secondary">
-                            Set your recurring weekly working hours and slot durations.
-                        </Typography>
-                    </Box>
-                    <Button
-                        variant="contained"
-                        size="large"
-                        startIcon={isActionLoading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                        onClick={handleSave}
-                        disabled={isActionLoading}
-                        sx={{ borderRadius: 3, px: 4, fontWeight: 700 }}
-                    >
-                        Save Schedule
-                    </Button>
-                </Box>
+            <Box>
+                <PageHeader 
+                    title="Clinical Configuration"
+                    subtitle="Initialize your digital clinical presence. Configure your recurring availability and session durations for patient booking."
+                    breadcrumbs={[
+                        { label: "Onboarding", path: "/doctor" },
+                        { label: "Schedule Setup", active: true }
+                    ]}
+                    action={{
+                        label: isActionLoading ? "Processing..." : "Finalize Configuration",
+                        icon: Sparkles,
+                        onClick: handleSave,
+                        disabled: isActionLoading,
+                        color: 'primary'
+                    }}
+                />
+
+                <Grid container spacing={4}>
+                    <Grid size={{ xs: 12, lg: 8 }}>
+                        {hasNoSchedule && (
+                            <Alert 
+                                severity="info" 
+                                variant="soft"
+                                icon={<Sparkles size={24} />}
+                                sx={{ mb: 4, borderRadius: 4, py: 2, fontWeight: 700, border: '1px solid', borderColor: alpha(theme.palette.info.main, 0.2) }}
+                            >
+                                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>Welcome to your Digital Practice</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>Activate your working days below to begin receiving appointment requests. Your availability defines your platform visibility.</Typography>
+                            </Alert>
+                        )}
+
+                        <SectionCard 
+                            title="Availability Blueprint" 
+                            subtitle="Toggle active days and define session durations"
+                        >
+                            <Stack spacing={2.5}>
+                                {schedule.map((day, index) => (
+                                    <Paper
+                                        key={day.dayOfWeek}
+                                        elevation={0}
+                                        sx={{
+                                            p: 3,
+                                            borderRadius: 4,
+                                            border: "1px solid",
+                                            borderColor: day.isActive ? alpha(theme.palette.primary.main, 0.25) : "divider",
+                                            bgcolor: day.isActive ? "white" : alpha(theme.palette.background.default, 0.4),
+                                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                            "&:hover": { borderColor: alpha(theme.palette.primary.main, 0.4) }
+                                        }}
+                                    >
+                                        <Grid container alignItems="center" spacing={3}>
+                                            <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            checked={day.isActive}
+                                                            onChange={() => handleToggle(index)}
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Typography sx={{ 
+                                                            fontWeight: 900, 
+                                                            color: day.isActive ? "text.primary" : "text.disabled",
+                                                            fontSize: '1rem',
+                                                            ml: 1
+                                                        }}>
+                                                            {day.dayName}
+                                                        </Typography>
+                                                    }
+                                                />
+                                            </Grid>
+
+                                            <Grid size={{ xs: 12, sm: 8, md: 9 }}>
+                                                <Stack 
+                                                    direction={{ xs: "column", md: "row" }} 
+                                                    spacing={2} 
+                                                    alignItems="center"
+                                                    sx={{ 
+                                                        opacity: day.isActive ? 1 : 0.3, 
+                                                        pointerEvents: day.isActive ? "auto" : "none" 
+                                                    }}
+                                                >
+                                                    <Box sx={{ display: 'flex', gap: 1.5, width: '100%', flexGrow: 1 }}>
+                                                        <TimePicker
+                                                            label="Shift Start"
+                                                            value={day.startTime}
+                                                            onChange={(val) => handleChange(index, "startTime", val)}
+                                                            slotProps={{ 
+                                                                textField: { 
+                                                                    size: "small", 
+                                                                    fullWidth: true,
+                                                                    sx: { '& .MuiOutlinedInput-root': { borderRadius: 2.5 } } 
+                                                                } 
+                                                            }}
+                                                        />
+                                                        <TimePicker
+                                                            label="Shift End"
+                                                            value={day.endTime}
+                                                            onChange={(val) => handleChange(index, "endTime", val)}
+                                                            slotProps={{ 
+                                                                textField: { 
+                                                                    size: "small", 
+                                                                    fullWidth: true,
+                                                                    sx: { '& .MuiOutlinedInput-root': { borderRadius: 2.5 } } 
+                                                                } 
+                                                            }}
+                                                        />
+                                                    </Box>
+
+                                                    <TextField
+                                                        select
+                                                        label="Session"
+                                                        value={day.slotDuration}
+                                                        onChange={(e) => handleChange(index, "slotDuration", e.target.value)}
+                                                        size="small"
+                                                        sx={{ 
+                                                            minWidth: 130,
+                                                            '& .MuiOutlinedInput-root': { borderRadius: 2.5 } 
+                                                        }}
+                                                    >
+                                                        {[15, 30, 45, 60].map(m => (
+                                                            <MenuItem key={m} value={m} sx={{ fontWeight: 800 }}>{m} Minutes</MenuItem>
+                                                        ))}
+                                                    </TextField>
+
+                                                    <Box 
+                                                        sx={{ 
+                                                            display: "flex", 
+                                                            alignItems: "center", 
+                                                            gap: 1, 
+                                                            px: 2, 
+                                                            py: 0.8, 
+                                                            borderRadius: 2.5, 
+                                                            bgcolor: day.isActive ? alpha(theme.palette.primary.main, 0.05) : "transparent",
+                                                            border: '1px solid',
+                                                            borderColor: day.isActive ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                                                            color: day.isActive ? 'primary.main' : 'text.disabled',
+                                                            minWidth: 110,
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        <Clock size={14} />
+                                                        <Typography variant="caption" sx={{ fontWeight: 900 }}>
+                                                            {day.isActive ? `${calculateSlots(day.startTime, day.endTime, day.slotDuration)} slots` : "--"}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            </Grid>
+                                        </Grid>
+                                    </Paper>
+                                ))}
+                            </Stack>
+                        </SectionCard>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, lg: 4 }}>
+                        <Stack spacing={3}>
+                            <SectionCard title="Configuration Guide" icon={Info}>
+                                <Stack spacing={3}>
+                                    <Box>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: 'primary.main' }}>
+                                            Predictive Slot Generation
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.6 }}>
+                                            The system automatically segments your clinical shift into bookable sessions based on the selected duration.
+                                        </Typography>
+                                    </Box>
+
+                                    <Divider />
+
+                                    <Stack spacing={2.5}>
+                                        {[
+                                            { icon: Clock, title: 'Session Precision', desc: 'Choose a duration that matches your clinical workflow.', color: 'info' },
+                                            { icon: MousePointerClick, title: 'Interactive Selection', desc: 'Toggle days on/off to reflect your real-world hours.', color: 'success' },
+                                            { icon: Sparkles, title: 'Instant Visibility', desc: 'Patients can book immediately after you finalize setup.', color: 'warning' }
+                                        ].map((item, i) => (
+                                            <Box key={i} sx={{ display: 'flex', gap: 2 }}>
+                                                <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette[item.color].main, 0.1), color: `${item.color}.main`, height: 'fit-content' }}>
+                                                    <item.icon size={18} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ fontWeight: 900, display: 'block' }}>{item.title}</Typography>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>{item.desc}</Typography>
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+
+                                    {!schedule.some(d => d.isActive) && (
+                                        <Alert 
+                                          severity="error" 
+                                          icon={<AlertTriangle size={18} />}
+                                          sx={{ 
+                                            borderRadius: "16px", 
+                                            bgcolor: alpha(theme.palette.error.main, 0.05), 
+                                            color: 'error.dark',
+                                            border: '1px solid', 
+                                            borderColor: alpha(theme.palette.error.main, 0.1),
+                                            fontWeight: 800
+                                          }}
+                                        >
+                                            At least one active day is required to proceed.
+                                        </Alert>
+                                    )}
+                                </Stack>
+                            </SectionCard>
+
+                            <Paper 
+                                elevation={0}
+                                sx={{ 
+                                    p: 4, 
+                                    borderRadius: 4, 
+                                    bgcolor: alpha(theme.palette.primary.main, 0.03),
+                                    border: '1px dashed',
+                                    borderColor: alpha(theme.palette.primary.main, 0.2),
+                                    textAlign: 'center'
+                                }}
+                            >
+                                <Typography variant="h3" sx={{ fontWeight: 900, color: 'primary.main', mb: 1 }}>
+                                    {schedule.filter(d => d.isActive).length} / 7
+                                </Typography>
+                                <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                                    Clinical Week Active
+                                </Typography>
+                            </Paper>
+                        </Stack>
+                    </Grid>
+                </Grid>
 
                 {error && (
-                    <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>
+                    <Alert 
+                        severity="error" 
+                        sx={{ 
+                            mt: 3, 
+                            borderRadius: "16px",
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            color: "error.dark",
+                            border: "1px solid",
+                            borderColor: alpha(theme.palette.error.main, 0.2),
+                            fontWeight: 600,
+                            py: 1.5,
+                            px: 2.5
+                        }}
+                    >
                         {error}
                     </Alert>
                 )}
-
-                {!workingDays.length && isScheduleLoaded && (
-                    <Alert 
-                        severity="warning" 
-                        icon={<WarningIcon />}
-                        sx={{ mb: 4, borderRadius: 3, fontWeight: 700 }}
-                    >
-                        You have no schedule set. Patients cannot book appointments with you until you set your availability.
-                    </Alert>
-                )}
-
-                <Grid container spacing={3}>
-                    {schedule.map((day, index) => (
-                        <Grid item xs={12} key={day.dayOfWeek}>
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 4,
-                                    border: "1px solid",
-                                    borderColor: day.isActive ? "primary.main" : "divider",
-                                    transition: "all 0.3s",
-                                    bgcolor: day.isActive ? "inherit" : "rgba(0,0,0,0.01)",
-                                }}
-                            >
-                                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 3 }}>
-                                    <Box sx={{ minWidth: 150 }}>
-                                        <FormControlLabel
-                                            control={
-                                                <Switch
-                                                    checked={day.isActive}
-                                                    onChange={() => handleToggle(index)}
-                                                />
-                                            }
-                                            label={
-                                                <Typography sx={{ fontWeight: 800, color: day.isActive ? "text.primary" : "text.disabled" }}>
-                                                    {day.dayName}
-                                                </Typography>
-                                            }
-                                        />
-                                    </Box>
-
-                                    <Box sx={{ 
-                                        display: "flex", 
-                                        flexGrow: 1, 
-                                        gap: 2, 
-                                        opacity: day.isActive ? 1 : 0.4, 
-                                        pointerEvents: day.isActive ? "auto" : "none",
-                                        alignItems: "center"
-                                    }}>
-                                        <TimePicker
-                                            label="Start Time"
-                                            value={day.startTime}
-                                            onChange={(val) => handleChange(index, "startTime", val)}
-                                            slotProps={{ textField: { size: "small", sx: { width: 140 } } }}
-                                        />
-                                        <TimePicker
-                                            label="End Time"
-                                            value={day.endTime}
-                                            onChange={(val) => handleChange(index, "endTime", val)}
-                                            slotProps={{ textField: { size: "small", sx: { width: 140 } } }}
-                                        />
-                                        
-                                        <TextField
-                                            select
-                                            label="Slot Duration"
-                                            value={day.slotDuration}
-                                            onChange={(e) => handleChange(index, "slotDuration", e.target.value)}
-                                            size="small"
-                                            sx={{ minWidth: 150 }}
-                                        >
-                                            <MenuItem value={15}>15 Minutes</MenuItem>
-                                            <MenuItem value={30}>30 Minutes</MenuItem>
-                                            <MenuItem value={45}>45 Minutes</MenuItem>
-                                            <MenuItem value={60}>60 Minutes</MenuItem>
-                                        </TextField>
-
-                                        <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
-                                            <Tooltip title="Estimated slots per day">
-                                                <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary", bgcolor: "rgba(0,0,0,0.03)", px: 2, py: 0.5, borderRadius: 2 }}>
-                                                    <TimeIcon sx={{ fontSize: "1rem", mr: 1 }} />
-                                                    <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                                        {day.isActive ? `${calculateSlots(day.startTime, day.endTime, day.slotDuration)} slots` : "No slots"}
-                                                    </Typography>
-                                                </Box>
-                                            </Tooltip>
-                                        </Box>
-                                    </Box>
-                                </Box>
-                            </Paper>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Container>
+            </Box>
         </LocalizationProvider>
     );
 };

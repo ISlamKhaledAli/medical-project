@@ -2,19 +2,15 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
-  Container,
   Box,
   Typography,
   TextField,
   Button,
-  Paper,
   Grid,
   Radio,
   Alert,
   IconButton,
   InputAdornment,
-  Toolbar,
-  AppBar,
   Stepper,
   Step,
   StepLabel,
@@ -23,27 +19,38 @@ import {
   CircularProgress,
   Link,
   Fade,
-  Grow,
-  Zoom
+  Stack,
+  alpha,
+  useTheme,
+  Paper,
+  Divider
 } from "@mui/material";
 import {
-  Person as PersonIcon,
-  MedicalServices as DoctorIcon,
+  User as PersonIcon,
+  Stethoscope as DoctorIcon,
   ChevronLeft as BackIcon,
-  Visibility,
-  VisibilityOff,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
   Info as InfoIcon,
-  CheckCircle as SuccessIcon,
-} from "@mui/icons-material";
+  CheckCircle2 as SuccessIcon,
+  PlusSquare as PlusIcon,
+  ShieldCheck,
+  Calendar
+} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { validateEmail, validatePassword, validateName, normalizeEmail, getStrengthLabel, getStrengthColor } from "../../utils/validators";
-import { debugUI } from "../../utils/debugTrace";
+import { 
+  validateEmail, 
+  validatePassword, 
+  validateName, 
+  normalizeEmail, 
+  getStrengthLabel, 
+  getStrengthColor 
+} from "../../utils/validators";
 
-const steps = ["Basic Info", "Role Selection", "Role Details"];
+const steps = ["Basic Info", "Role Selection", "Final Review"];
 
 const RegisterPage = () => {
   const { 
-    user, 
     isRegisterLoading, 
     error, 
     successMessage, 
@@ -54,7 +61,7 @@ const RegisterPage = () => {
   } = useAuth();
   
   const navigate = useNavigate();
-  const formRef = useRef(null);
+  const theme = useTheme();
 
   const [activeStep, setActiveStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -80,22 +87,18 @@ const RegisterPage = () => {
     confirmPassword: false,
   });
 
-  // Strength calculation is now memoized to avoid redundant compute on every render
   const passwordStrength = useMemo(() => {
     if (!formData.password) return 0;
     return validatePassword(formData.password).strength;
   }, [formData.password]);
 
-  // Effect for clearing errors between steps
   useEffect(() => {
     clearAuthError();
   }, [clearAuthError, activeStep]);
 
-  // Handle Redirection when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      debugUI("User authenticated, redirecting from register page");
-      const target = userRole === "admin" ? "/admin" : userRole === "doctor" ? "/doctor" : "/";
+      const target = userRole === "admin" ? "/admin" : userRole === "doctor" ? "/doctor/dashboard" : "/patient";
       navigate(target);
     }
   }, [isAuthenticated, userRole, navigate]);
@@ -121,12 +124,10 @@ const RegisterPage = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Auto-validate if already touched
     if (touched[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
 
-    // Sync validation for password match
     if (name === "password" && touched.confirmPassword) {
         setFormErrors(prev => ({ 
             ...prev, 
@@ -153,7 +154,6 @@ const RegisterPage = () => {
       if (nameError || emailError || passwordError || confirmError) {
         setFormErrors({ fullName: nameError, email: emailError, password: passwordError, confirmPassword: confirmError });
         setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
-        debugUI("Validation failed for initial registration step");
         return;
       }
     }
@@ -166,8 +166,6 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    debugUI("Submitting registration request", formData.email);
-    
     await registerUser({
       ...formData,
       fullName: formData.fullName.trim(),
@@ -175,181 +173,204 @@ const RegisterPage = () => {
     });
   };
 
-  // Removed local strength functions in favor of shared utilities
-
-
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>Full Name</Typography>
-            <TextField
-              fullWidth
-              name="fullName"
-              placeholder="Full Name"
-              value={formData.fullName}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.fullName && !!formErrors.fullName}
-              helperText={touched.fullName && formErrors.fullName}
-              required
-              sx={{ mb: 2 }}
-            />
+          <Stack gap={3}>
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 700, ml: 0.5 }}>Full Name</Typography>
+              <TextField
+                fullWidth
+                name="fullName"
+                placeholder="Full Name"
+                value={formData.fullName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.fullName && !!formErrors.fullName}
+                helperText={touched.fullName && formErrors.fullName}
+                required
+              />
+            </Box>
             
-            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>Email Address</Typography>
-            <TextField
-              fullWidth
-              name="email"
-              type="email"
-              placeholder="name@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.email && !!formErrors.email}
-              helperText={touched.email && formErrors.email}
-              required
-              sx={{ mb: 2 }}
-              autoComplete="email"
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 700, ml: 0.5 }}>Email Address</Typography>
+              <TextField
+                fullWidth
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.email && !!formErrors.email}
+                helperText={touched.email && formErrors.email}
+                required
+                autoComplete="email"
+              />
+            </Box>
 
-            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>
-                Password 
-                <Tooltip title="At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char" arrow>
-                    <IconButton size="small" sx={{ ml: 0.5 }}><InfoIcon fontSize="inherit" /></IconButton>
-                </Tooltip>
-            </Typography>
-            <TextField
-              fullWidth
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.password && !!formErrors.password}
-              helperText={touched.password && formErrors.password}
-              required
-              sx={{ mb: 1 }}
-              autoComplete="new-password"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton 
-                      onClick={() => setShowPassword(!showPassword)} 
-                      edge="end"
-                      type="button"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {formData.password && (
-                <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                        <Typography variant="caption" color="text.secondary">Strength: {getStrengthLabel(passwordStrength)}</Typography>
-                    </Box>
-                    <LinearProgress 
-                        variant="determinate" 
-                        value={(passwordStrength / 5) * 100} 
-                        color={getStrengthColor(passwordStrength)} 
-                        sx={{ height: 6, borderRadius: 3 }} 
-                    />
-                </Box>
-            )}
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 700, ml: 0.5, display: "flex", alignItems: "center" }}>
+                  Password 
+                  <Tooltip title="At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char" arrow>
+                      <IconButton size="small" sx={{ ml: 0.5 }}><InfoIcon size={14} /></IconButton>
+                  </Tooltip>
+              </Typography>
+              <TextField
+                fullWidth
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.password && !!formErrors.password}
+                helperText={touched.password && formErrors.password}
+                required
+                autoComplete="new-password"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" type="button">
+                        {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {formData.password && (
+                  <Box sx={{ mt: 1.5, px: 0.5 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
+                            Strength: {getStrengthLabel(passwordStrength)}
+                          </Typography>
+                      </Box>
+                      <LinearProgress 
+                          variant="determinate" 
+                          value={(passwordStrength / 5) * 100} 
+                          color={getStrengthColor(passwordStrength)} 
+                          sx={{ height: 6, borderRadius: 3, bgcolor: "rgba(0,0,0,0.05)" }} 
+                      />
+                  </Box>
+              )}
+            </Box>
 
-            <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 600 }}>Confirm Password</Typography>
-            <TextField
-              fullWidth
-              name="confirmPassword"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={touched.confirmPassword && !!formErrors.confirmPassword}
-              helperText={touched.confirmPassword && formErrors.confirmPassword}
-              required
-              autoComplete="new-password"
-            />
-          </Box>
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 700, ml: 0.5 }}>Confirm Password</Typography>
+              <TextField
+                fullWidth
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.confirmPassword && !!formErrors.confirmPassword}
+                helperText={touched.confirmPassword && formErrors.confirmPassword}
+                required
+                autoComplete="new-password"
+              />
+            </Box>
+          </Stack>
         );
       case 1:
         return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h5" align="center" sx={{ fontWeight: 700, mb: 1, color: "#1a237e" }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: "text.primary" }}>
               Select Your Role
             </Typography>
-            <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 4 }}>
-              Registering as a Doctor or a Patient?
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4, fontWeight: 500 }}>
+              Are you registering as a professional Doctor or a Patient?
             </Typography>
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+            <Stack gap={2.5}>
+              {[
+                { id: "patient", icon: PersonIcon, label: "I am a Patient", desc: "Book appointments, view medical records and chat with doctors." },
+                { id: "doctor", icon: DoctorIcon, label: "I am a Doctor", desc: "Manage your schedule, approvals and patient consultations." }
+              ].map((role) => (
                 <Paper
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "doctor" }))}
+                  key={role.id}
+                  onClick={() => setFormData((prev) => ({ ...prev, role: role.id }))}
+                  elevation={0}
                   sx={{
                     p: 3,
                     cursor: "pointer",
-                    textAlign: "center",
-                    border: `2px solid ${formData.role === "doctor" ? "#1976d2" : "#e0e0e0"}`,
-                    bgcolor: formData.role === "doctor" ? "#f0f7ff" : "white",
-                    transition: "0.2s",
-                    "&:hover": { borderColor: "#1976d2" }
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 3,
+                    borderRadius: 4,
+                    border: "2px solid",
+                    borderColor: formData.role === role.id ? "primary.main" : "divider",
+                    bgcolor: formData.role === role.id ? alpha(theme.palette.primary.main, 0.04) : "transparent",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      borderColor: formData.role === role.id ? "primary.main" : alpha(theme.palette.primary.main, 0.3),
+                      bgcolor: formData.role === role.id ? alpha(theme.palette.primary.main, 0.04) : alpha(theme.palette.primary.main, 0.01)
+                    }
                   }}
-                  elevation={0}
                 >
-                  <DoctorIcon sx={{ fontSize: 48, mb: 1, color: formData.role === "doctor" ? "#1976d2" : "#757575" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Doctor</Typography>
-                  <Typography variant="caption" color="text.secondary">Manage appointments and patients</Typography>
-                  <Box sx={{ mt: 2 }}><Radio checked={formData.role === "doctor"} color="primary" /></Box>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: 3, 
+                    bgcolor: formData.role === role.id ? "primary.main" : alpha(theme.palette.text.disabled, 0.1),
+                    color: formData.role === role.id ? "white" : "text.secondary",
+                    transition: "all 0.2s ease"
+                  }}>
+                    <role.icon size={28} />
+                  </Box>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{role.label}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>{role.desc}</Typography>
+                  </Box>
+                  <Radio checked={formData.role === role.id} color="primary" />
                 </Paper>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Paper
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "patient" }))}
-                  sx={{
-                    p: 3,
-                    cursor: "pointer",
-                    textAlign: "center",
-                    border: `2px solid ${formData.role === "patient" ? "#1976d2" : "#e0e0e0"}`,
-                    bgcolor: formData.role === "patient" ? "#f0f7ff" : "white",
-                    transition: "0.2s",
-                    "&:hover": { borderColor: "#1976d2" }
-                  }}
-                  elevation={0}
-                >
-                  <PersonIcon sx={{ fontSize: 48, mb: 1, color: formData.role === "patient" ? "#1976d2" : "#757575" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Patient</Typography>
-                  <Typography variant="caption" color="text.secondary">Book and view your appointments</Typography>
-                  <Box sx={{ mt: 2 }}><Radio checked={formData.role === "patient"} color="primary" /></Box>
-                </Paper>
-              </Grid>
-            </Grid>
+              ))}
+            </Stack>
           </Box>
         );
       case 2:
         return (
-          <Box sx={{ mt: 2, textAlign: "center" }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: "#1a237e" }}>Review Your Account</Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mb: 4 }}>
-                <Paper variant="outlined" sx={{ p: 2, textAlign: "left", borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary">Full Name</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{formData.fullName}</Typography>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, mb: 3, color: "text.primary" }}>Review & Complete</Typography>
+            <Stack gap={2} sx={{ mb: 4 }}>
+                <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: "background.default", border: "1px solid", borderColor: "divider" }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Full Name</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 800, mt: 0.5 }}>{formData.fullName}</Typography>
                 </Paper>
-                <Paper variant="outlined" sx={{ p: 2, textAlign: "left", borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary">Email Address</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{formData.email}</Typography>
+                <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: "background.default", border: "1px solid", borderColor: "divider" }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Email Address</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 800, mt: 0.5 }}>{formData.email}</Typography>
                 </Paper>
-                <Paper variant="outlined" sx={{ p: 2, textAlign: "left", borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary">Role</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600, textTransform: "capitalize" }}>{formData.role}</Typography>
+                <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: "background.default", border: "1px solid", borderColor: "divider" }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Account Type</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 800, mt: 0.5, textTransform: "capitalize" }}>{formData.role}</Typography>
                 </Paper>
-            </Box>
-            <Alert severity="info" sx={{ borderRadius: 2 }}>
-              Final step! Click register to create your medical portal account.
+            </Stack>
+            <Alert 
+              severity="info" 
+              icon={<SuccessIcon size={22} style={{ color: theme.palette.info.main }} />}
+              sx={{ 
+                borderRadius: "16px", 
+                fontWeight: 600, 
+                bgcolor: alpha(theme.palette.info.main, 0.08),
+                color: "info.dark", // High contrast
+                border: "1px solid",
+                borderColor: alpha(theme.palette.info.main, 0.2),
+                py: 2,
+                px: 3,
+                "& .MuiAlert-icon": {
+                  display: 'flex',
+                  alignItems: 'center',
+                  opacity: 1
+                },
+                "& .MuiAlert-message": {
+                  fontSize: "0.95rem",
+                  letterSpacing: "0.01em"
+                }
+              }}
+            >
+              Almost there! Click the button below to finalize your registration.
             </Alert>
           </Box>
         );
@@ -359,89 +380,164 @@ const RegisterPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f4f7f9" }}>
-      <AppBar position="static" sx={{ bgcolor: "white", color: "#1a237e", borderBottom: "1px solid #e0e0e0" }} elevation={0}>
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-             <DoctorIcon color="primary" sx={{ mr: 1 }} />
-             <Typography variant="h6" sx={{ fontWeight: 800 }}>MediConnect</Typography>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "background.default" }}>
+      <Grid container sx={{ flexGrow: 1 }}>
+        {/* Left Column: Branding & Illustration (Shared with Login) */}
+        <Grid size={{ xs: 12, md: 5, lg: 6 }} sx={{ 
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          bgcolor: "action.hover",
+          p: 8,
+          position: "relative",
+          overflow: "hidden",
+          borderRight: theme.palette.mode === "dark" ? "1px solid" : "none",
+          borderColor: "divider"
+        }}>
+          {/* Logo */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 8 }}>
+            <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: "primary.main", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <PlusIcon color="white" size={28} strokeWidth={3} />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: "text.primary" }}>MEDIC TOTAL</Typography>
           </Box>
-          <Button component={RouterLink} to="/login" variant="outlined" sx={{ borderRadius: 2, textTransform: "none" }}>Sign In</Button>
-        </Toolbar>
-      </AppBar>
 
-      <Container maxWidth="md" sx={{ py: 6 }}>
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 5 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+          <Box sx={{ position: "relative", zIndex: 1, mt: "auto", mb: "auto" }}>
+            <Typography variant="h3" sx={{ fontWeight: 900, mb: 3, maxWidth: 500, lineHeight: 1.2 }}>
+              Join the Future of <Box component="span" sx={{ color: "primary.main" }}>Healthcare</Box>
+            </Typography>
+            
+            <Stack gap={4} sx={{ mt: 5 }}>
+              {[
+                { icon: DoctorIcon, title: "For Doctors", desc: "Build your reputation and manage your clinical practice with ease." },
+                { icon: Calendar, title: "For Patients", desc: "Find the best doctors and book appointments in seconds." }
+              ].map((f, i) => (
+                <Box key={i} sx={{ display: "flex", gap: 2.5 }}>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: 2.5, 
+                    bgcolor: "background.paper", 
+                    boxShadow: theme.palette.mode === "dark" ? "none" : "0 4px 12px rgba(0,0,0,0.03)", 
+                    color: "primary.main", 
+                    height: "fit-content",
+                    border: theme.palette.mode === "dark" ? "1px solid" : "none",
+                    borderColor: "divider"
+                  }}>
+                    <f.icon size={28} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{f.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{f.desc}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
 
-        <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-          {successMessage ? (
-              <Box sx={{ py: 4, textAlign: "center" }}>
-                  <SuccessIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-                  <Typography variant="h5" color="success.main" gutterBottom sx={{ fontWeight: 700 }}>
-                      Account Created!
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                      {successMessage}
+          <Box sx={{ position: "absolute", bottom: -100, left: -100, width: 300, height: 300, borderRadius: "50%", bgcolor: alpha(theme.palette.primary.main, 0.05) }} />
+        </Grid>
+
+        {/* Right Column: Register Stepper Form */}
+        <Grid size={{ xs: 12, md: 7, lg: 6 }} sx={{ 
+          display: "flex", 
+          flexDirection: "column",
+          justifyContent: "center",
+          p: { xs: 4, sm: 8, md: 10 }
+        }}>
+          <Box sx={{ maxWidth: 500, width: "100%", mx: "auto" }}>
+            {successMessage ? (
+              <Fade in timeout={800}>
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Box sx={{ p: 3, borderRadius: "50%", bgcolor: alpha(theme.palette.success.main, 0.1), color: "success.main", display: "inline-flex", mb: 3 }}>
+                    <SuccessIcon size={64} />
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>Welcome Aboard!</Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 6, fontWeight: 500 }}>
+                    {successMessage || "Your medical account has been successfully created. You can now access all features of our portal."}
                   </Typography>
                   <Button 
-                      variant="contained" 
-                      fullWidth 
-                      component={RouterLink}
-                      to="/login"
-                      sx={{ py: 1.5, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+                    variant="contained" 
+                    fullWidth 
+                    size="large"
+                    component={RouterLink}
+                    to="/login"
+                    sx={{ py: 2, borderRadius: 3, fontWeight: 800, fontSize: "1rem" }}
                   >
-                      Go to Sign In
+                    Take me to Login
                   </Button>
-              </Box>
-          ) : (
+                </Box>
+              </Fade>
+            ) : (
               <>
-                {renderStepContent(activeStep)}
+                <Box sx={{ mb: 6 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, color: "text.primary" }}>
+                    Create Account
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Step {activeStep + 1} of {steps.length}: {steps[activeStep]}
+                  </Typography>
+                </Box>
 
-                {error && <Alert severity="error" sx={{ mt: 3, borderRadius: 2 }}>{error}</Alert>}
+                <Stepper activeStep={activeStep} sx={{ mb: 8, "& .MuiStepLabel-label": { fontWeight: 700, fontSize: "0.75rem" } }}>
+                  {steps.map((label) => (
+                    <Step key={label}>
+                      <StepLabel>{label}</StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
 
-                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 5 }}>
+                <form noValidate>
+                  {renderStepContent(activeStep)}
+
+                  {error && (
+                    <Alert severity="error" variant="outlined" sx={{ mt: 4, borderRadius: 3, fontWeight: 600, borderWidth: 1.5 }}>
+                      {error}
+                    </Alert>
+                  )}
+
+                  <Box sx={{ display: "flex", justifyContent: "space-between", mt: 6, alignItems: "center" }}>
                     <Button
-                    disabled={activeStep === 0 || isRegisterLoading}
-                    onClick={handleBack}
-                    startIcon={<BackIcon />}
-                    sx={{ textTransform: "none", color: "text.secondary" }}
+                      disabled={activeStep === 0 || isRegisterLoading}
+                      onClick={handleBack}
+                      startIcon={<BackIcon size={18} />}
+                      sx={{ fontWeight: 700, color: "text.secondary" }}
                     >
-                    Back
+                      Previous
                     </Button>
+                    
                     {activeStep === steps.length - 1 ? (
-                    <Button
+                      <Button
                         variant="contained"
+                        size="large"
                         onClick={handleSubmit}
                         disabled={isRegisterLoading}
-                        sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
-                    >
-                        {isRegisterLoading ? <CircularProgress size={24} color="inherit" /> : "Register Account"}
-                    </Button>
+                        sx={{ px: 5, py: 1.6, borderRadius: 3, fontWeight: 800 }}
+                      >
+                        {isRegisterLoading ? <CircularProgress size={24} color="inherit" /> : "Complete Registration"}
+                      </Button>
                     ) : (
-                    <Button
+                      <Button
                         variant="contained"
+                        size="large"
                         onClick={handleNext}
-                        disabled={isRegisterLoading}
-                        sx={{ py: 1, px: 4, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
-                    >
+                        sx={{ px: 6, py: 1.6, borderRadius: 3, fontWeight: 800 }}
+                      >
                         Next Step
-                    </Button>
+                      </Button>
                     )}
-                </Box>
+                  </Box>
+                </form>
+
+                <Typography align="center" variant="body2" sx={{ mt: 6, fontWeight: 500, color: "text.secondary" }}>
+                  Already have an account?{" "}
+                  <Link component={RouterLink} to="/login" sx={{ color: "primary.main", fontWeight: 800, textDecoration: "none" }}>
+                    Sign In instead
+                  </Link>
+                </Typography>
               </>
-          )}
-        </Paper>
-        
-        <Box sx={{ mt: 6, textAlign: "center", opacity: 0.6 }}>
-            <Typography variant="caption">©  2026 MediConnect Portal. All rights reserved.</Typography>
-        </Box>
-      </Container>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

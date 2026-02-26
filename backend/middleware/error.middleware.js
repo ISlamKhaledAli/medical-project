@@ -2,6 +2,12 @@ const globalErrorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
+  // Log everything for debugging
+  console.log(`[ERROR] ${req.method} ${req.url} - Status: ${err.statusCode || 500} - Message: ${err.message}`);
+  if (err.statusCode === 400 || !err.statusCode) {
+    console.log("Error Stack:", err.stack);
+  }
+
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     error.message = `An account with that ${field} already exists.`;

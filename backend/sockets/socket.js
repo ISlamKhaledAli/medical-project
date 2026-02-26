@@ -46,6 +46,8 @@ export const initSocket = (httpServer) => {
         // This allows io.to(userId).emit() from anywhere in the service layer.
         socket.join(userId);
 
+        console.log(`🔌 Socket connected: userId=${userId}  socketId=${socket.id}`);
+
         // ─── Chat Events ───────────────────────────────────────
         socket.on("sendMessage", async ({ receiverId, text }) => {
             try {
@@ -74,6 +76,7 @@ export const initSocket = (httpServer) => {
         // ────────────────────────────────────────────────────────
 
         socket.on("disconnect", (reason) => {
+            console.log(`❌ Socket disconnected: userId=${userId}  reason=${reason}`);
         });
     });
 

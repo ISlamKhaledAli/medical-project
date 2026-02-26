@@ -15,7 +15,9 @@ import {
     Card,
     CardContent,
     Chip,
-    Stack
+    Stack,
+    alpha,
+    useTheme
 } from "@mui/material";
 import { 
     Person as ProfileIcon, 
@@ -30,6 +32,7 @@ import SpecialtySelect from "../../components/doctor/SpecialtySelect";
 
 const DoctorProfilePage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { user } = useSelector((state) => state.auth);
     const { doctorDetails, isLoading, error } = useSelector((state) => state.doctor);
     
@@ -95,43 +98,119 @@ const DoctorProfilePage = () => {
             </Box>
 
             {success && (
-                <Alert severity="success" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.success.main, 0.08),
+                    color: "success.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.success.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     Profile updated successfully!
                 </Alert>
             )}
 
             {user?.status === "pending" && (
-                <Alert severity="warning" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="warning" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.warning.main, 0.08),
+                    color: "warning.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.warning.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     <strong>Account Pending Approval:</strong> Your profile is currently being reviewed by administrators. You will be able to manage availability once approved.
                 </Alert>
             )}
 
             {user?.status === "rejected" && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    color: "error.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     <strong>Account Rejected:</strong> Your application has been rejected. Please contact support if you believe this is an error.
                 </Alert>
             )}
 
-            {error && error !== "Doctor profile not found." && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-                    {error}
+            {error && (
+                <Alert 
+                  severity={error === "Doctor profile not found." ? "info" : "error"}
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: error === "Doctor profile not found." 
+                      ? alpha(theme.palette.info.main, 0.08)
+                      : alpha(theme.palette.error.main, 0.08),
+                    color: error === "Doctor profile not found." ? "info.dark" : "error.dark",
+                    border: "1px solid",
+                    borderColor: error === "Doctor profile not found." 
+                      ? alpha(theme.palette.info.main, 0.2)
+                      : alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
+                    {error === "Doctor profile not found." 
+                      ? "Clinical profile not found. Please complete the setup below to join the network." 
+                      : error}
                 </Alert>
             )}
 
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={4}>
                     {/* Public Info */}
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                             <CardContent sx={{ textAlign: "center", py: 5 }}>
                                 <Avatar 
                                     sx={{ 
-                                        width: 120, 
-                                        height: 120, 
+                                        width: 110, 
+                                        height: 110, 
                                         mx: "auto", 
                                         mb: 3, 
                                         bgcolor: "primary.main",
-                                        fontSize: "3rem"
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                                        fontSize: "3.5rem",
+                                        fontWeight: 800,
+                                        boxShadow: theme.palette.mode === "dark" 
+                                            ? "0 8px 24px rgba(0,0,0,0.5)" 
+                                            : `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
+                                        border: "4px solid",
+                                        borderColor: "background.paper",
+                                        position: "relative",
+                                        "&::after": {
+                                            content: '""',
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            borderRadius: "50%",
+                                            boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)"
+                                        }
                                     }}
                                 >
                                     {user?.fullName?.[0]}
@@ -148,7 +227,7 @@ const DoctorProfilePage = () => {
                     </Grid>
 
                     {/* Form Fields */}
-                    <Grid item xs={12} md={8}>
+                    <Grid size={{ xs: 12, md: 8 }}>
                         <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
                             <Stack spacing={4}>
                                 <Box>
@@ -177,7 +256,7 @@ const DoctorProfilePage = () => {
                                 </Box>
 
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
                                             <ExpIcon color="primary" fontSize="small" /> Experience (Years)
                                         </Typography>
@@ -189,7 +268,7 @@ const DoctorProfilePage = () => {
                                             onChange={handleChange}
                                         />
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
                                             <FeeIcon color="primary" fontSize="small" /> Consultation Fee ($)
                                         </Typography>
