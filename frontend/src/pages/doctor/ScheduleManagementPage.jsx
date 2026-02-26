@@ -183,14 +183,14 @@ const ScheduleManagementPage = () => {
                     action={{
                         label: isActionLoading ? "Saving..." : "Commit Changes",
                         icon: Save,
-                        onClick: handleSave,
+                        onAction: handleSave,
                         disabled: isActionLoading,
                         color: 'primary'
                     }}
                 />
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12} lg={8}>
+                    <Grid size={{ xs: 12, lg: 8 }}>
                         <SectionCard 
                             title="Weekly Pattern" 
                             subtitle="Configure active days and session durations"
@@ -211,7 +211,7 @@ const ScheduleManagementPage = () => {
                                         }}
                                     >
                                         <Grid container alignItems="center" spacing={3}>
-                                            <Grid item xs={12} sm={4} md={3}>
+                                            <Grid size={{ xs: 12, sm: 4, md: 3 }}>
                                                 <FormControlLabel
                                                     control={
                                                         <Switch
@@ -237,7 +237,7 @@ const ScheduleManagementPage = () => {
                                                 />
                                             </Grid>
 
-                                            <Grid item xs={12} sm={8} md={9}>
+                                            <Grid size={{ xs: 12, sm: 8, md: 9 }}>
                                                 <Stack 
                                                     direction={{ xs: 'column', md: 'row' }} 
                                                     spacing={2} 
@@ -321,7 +321,7 @@ const ScheduleManagementPage = () => {
                         </SectionCard>
                     </Grid>
 
-                    <Grid item xs={12} lg={4}>
+                    <Grid size={{ xs: 12, lg: 4 }}>
                         <Stack spacing={3}>
                             <SectionCard title="Schedule Insight" icon={Info}>
                                 <Stack spacing={3}>

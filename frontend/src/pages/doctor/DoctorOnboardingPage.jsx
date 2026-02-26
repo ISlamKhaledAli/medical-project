@@ -187,7 +187,7 @@ const DoctorOnboardingPage = () => {
                 {activeStep === 0 && (
                     <SectionCard title="Practice Foundations" icon={User}>
                         <Grid container spacing={4}>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Professional Narrative</Typography>
                                     <TextField
@@ -204,7 +204,7 @@ const DoctorOnboardingPage = () => {
                                     />
                                 </Stack>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Tenure (Years)</Typography>
                                     <TextField
@@ -222,7 +222,7 @@ const DoctorOnboardingPage = () => {
                                     />
                                 </Stack>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Primary Hospital</Typography>
                                     <TextField
@@ -238,7 +238,7 @@ const DoctorOnboardingPage = () => {
                                     />
                                 </Stack>
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Site Address</Typography>
                                     <TextField
@@ -263,7 +263,7 @@ const DoctorOnboardingPage = () => {
                 {activeStep === 1 && (
                     <SectionCard title="Medical Domain" icon={Briefcase}>
                         <Grid container spacing={4}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Specialty</Typography>
                                     <TextField
@@ -282,7 +282,7 @@ const DoctorOnboardingPage = () => {
                                     </TextField>
                                 </Stack>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Standard Consultation Fee</Typography>
                                     <TextField
@@ -324,7 +324,7 @@ const DoctorOnboardingPage = () => {
                                     { icon: DollarSign, label: 'Standard Rate', value: `$${formData.consultationFee}` },
                                     { icon: MapPin, label: 'Active Facility', value: formData.hospitalName || "N/A" }
                                 ].map((stat, i) => (
-                                    <Grid item xs={6} key={i}>
+                                    <Grid size={6} key={i}>
                                         <Paper elevation={0} sx={{ p: 3, borderRadius: 4, bgcolor: 'white', border: '1px solid', borderColor: 'divider' }}>
                                             <Stack direction="row" spacing={2} alignItems="center">
                                                 <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), color: 'primary.main' }}>

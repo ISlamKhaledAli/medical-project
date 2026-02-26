@@ -60,7 +60,7 @@ const AvailabilitySlots = ({ slots, selectedSlot, onSelect, isLoading }) => {
                     const isSelected = selectedSlot?.startTime === slot.startTime;
                     
                     return (
-                        <Grid item xs={6} sm={4} key={slot._id || slot.startTime}>
+                        <Grid size={{ xs: 6, sm: 4 }} key={slot._id || slot.startTime}>
                             <Button
                                 fullWidth
                                 onClick={() => onSelect(slot)}

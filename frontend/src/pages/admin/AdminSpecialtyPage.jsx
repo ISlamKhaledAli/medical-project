@@ -123,7 +123,7 @@ export default function AdminSpecialtyPage() {
 
             <Grid container spacing={4}>
                 {/* Registry Controls */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <SectionCard title="Registration" icon={Plus}>
                         <Stack spacing={3}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
@@ -166,7 +166,7 @@ export default function AdminSpecialtyPage() {
                 </Grid>
 
                 {/* Registry View */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard 
                         title="Specialty Registry" 
                         subtitle={`${filteredSpecialties.length} active domains identified`}

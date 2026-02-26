@@ -121,7 +121,7 @@ const DoctorProfilePage = () => {
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={4}>
                     {/* Public Info */}
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                             <CardContent sx={{ textAlign: "center", py: 5 }}>
                                 <Avatar 
@@ -148,7 +148,7 @@ const DoctorProfilePage = () => {
                     </Grid>
 
                     {/* Form Fields */}
-                    <Grid item xs={12} md={8}>
+                    <Grid size={{ xs: 12, md: 8 }}>
                         <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
                             <Stack spacing={4}>
                                 <Box>
@@ -177,7 +177,7 @@ const DoctorProfilePage = () => {
                                 </Box>
 
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
                                             <ExpIcon color="primary" fontSize="small" /> Experience (Years)
                                         </Typography>
@@ -189,7 +189,7 @@ const DoctorProfilePage = () => {
                                             onChange={handleChange}
                                         />
                                     </Grid>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
                                             <FeeIcon color="primary" fontSize="small" /> Consultation Fee ($)
                                         </Typography>

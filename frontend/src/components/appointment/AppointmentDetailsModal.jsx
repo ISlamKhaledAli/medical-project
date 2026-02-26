@@ -59,7 +59,7 @@ const AppointmentDetailsModal = ({ open, onClose, appointment }) => {
 
                 <Grid container spacing={3}>
                     {details.map((item, idx) => (
-                        <Grid item xs={12} key={idx}>
+                        <Grid size={{ xs: 12 }} key={idx}>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
                                 <Avatar sx={{ bgcolor: "rgba(0,0,0,0.04)", color: "primary.main", mr: 2 }}>
                                     {item.icon}
@@ -81,7 +81,7 @@ const AppointmentDetailsModal = ({ open, onClose, appointment }) => {
                         </Grid>
                     ))}
 
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <Divider sx={{ my: 1 }} />
                         <Box sx={{ display: "flex", alignItems: "flex-start", mt: 1 }}>
                             <Avatar sx={{ bgcolor: "rgba(0,0,0,0.04)", color: "primary.main", mr: 2 }}>

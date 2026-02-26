@@ -88,7 +88,7 @@ const DoctorDashboard = () => {
 
             {/* Stats Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Today's visits" 
                         value={stats.today} 
@@ -98,7 +98,7 @@ const DoctorDashboard = () => {
                         trend={{ value: "12% more than yesterday", isUp: true }}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Pending Review" 
                         value={stats.pending} 
@@ -107,7 +107,7 @@ const DoctorDashboard = () => {
                         subtitle="Action required"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Completed" 
                         value={stats.completed} 
@@ -117,7 +117,7 @@ const DoctorDashboard = () => {
                         trend={{ value: "4% growth", isUp: true }}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Total Patients" 
                         value={stats.total} 
@@ -131,7 +131,7 @@ const DoctorDashboard = () => {
             {/* Main Content Grid */}
             <Grid container spacing={4}>
                 {/* Upcoming Appointments */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard 
                         title="Upcoming Appointments" 
                         action={{ 
@@ -239,7 +239,7 @@ const DoctorDashboard = () => {
                 </Grid>
 
                 {/* Side Panel: Schedule Summary */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Stack spacing={3}>
                         <SectionCard title="Today's Timeline">
                             {stats.today > 0 ? (

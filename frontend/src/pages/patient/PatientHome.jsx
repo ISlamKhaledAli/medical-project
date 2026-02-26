@@ -82,7 +82,7 @@ const PatientHome = () => {
 
             {/* Quick Stats Overview */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Total Visits" 
                         value={stats.total} 
@@ -91,7 +91,7 @@ const PatientHome = () => {
                         color="primary"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Confirmed" 
                         value={stats.confirmed} 
@@ -100,7 +100,7 @@ const PatientHome = () => {
                         trend={{ value: "Next visit soon", isUp: true }}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Pending Approvals" 
                         value={stats.pending} 
@@ -108,7 +108,7 @@ const PatientHome = () => {
                         color="warning"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <StatCard 
                       title="Today's Care" 
                       value={todayAppointments.length} 
@@ -121,7 +121,7 @@ const PatientHome = () => {
 
             <Grid container spacing={4}>
                 {/* Left Side: Upcoming Appointments */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard 
                         title="Upcoming Appointments" 
                         action={{ 
@@ -208,7 +208,7 @@ const PatientHome = () => {
                 </Grid>
 
                 {/* Right Side: Quick Actions & Education */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Stack spacing={3}>
                         <SectionCard title="Quick Resources">
                             <Stack spacing={2} sx={{ mt: 1 }}>

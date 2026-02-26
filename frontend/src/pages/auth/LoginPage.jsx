@@ -119,7 +119,7 @@ const LoginPage = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#fff" }}>
       <Grid container sx={{ flexGrow: 1 }}>
         {/* Left Column: Branding & Illustration */}
-        <Grid item xs={12} md={6} lg={7} sx={{ 
+        <Grid size={{ xs: 12, md: 6, lg: 7 }} sx={{ 
           display: { xs: "none", md: "flex" },
           flexDirection: "column",
           bgcolor: alpha(theme.palette.primary.main, 0.03),
@@ -199,7 +199,7 @@ const LoginPage = () => {
         </Grid>
 
         {/* Right Column: Login Form */}
-        <Grid item xs={12} md={6} lg={5} sx={{ 
+        <Grid size={{ xs: 12, md: 6, lg: 5 }} sx={{ 
           display: "flex", 
           flexDirection: "column",
           justifyContent: "center",

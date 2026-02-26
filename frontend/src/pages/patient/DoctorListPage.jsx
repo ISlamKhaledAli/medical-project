@@ -248,18 +248,18 @@ const DoctorListPage = () => {
                 <Grid container spacing={3.5}>
                     {isLoading ? (
                         [...Array(6)].map((_, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={index}>
                                 <DoctorCardSkeleton />
                             </Grid>
                         ))
                     ) : doctors.length > 0 ? (
                         doctors.map((doctor) => (
-                            <Grid item xs={12} sm={6} md={4} key={doctor._id}>
+                            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={doctor._id}>
                                 <DoctorCard doctor={doctor} />
                             </Grid>
                         ))
                     ) : (
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <EmptyState 
                                 title="No Specialists Found"
                                 message="We couldn't find any doctors matching your search criteria. Try broadening your filters." 

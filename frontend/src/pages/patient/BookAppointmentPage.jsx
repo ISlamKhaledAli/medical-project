@@ -169,7 +169,7 @@ const BookAppointmentPage = () => {
 
             <Grid container spacing={4}>
                 {/* Left side: Doctor Profile Preview */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <SectionCard title="Doctor Preview">
                         <Stack spacing={3}>
                             <Stack direction="row" spacing={2} alignItems="center">
@@ -245,7 +245,7 @@ const BookAppointmentPage = () => {
                 </Grid>
 
                 {/* Right side: Multi-step booking */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard sx={{ minHeight: 600, display: 'flex', flexDirection: 'column' }}>
                         <Stepper activeStep={activeStep} sx={{ mb: 6, px: { xs: 0, md: 4 } }}>
                             {steps.map((label) => (

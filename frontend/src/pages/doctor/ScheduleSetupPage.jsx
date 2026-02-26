@@ -199,7 +199,7 @@ const ScheduleSetupPage = () => {
                 />
 
                 <Grid container spacing={4}>
-                    <Grid item xs={12} lg={8}>
+                    <Grid size={{ xs: 12, lg: 8 }}>
                         {hasNoSchedule && (
                             <Alert 
                                 severity="info" 
@@ -232,7 +232,7 @@ const ScheduleSetupPage = () => {
                                         }}
                                     >
                                         <Grid container alignItems="center" spacing={3}>
-                                            <Grid item xs={12} sm={4} md={3}>
+                                            <Grid size={{ xs: 12, sm: 4, md: 3 }}>
                                                 <FormControlLabel
                                                     control={
                                                         <Switch
@@ -254,7 +254,7 @@ const ScheduleSetupPage = () => {
                                                 />
                                             </Grid>
 
-                                            <Grid item xs={12} sm={8} md={9}>
+                                            <Grid size={{ xs: 12, sm: 8, md: 9 }}>
                                                 <Stack 
                                                     direction={{ xs: "column", md: "row" }} 
                                                     spacing={2} 
@@ -337,7 +337,7 @@ const ScheduleSetupPage = () => {
                         </SectionCard>
                     </Grid>
 
-                    <Grid item xs={12} lg={4}>
+                    <Grid size={{ xs: 12, lg: 4 }}>
                         <Stack spacing={3}>
                             <SectionCard title="Configuration Guide" icon={Info}>
                                 <Stack spacing={3}>

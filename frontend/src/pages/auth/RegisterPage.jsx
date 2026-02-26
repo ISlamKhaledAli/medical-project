@@ -365,7 +365,7 @@ const RegisterPage = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#fff" }}>
       <Grid container sx={{ flexGrow: 1 }}>
         {/* Left Column: Branding & Illustration (Shared with Login) */}
-        <Grid item xs={12} md={5} lg={6} sx={{ 
+        <Grid size={{ xs: 12, md: 5, lg: 6 }} sx={{ 
           display: { xs: "none", md: "flex" },
           flexDirection: "column",
           bgcolor: alpha(theme.palette.primary.main, 0.03),
@@ -408,7 +408,7 @@ const RegisterPage = () => {
         </Grid>
 
         {/* Right Column: Register Stepper Form */}
-        <Grid item xs={12} md={7} lg={6} sx={{ 
+        <Grid size={{ xs: 12, md: 7, lg: 6 }} sx={{ 
           display: "flex", 
           flexDirection: "column",
           justifyContent: "center",

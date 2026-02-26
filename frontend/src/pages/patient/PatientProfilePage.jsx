@@ -91,7 +91,7 @@ const PatientProfilePage = () => {
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={4}>
                     {/* Sidebar Info */}
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                             <CardContent sx={{ textAlign: "center", py: 5 }}>
                                 <Avatar 
@@ -120,7 +120,7 @@ const PatientProfilePage = () => {
                     </Grid>
 
                     {/* Form Fields */}
-                    <Grid item xs={12} md={8}>
+                    <Grid size={{ xs: 12, md: 8 }}>
                         <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
                             <Stack spacing={4}>
                                 <Box>

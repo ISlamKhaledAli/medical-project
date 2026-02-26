@@ -76,7 +76,7 @@ const DoctorDetailsPage = () => {
 
             <Grid container spacing={4}>
                 {/* Profile Card Sidebar */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <SectionCard 
                         sx={{ 
                             position: "sticky", 
@@ -159,7 +159,7 @@ const DoctorDetailsPage = () => {
                 </Grid>
 
                 {/* Detailed Information */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <Stack spacing={4}>
                         <SectionCard title="Professional Narrative" icon={Award}>
                             <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.9, fontWeight: 500 }}>
@@ -173,7 +173,7 @@ const DoctorDetailsPage = () => {
                                     { label: 'Consultation', value: `$${doctor.fee || '150'}`, icon: DollarSign, color: 'success' },
                                     { label: 'Linguistic', value: 'English, FR', icon: Languages, color: 'warning' }
                                 ].map((stat, i) => (
-                                    <Grid item xs={6} sm={3} key={i}>
+                                    <Grid size={{ xs: 6, sm: 3 }} key={i}>
                                         <Paper 
                                             elevation={0} 
                                             sx={{ 
@@ -212,7 +212,7 @@ const DoctorDetailsPage = () => {
                         </SectionCard>
 
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <SectionCard title="Practice Velocity" icon={Clock}>
                                     <Stack spacing={2}>
                                         {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
@@ -227,7 +227,7 @@ const DoctorDetailsPage = () => {
                                 </SectionCard>
                             </Grid>
                             
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <SectionCard title="Quick Booking" icon={CalendarCheck}>
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontWeight: 500 }}>
                                         Secure your slot today. We offer same-day emergency consultations for critical concerns.

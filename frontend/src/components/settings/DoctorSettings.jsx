@@ -106,7 +106,7 @@ const DoctorSettings = () => {
                 </Box>
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
                             <ExpIcon color="primary" fontSize="small" /> Experience (Years)
                         </Typography>
@@ -118,7 +118,7 @@ const DoctorSettings = () => {
                             onChange={handleChange}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
                             <FeeIcon color="primary" fontSize="small" /> Consultation Fee
                         </Typography>

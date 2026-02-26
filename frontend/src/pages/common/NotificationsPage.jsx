@@ -102,7 +102,7 @@ const NotificationsPage = () => {
             />
 
             <Grid container spacing={4}>
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard 
                         title="Notifications" 
                         subtitle={`${unreadCount} unread transmissions`}
@@ -229,7 +229,7 @@ const NotificationsPage = () => {
                     </SectionCard>
                 </Grid>
 
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Stack spacing={3}>
                         <SectionCard title="System Integrity" icon={AlertCircle}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.6, mb: 3 }}>

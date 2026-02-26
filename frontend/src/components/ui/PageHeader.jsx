@@ -67,7 +67,7 @@ const PageHeader = ({
             component={finalAction.path ? RouterLink : "button"}
             to={finalAction.path}
             startIcon={finalAction.icon ? <finalAction.icon size={18} /> : null}
-            onClick={finalAction.onAction}
+            onClick={finalAction.onClick || finalAction.onAction}
             sx={{ 
               borderRadius: 3, 
               px: 3, 

@@ -52,7 +52,7 @@ const StatsDashboard = () => {
 
             {/* Performance Metrics */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Platform Users" 
                         value={data.totalUsers} 
@@ -62,7 +62,7 @@ const StatsDashboard = () => {
                         trend={{ value: "8% increase", isUp: true }}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Appointments" 
                         value={data.totalAppointments} 
@@ -72,7 +72,7 @@ const StatsDashboard = () => {
                         trend={{ value: "12% growth", isUp: true }}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Active Doctors" 
                         value={data.activeDoctors} 
@@ -81,7 +81,7 @@ const StatsDashboard = () => {
                         duration="Clinical Capacity"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard 
                         title="Pending Audits" 
                         value={data.pendingApprovals} 
@@ -94,7 +94,7 @@ const StatsDashboard = () => {
 
             {/* Platform Insights Section */}
             <Grid container spacing={4}>
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <SectionCard title="System Activity & Traffic">
                         <Box 
                             sx={{ 
@@ -120,7 +120,7 @@ const StatsDashboard = () => {
                     </SectionCard>
                 </Grid>
 
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Stack spacing={3}>
                         <SectionCard title="Platform Integrity">
                             <Stack spacing={2.5} sx={{ mt: 1 }}>

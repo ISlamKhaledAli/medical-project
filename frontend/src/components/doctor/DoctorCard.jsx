@@ -43,7 +43,8 @@ const DoctorCard = ({ doctor }) => {
                 },
                 display: "flex",
                 flexDirection: "column",
-                position: "relative"
+                position: "relative",
+                flex: "1 1 auto"
             }}
         >
             {/* Experience Badge */}
@@ -85,7 +86,7 @@ const DoctorCard = ({ doctor }) => {
                         <User size={40} />
                     </Avatar>
                     
-                    <Box sx={{ pt: 0.5, pr: 11, flexGrow: 1 }}>
+                    <Box sx={{ pt: 0.5, flexGrow: 1, minWidth: 0 }}>
                         <Typography 
                             variant="h6" 
                             sx={{ 
