@@ -1,25 +1,17 @@
 import { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
-import { fetchConversations } from "../../features/chat/chatSlice";
 
 const MainLayout = ({ children }) => {
-    const dispatch = useDispatch();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Standardized check
     const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const [open, setOpen] = useState(false);
     
     const { user, accessToken, isAuthChecking } = useSelector((state) => state.auth);
-
-    useEffect(() => {
-        if (accessToken) {
-            dispatch(fetchConversations());
-        }
-    }, [dispatch, accessToken]);
     const navigate = useNavigate();
 
     // Protection logic is handled by the wrapping ProtectedRoute component

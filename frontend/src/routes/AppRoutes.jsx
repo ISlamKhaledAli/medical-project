@@ -97,7 +97,6 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/chat" element={<ChatPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
 

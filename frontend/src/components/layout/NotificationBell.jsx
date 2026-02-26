@@ -13,8 +13,7 @@ import {
     ListItem,
     ListItemText,
     ListItemAvatar,
-    Avatar,
-    Button
+    Avatar
 } from "@mui/material";
 import { Notifications as NotificationsIcon, Info as InfoIcon } from "@mui/icons-material";
 import { fetchNotifications, markAsRead, markAllNotificationsAsRead } from "../../features/notification/notificationSlice";
@@ -60,27 +59,20 @@ const NotificationBell = () => {
                 onClose={handleClose}
                 PaperProps={{
                     sx: {
-                        width: 330, // Slightly wider
-                        maxHeight: 500, // Increased height
-                        borderRadius: 4, // More rounded
+                        width: 320,
+                        maxHeight: 450,
+                        borderRadius: 3,
                         mt: 1.5,
-                        boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden" // Keep this, but we'll scroll the content
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                        overflow: "hidden"
                     }
                 }}
             >
-                <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "white", position: "sticky", top: 0, zIndex: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 900 }}>Notifications</Typography>
+                <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>Notifications</Typography>
                     <Typography 
                         variant="caption" 
-                        sx={{ 
-                            fontWeight: 700, 
-                            color: "primary.main", 
-                            cursor: "pointer",
-                            "&:hover": { textDecoration: "underline" }
-                        }}
+                        sx={{ fontWeight: 700, color: "primary.main", cursor: "pointer" }}
                         onClick={handleMarkAll}
                     >
                         Mark all as read
@@ -88,80 +80,58 @@ const NotificationBell = () => {
                 </Box>
                 <Divider />
                 
-                <Box sx={{ overflowY: "auto", flexGrow: 1, maxHeight: 380 }}>
-                    <List sx={{ p: 0 }}>
-                        {notifications.length > 0 ? (
-                            notifications.slice(0, 5).map((notification) => (
-                                <ListItem 
-                                    key={notification._id || notification.id} 
-                                    onClick={() => handleMarkAsRead(notification._id || notification.id)}
-                                    sx={{ 
-                                        py: 2,
-                                        px: 2,
-                                        cursor: "pointer", 
-                                        bgcolor: notification.isRead ? "transparent" : "rgba(25, 118, 210, 0.04)",
-                                        borderBottom: "1px solid rgba(0,0,0,0.05)",
-                                        "&:hover": { bgcolor: "rgba(0,0,0,0.02)" }
-                                    }}
-                                >
-                                    <ListItemAvatar>
-                                        <Avatar sx={{ 
-                                            width: 40, 
-                                            height: 40, 
-                                            bgcolor: notification.isRead ? "grey.100" : "primary.light", 
-                                            color: notification.isRead ? "grey.400" : "primary.main" 
-                                        }}>
-                                            <InfoIcon fontSize="small" />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText 
-                                        primary={notification.type ? notification.type.charAt(0).toUpperCase() + notification.type.slice(1) : "Notification"}
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5, fontSize: "0.8rem", lineHeight: 1.4 }}>
-                                                    {notification.message}
-                                                </Typography>
-                                                <Typography variant="caption" sx={{ fontSize: "0.65rem", fontWeight: 700, color: "text.disabled" }}>
-                                                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        primaryTypographyProps={{ variant: "body2", fontWeight: notification.isRead ? 600 : 800 }}
-                                    />
-                                </ListItem>
-                            ))
-                        ) : (
-                            <Box sx={{ py: 6, textAlign: "center" }}>
-                                <NotificationsIcon sx={{ fontSize: 40, color: "grey.200", mb: 1 }} />
-                                <Typography variant="body2" color="text.disabled">No notifications yet.</Typography>
-                            </Box>
-                        )}
-                    </List>
-                </Box>
+                <List sx={{ p: 0 }}>
+                    {notifications.slice(0, 5).length > 0 ? (
+                        notifications.slice(0, 5).map((notification) => (
+                            <ListItem 
+                                key={notification._id || notification.id} 
+                                onClick={() => handleMarkAsRead(notification._id || notification.id)}
+                                sx={{ 
+                                    cursor: "pointer", 
+                                    bgcolor: notification.isRead ? "transparent" : "rgba(25, 118, 210, 0.04)",
+                                    borderBottom: "1px solid rgba(0,0,0,0.05)",
+                                    "&:hover": { bgcolor: "rgba(0,0,0,0.02)" }
+                                }}
+                            >
+                                <ListItemAvatar>
+                                    <Avatar sx={{ bgcolor: notification.isRead ? "grey.200" : "primary.main", color: notification.isRead ? "grey.500" : "white" }}>
+                                        <InfoIcon />
+                                    </Avatar>
+                                </ListItemAvatar>
+                                <ListItemText 
+                                    primary={notification.type ? notification.type.charAt(0).toUpperCase() + notification.type.slice(1) : "Notification"}
+                                    secondary={
+                                        <>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                                                {notification.message}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ fontSize: "0.7rem", fontWeight: 600 }}>
+                                                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                                            </Typography>
+                                        </>
+                                    }
+                                    primaryTypographyProps={{ variant: "body2", fontWeight: notification.isRead ? 500 : 800 }}
+                                />
+                            </ListItem>
+                        ))
+                    ) : (
+                        <Box sx={{ py: 6, textAlign: "center" }}>
+                            <Typography color="text.secondary">No notifications yet.</Typography>
+                        </Box>
+                    )}
+                </List>
 
-                <Box sx={{ p: 1.5, display: "flex", justifyContent: "center", bgcolor: "white" }}>
-                    <Button 
-                        size="small"
-                        onClick={handleViewAll}
-                        sx={{ 
-                            px: 3,
-                            py: 0.5,
-                            fontSize: "0.75rem",
-                            fontWeight: 700, 
-                            textTransform: "none",
-                            borderRadius: "20px",
-                            color: "primary.main",
-                            bgcolor: "rgba(25, 118, 210, 0.05)",
-                            "&:hover": {
-                                bgcolor: "rgba(25, 118, 210, 0.1)",
-                                transform: "translateY(-1px)"
-                            },
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                        }}
-                    >
-                        View All Notifications
-                    </Button>
-                </Box>
+                {notifications.length > 0 && (
+                    <Box sx={{ p: 1.5, textAlign: "center", bgcolor: "rgba(0,0,0,0.02)" }}>
+                        <Typography 
+                            variant="caption" 
+                            sx={{ fontWeight: 700, color: "text.secondary", cursor: "pointer" }}
+                            onClick={handleViewAll}
+                        >
+                            View All Notifications
+                        </Typography>
+                    </Box>
+                )}
             </Menu>
         </>
     );
