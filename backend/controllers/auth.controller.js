@@ -4,6 +4,7 @@ import {
   verificationSuccessTemplate,
   verificationFailureTemplate
 } from "../templates/verification.template.js";
+import * as authService from "../services/auth.service.js";
 
 /**
  * @route   POST /api/auth/register
@@ -70,11 +71,14 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    console.log("🔑 Login attempt for:", email);
 
     const user = await authService.validateLogin(email, password);
+    console.log("✅ Login validated for:", email);
 
     const { accessToken, refreshToken } =
       await authService.generateTokens(user);
+    console.log("🎫 Tokens generated for:", email);
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
