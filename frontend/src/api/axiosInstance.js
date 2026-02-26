@@ -18,22 +18,18 @@ const axiosInstance = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
     failedQueue.forEach((prom) => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve(token);
+            prom.resolve();
         }
     });
     failedQueue = [];
 };
 
 axiosInstance.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
     debugAPI(`Request: ${config.method.toUpperCase()} ${config.url}`, config.params || config.data);
     return config;
 });
@@ -54,8 +50,7 @@ axiosInstance.interceptors.response.use(
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
-                    .then((token) => {
-                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                    .then(() => {
                         return axiosInstance(originalRequest);
                     })
                     .catch((err) => Promise.reject(err));
@@ -67,25 +62,19 @@ axiosInstance.interceptors.response.use(
 
             try {
                 store.dispatch(startGlobalLoading());
-                const response = await axios.post(
+                await axios.post(
                     `${baseURL}/auth/refresh-token`,
                     {},
                     { withCredentials: true }
                 );
 
-                const { accessToken } = response.data;
                 debugAPI("Token refresh successful");
 
-                store.dispatch(setCredentials({ accessToken }));
-                // LocalStorage is also updated in slice, but kept here for immediate interceptor sync
-                localStorage.setItem("accessToken", accessToken);
-
-                processQueue(null, accessToken);
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                processQueue(null);
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 debugAPI("Token refresh failed, logging out user", refreshError);
-                processQueue(refreshError, null);
+                processQueue(refreshError);
                 store.dispatch(logout());
                 return Promise.reject(refreshError);
             } finally {

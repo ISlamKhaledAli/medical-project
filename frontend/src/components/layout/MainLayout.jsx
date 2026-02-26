@@ -11,7 +11,7 @@ const MainLayout = ({ children }) => {
     const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const [open, setOpen] = useState(false);
     
-    const { user, accessToken, isInitialLoading } = useSelector((state) => state.auth);
+    const { user, accessToken, isAuthChecking } = useSelector((state) => state.auth);
     const navigate = useNavigate();
 
     // Protection logic is handled by the wrapping ProtectedRoute component
@@ -20,7 +20,7 @@ const MainLayout = ({ children }) => {
         setOpen(!open);
     };
 
-    if (isInitialLoading) return null; // Or a full-screen skeleton/loader
+    if (isAuthChecking) return null; // Or a full-screen skeleton/loader
 
     return (
         <Box sx={{ display: "flex", bgcolor: "#f1f5f9", minHeight: "100vh" }}>
