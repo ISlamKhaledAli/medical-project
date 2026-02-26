@@ -2,11 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-    Container, 
     Typography, 
     Box, 
     Grid, 
-    Paper, 
     Table, 
     TableBody, 
     TableCell, 
@@ -19,26 +17,36 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    CircularProgress,
     Avatar,
-    Tooltip
+    Tooltip,
+    Stack,
+    alpha,
+    useTheme
 } from "@mui/material";
 import { 
-    Cancel as CancelIcon, 
-    EventRepeat as RescheduleIcon,
-    Visibility as ViewIcon 
-} from "@mui/icons-material";
-import { format } from "date-fns";
+    XCircle, 
+    RefreshCw,
+    Eye,
+    Calendar,
+    Clock,
+    FileText,
+    AlertTriangle
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 import { fetchMyAppointments, cancelAppointment } from "../../features/appointment/appointmentSlice";
 import StatusBadge from "../../components/appointment/StatusBadge";
 import AppointmentDetailsModal from "../../components/appointment/AppointmentDetailsModal";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import TableSkeleton from "../../components/skeletons/TableSkeleton";
 
 const MyAppointmentsPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const theme = useTheme();
     const { appointments, isLoading, error, isActionLoading } = useSelector((state) => state.appointment);
     
     // Dialog/Modal States
@@ -75,13 +83,8 @@ const MyAppointmentsPage = () => {
     };
 
     const handleReschedule = useCallback((appointment) => {
-        // Navigate to booking page with doctor pre-selected
         const doctorId = appointment.doctor?._id || appointment.doctor?.id;
-        
-        if (!doctorId) {
-            console.error('doctorId is undefined', appointment);
-            return;
-        }
+        if (!doctorId) return;
 
         navigate(`/patient/book/${doctorId}`, { 
             state: { 
@@ -93,175 +96,217 @@ const MyAppointmentsPage = () => {
     }, [navigate]);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 5 }}>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
-                    My Appointments
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Keep track of your upcoming and past medical consultations.
-                </Typography>
-            </Box>
+        <Box>
+            <PageHeader 
+                title="My Appointments"
+                subtitle="Keep track of your medical history, manage upcoming visits, and review doctor notes."
+                breadcrumbs={[
+                    { label: "Dashboard", path: "/patient" },
+                    { label: "Appointments", active: true }
+                ]}
+            />
 
             {error && <ErrorState message={error} onRetry={() => dispatch(fetchMyAppointments())} />}
 
             {!error && (
-                <TableContainer 
-                    component={Paper} 
-                    elevation={0} 
-                    sx={{ 
-                        borderRadius: 4, 
-                        border: "1px solid rgba(0,0,0,0.05)",
-                        overflow: "hidden"
-                    }}
+                <SectionCard 
+                    title="All Consultations" 
+                    subtitle={`${appointments?.length || 0} relative records found`}
+                    sx={{ mt: 2 }}
                 >
-                    <Table>
-                        <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 800 }}>Doctor</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>Specialty</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>Date & Time</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>Doctor Notes</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {isLoading ? (
-                                [...Array(5)].map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={6} sx={{ py: 3, textAlign: "center" }}>
-                                            <CircularProgress size={20} sx={{ mr: 2 }} />
-                                            Loading...
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : appointments.length > 0 ? (
-                                appointments.map((appointment) => {
+                {isLoading ? (
+                    <TableSkeleton rows={6} cols={5} />
+                ) : appointments?.length > 0 ? (
+                    <TableContainer sx={{ mt: 1 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary", pl: 0 }}>Doctor</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Schedule</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Status</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Medical Notes</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary", pr: 0 }}>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {appointments.map((appointment) => {
                                     const isTerminal = ["completed", "cancelled", "rejected"].includes(appointment.status);
                                     
                                     return (
-                                        <TableRow key={appointment._id || appointment.id} hover>
-                                            <TableCell>
-                                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                        <TableRow key={appointment._id || appointment.id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                                            <TableCell sx={{ py: 2.5, pl: 0 }}>
+                                                <Stack direction="row" spacing={2} alignItems="center">
                                                     <Avatar 
                                                         src={appointment.doctor?.image} 
-                                                        sx={{ width: 40, height: 40, mr: 2, border: "1px solid rgba(0,0,0,0.05)" }} 
-                                                    />
-                                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                                        {appointment.doctor?.user?.fullName || appointment.doctor?.name}
-                                                    </Typography>
-                                                </Box>
+                                                        sx={{ 
+                                                            width: 48, 
+                                                            height: 48, 
+                                                            borderRadius: 2.5,
+                                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                                            color: "primary.main",
+                                                            fontWeight: 900
+                                                        }} 
+                                                    >
+                                                        {appointment.doctor?.user?.fullName?.[0] || appointment.doctor?.name?.[0]}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                                                            Dr. {appointment.doctor?.user?.fullName || appointment.doctor?.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                                            {appointment.doctor?.specialty?.name || appointment.doctor?.specialty}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
                                             </TableCell>
-                                            <TableCell>{appointment.doctor?.specialty?.name || appointment.doctor?.specialty}</TableCell>
                                             <TableCell>
-                                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                    {format(new Date(appointment.appointmentDate), "PPP")}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {appointment.startTime} - {appointment.endTime}
-                                                </Typography>
+                                                <Stack spacing={0.5}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Calendar size={14} />
+                                                        {format(parseISO(appointment.appointmentDate), "MMM dd, yyyy")}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
+                                                        <Clock size={14} />
+                                                        {appointment.startTime} - {appointment.endTime}
+                                                    </Typography>
+                                                </Stack>
                                             </TableCell>
                                             <TableCell>
                                                 <StatusBadge status={appointment.status} />
                                             </TableCell>
                                             <TableCell>
-                                                <Typography variant="body2" sx={{ 
-                                                    maxWidth: 200, 
-                                                    overflow: "hidden", 
-                                                    textOverflow: "ellipsis", 
-                                                    whiteSpace: "nowrap",
-                                                    color: appointment.doctorNotes ? "text.primary" : "text.disabled",
-                                                    fontStyle: appointment.doctorNotes ? "normal" : "italic"
-                                                }}>
-                                                    {appointment.doctorNotes || "No notes yet"}
-                                                </Typography>
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <FileText size={16} color={appointment.doctorNotes ? theme.palette.text.primary : theme.palette.text.disabled} />
+                                                    <Typography variant="body2" sx={{ 
+                                                        maxWidth: 200, 
+                                                        overflow: "hidden", 
+                                                        textOverflow: "ellipsis", 
+                                                        whiteSpace: "nowrap",
+                                                        color: appointment.doctorNotes ? "text.primary" : "text.disabled",
+                                                        fontWeight: appointment.doctorNotes ? 600 : 400,
+                                                        fontStyle: appointment.doctorNotes ? "normal" : "italic"
+                                                    }}>
+                                                        {appointment.doctorNotes || "Waiting for visit..."}
+                                                    </Typography>
+                                                </Stack>
                                             </TableCell>
-                                            <TableCell align="right">
-                                                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                                            <TableCell align="right" sx={{ pr: 0 }}>
+                                                <Stack direction="row" spacing={1} justifyContent="flex-end">
                                                     {!isTerminal && (
                                                         <>
-                                                            <Tooltip title="Cancel Appointment">
-                                                                <IconButton 
-                                                                    size="small" 
-                                                                    color="error" 
+                                                            <Tooltip title="Cancel">
+                                                                  <IconButton 
                                                                     onClick={() => handleOpenCancelDialog(appointment)}
+                                                                    sx={{ 
+                                                                        borderRadius: 2, 
+                                                                        bgcolor: alpha(theme.palette.error.main, 0.05),
+                                                                        color: "error.main",
+                                                                        "&:hover": { bgcolor: "error.main", color: "white" }
+                                                                    }}
                                                                 >
-                                                                    <CancelIcon fontSize="small" />
+                                                                    <XCircle size={18} />
                                                                 </IconButton>
                                                             </Tooltip>
                                                             <Tooltip title="Reschedule">
                                                                 <IconButton 
-                                                                    size="small" 
-                                                                    color="primary" 
                                                                     onClick={() => handleReschedule(appointment)}
+                                                                    sx={{ 
+                                                                        borderRadius: 2, 
+                                                                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                                                        color: "primary.main",
+                                                                        "&:hover": { bgcolor: "primary.main", color: "white" }
+                                                                    }}
                                                                 >
-                                                                    <RescheduleIcon fontSize="small" />
+                                                                    <RefreshCw size={18} />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         </>
                                                     )}
-                                                    <Tooltip title="View Details">
+                                                    <Tooltip title="View Summary">
                                                         <IconButton 
-                                                            size="small" 
                                                             onClick={() => handleOpenDetails(appointment)}
+                                                            sx={{ 
+                                                                borderRadius: 2, 
+                                                                bgcolor: alpha(theme.palette.text.primary, 0.05),
+                                                                color: "text.primary"
+                                                            }}
                                                         >
-                                                            <ViewIcon fontSize="small" />
+                                                            <Eye size={18} />
                                                         </IconButton>
                                                     </Tooltip>
-                                                </Box>
+                                                </Stack>
                                             </TableCell>
                                         </TableRow>
                                     );
-                                })
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6}>
-                                        <EmptyState 
-                                            message="No appointments scheduled" 
-                                            subMessage="You haven't booked any consultations yet. Find a specialist to get started."
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                ) : (
+                    <Box sx={{ py: 6 }}>
+                        <EmptyState 
+                            title="No Appointments Found"
+                            message="You haven't scheduled any consultations yet. Ready to meet a specialist?" 
+                            action={{ label: "Book Appointment", path: "/patient/doctors" }}
+                            icon={Calendar}
+                        />
+                    </Box>
+                )}
+                </SectionCard>
             )}
 
-            {/* Appointment Details Modal */}
             <AppointmentDetailsModal 
                 open={detailsModalOpen}
                 onClose={handleCloseDialogs}
                 appointment={selectedAppointment}
             />
 
-            {/* Cancel Confirmation Dialog */}
             <Dialog 
                 open={cancelDialogOpen} 
                 onClose={handleCloseDialogs}
-                PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
+                PaperProps={{ sx: { borderRadius: 4, width: '100%', maxWidth: 450 } }}
             >
-                <DialogTitle sx={{ fontWeight: 900 }}>Cancel Appointment?</DialogTitle>
-                <DialogContent>
-                    <Typography color="text.secondary">
-                        Are you sure you want to cancel your appointment with Dr. {selectedAppointment?.doctor?.user?.fullName || selectedAppointment?.doctor?.name} on {selectedAppointment && format(new Date(selectedAppointment.appointmentDate), "PPP")}? This action cannot be undone.
+                <DialogTitle sx={{ p: 3, pb: 0 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main', display: 'flex' }}>
+                            <AlertTriangle size={24} />
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 900 }}>Cancel Consultation?</Typography>
+                    </Stack>
+                </DialogTitle>
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.6 }}>
+                        You are about to cancel your appointment with <Box component="span" sx={{ fontWeight: 800, color: 'text.primary' }}>Dr. {selectedAppointment?.doctor?.user?.fullName}</Box> on <Box component="span" sx={{ fontWeight: 800, color: 'text.primary' }}>{selectedAppointment && format(parseISO(selectedAppointment.appointmentDate), "PPP")}</Box>.
+                    </Typography>
+                    <Typography variant="body2" color="error.main" sx={{ mt: 2, fontWeight: 700 }}>
+                        This action is irreversible.
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={handleCloseDialogs} sx={{ fontWeight: 700 }}>No, Keep It</Button>
+                <DialogActions sx={{ p: 3, pt: 0 }}>
+                    <Button 
+                        onClick={handleCloseDialogs} 
+                        sx={{ fontWeight: 800, textTransform: 'none', color: 'text.secondary' }}
+                    >
+                        Go Back
+                    </Button>
                     <Button 
                         variant="contained" 
                         color="error" 
                         onClick={handleConfirmCancel}
                         disabled={isActionLoading}
-                        sx={{ borderRadius: 2, fontWeight: 700 }}
+                        sx={{ 
+                            borderRadius: 2.5, 
+                            fontWeight: 800, 
+                            textTransform: 'none',
+                            px: 3,
+                            boxShadow: `0 8px 16px ${alpha(theme.palette.error.main, 0.2)}`
+                        }}
                     >
-                        {isActionLoading ? <CircularProgress size="20" color="inherit" /> : "Yes, Cancel"}
+                        {isActionLoading ? "Cancelling..." : "Confirm Cancellation"}
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Container>
+        </Box>
     );
 };
 

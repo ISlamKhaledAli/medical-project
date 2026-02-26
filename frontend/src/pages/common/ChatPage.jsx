@@ -14,18 +14,29 @@ import {
     Paper,
     Badge,
     InputAdornment,
-    CircularProgress,
     Divider,
     Chip,
     useMediaQuery,
     useTheme,
+    alpha,
+    Stack,
+    Tooltip
 } from "@mui/material";
 import {
-    Send as SendIcon,
-    ArrowBack as ArrowBackIcon,
-    Chat as ChatIcon,
-    Search as SearchIcon,
-} from "@mui/icons-material";
+    Send,
+    ChevronLeft,
+    MessageSquare,
+    Search,
+    Phone,
+    Video,
+    MoreVertical,
+    CheckCheck,
+    Check,
+    Clock,
+    User,
+    Sparkles,
+    ShieldCheck
+} from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import useSocket from "../../hooks/useSocket";
 import {
@@ -34,6 +45,7 @@ import {
     markConversationRead,
     setActivePartner,
 } from "../../features/chat/chatSlice";
+import GlobalLoader from "../../components/ui/GlobalLoader";
 
 const ChatPage = () => {
     const dispatch = useDispatch();
@@ -62,12 +74,10 @@ const ChatPage = () => {
     const messagesContainerRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    // Load conversations on mount
     useEffect(() => {
         dispatch(fetchConversations());
     }, [dispatch]);
 
-    // Load messages when active partner changes
     useEffect(() => {
         if (activePartnerId) {
             dispatch(fetchMessages({ partnerId: activePartnerId, page: 1 }));
@@ -78,7 +88,6 @@ const ChatPage = () => {
         }
     }, [activePartnerId, dispatch]);
 
-    // Auto-scroll to bottom on new messages
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -98,7 +107,6 @@ const ChatPage = () => {
             text: messageText.trim(),
         });
 
-        // Stop typing
         socketRef.current.emit("stopTyping", { receiverId: activePartnerId });
         setMessageText("");
     }, [messageText, activePartnerId]);
@@ -148,96 +156,102 @@ const ChatPage = () => {
         return format(d, "MMM d");
     };
 
-    // ─── Conversation List (inline JSX, not a component) ─────
     const conversationListJSX = (
         <Paper
             elevation={0}
             sx={{
-                width: isMobile ? "100%" : 360,
+                width: isMobile ? "100%" : 380,
                 height: "100%",
-                borderRadius: 4,
+                borderRadius: 5,
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-                bgcolor: "white",
+                bgcolor: "background.paper",
+                border: '1px solid',
+                borderColor: 'divider'
             }}
         >
-            {/* Header */}
-            <Box sx={{ p: 3, pb: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: "#263238", mb: 2 }}>
-                    Messages
-                </Typography>
+            <Box sx={{ p: 3 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: "text.primary" }}>
+                        Messenger
+                    </Typography>
+                    <Box sx={{ p: 0.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main' }}>
+                        <ShieldCheck size={18} />
+                    </Box>
+                </Stack>
+                
                 <TextField
                     fullWidth
-                    placeholder="Search conversations..."
+                    placeholder="Search clinical contacts..."
                     size="small"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: "#90a4ae" }} />
+                                <Search size={18} color={theme.palette.text.disabled} />
                             </InputAdornment>
                         ),
-                    }}
-                    sx={{
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: 3,
-                            bgcolor: "#f1f5f9",
-                            "& fieldset": { border: "none" },
-                        },
+                        sx: { borderRadius: 3, bgcolor: alpha(theme.palette.background.default, 0.8), border: 'none', '& fieldset': { border: 'none' } }
                     }}
                 />
             </Box>
 
-            <Divider />
+            <Divider sx={{ opacity: 0.6 }} />
 
-            {/* Conversation Items */}
-            <List sx={{ flex: 1, overflow: "auto", px: 1 }}>
+            <List sx={{ flex: 1, overflow: "auto", p: 1.5 }}>
                 {isLoadingConversations ? (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                        <CircularProgress size={32} sx={{ color: "#263238" }} />
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                        <GlobalLoader message="" />
                     </Box>
                 ) : filteredConversations.length === 0 ? (
-                    <Box sx={{ textAlign: "center", py: 6, px: 3 }}>
-                        <ChatIcon sx={{ fontSize: 48, color: "#cfd8dc", mb: 2 }} />
-                        <Typography variant="body1" color="text.secondary">
-                            No conversations yet
+                    <Box sx={{ textAlign: "center", py: 10, px: 3 }}>
+                        <MessageSquare size={48} color={theme.palette.text.disabled} style={{ opacity: 0.3, marginBottom: 16 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "text.secondary" }}>
+                            No active channels
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            Book an appointment to start chatting with a doctor
+                        <Typography variant="caption" sx={{ color: "text.disabled", display: 'block', mt: 1 }}>
+                            Book an appointment or clinical consultation to initiate messaging.
                         </Typography>
                     </Box>
                 ) : (
                     filteredConversations.map((conv) => (
-                        <ListItem key={conv.partnerId} disablePadding sx={{ mb: 0.5 }}>
+                        <ListItem key={conv.partnerId} disablePadding sx={{ mb: 1 }}>
                             <ListItemButton
                                 onClick={() => handleSelectConversation(conv.partnerId)}
                                 selected={conv.partnerId === activePartnerId}
                                 sx={{
-                                    borderRadius: 3,
-                                    py: 1.5,
+                                    borderRadius: 4,
+                                    py: 2,
                                     px: 2,
+                                    transition: 'all 0.2s',
                                     "&.Mui-selected": {
-                                        bgcolor: "#e8eaf6",
-                                        "&:hover": { bgcolor: "#e8eaf6" },
+                                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                        "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.12) },
+                                        border: '1px solid',
+                                        borderColor: alpha(theme.palette.primary.main, 0.1)
                                     },
-                                    "&:hover": { bgcolor: "#f5f5f5" },
+                                    "&:hover": { bgcolor: alpha(theme.palette.text.primary, 0.03) },
+                                    border: '1px solid transparent'
                                 }}
                             >
                                 <ListItemAvatar>
                                     <Badge
                                         badgeContent={conv.unreadCount || 0}
                                         color="error"
-                                        invisible={!conv.unreadCount}
+                                        overlap="circular"
+                                        sx={{ '& .MuiBadge-badge': { fontWeight: 900, fontSize: 10, minWidth: 20, height: 20 } }}
                                     >
                                         <Avatar
                                             sx={{
-                                                bgcolor: conv.partnerRole === "doctor" ? "#263238" : "#1a237e",
-                                                width: 48,
-                                                height: 48,
+                                                bgcolor: conv.partnerRole === "doctor" ? "primary.main" : "secondary.main",
+                                                width: 52,
+                                                height: 52,
+                                                fontWeight: 900,
                                                 fontSize: 18,
-                                                fontWeight: 700,
+                                                border: '2px solid white',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                                             }}
                                         >
                                             {conv.partnerName?.charAt(0)?.toUpperCase()}
@@ -245,14 +259,15 @@ const ChatPage = () => {
                                     </Badge>
                                 </ListItemAvatar>
                                 <ListItemText
+                                    sx={{ ml: 1 }}
                                     primary={
-                                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
                                             <Typography
                                                 variant="subtitle2"
                                                 sx={{
-                                                    fontWeight: conv.unreadCount ? 800 : 600,
-                                                    color: "#263238",
-                                                    maxWidth: 160,
+                                                    fontWeight: conv.unreadCount ? 900 : 700,
+                                                    color: "text.primary",
+                                                    maxWidth: 140,
                                                     overflow: "hidden",
                                                     textOverflow: "ellipsis",
                                                     whiteSpace: "nowrap",
@@ -260,24 +275,25 @@ const ChatPage = () => {
                                             >
                                                 {conv.partnerName}
                                             </Typography>
-                                            <Typography variant="caption" sx={{ color: "#90a4ae", flexShrink: 0, ml: 1 }}>
+                                            <Typography variant="caption" sx={{ color: "text.disabled", fontWeight: 700 }}>
                                                 {formatConvTime(conv.lastMessage?.createdAt)}
                                             </Typography>
                                         </Box>
                                     }
                                     secondary={
                                         <Typography
-                                            variant="body2"
+                                            variant="caption"
                                             sx={{
-                                                color: conv.unreadCount ? "#263238" : "#90a4ae",
-                                                fontWeight: conv.unreadCount ? 600 : 400,
-                                                maxWidth: 200,
+                                                color: conv.unreadCount ? "primary.main" : "text.secondary",
+                                                fontWeight: conv.unreadCount ? 800 : 500,
+                                                maxWidth: 180,
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
+                                                display: 'block'
                                             }}
                                         >
-                                            {conv.lastMessage?.text || "No messages yet"}
+                                            {conv.lastMessage?.text || "Synchronizing data..."}
                                         </Typography>
                                     }
                                 />
@@ -289,203 +305,127 @@ const ChatPage = () => {
         </Paper>
     );
 
-    // ─── Message Area (inline JSX, not a component) ──────
     const messageAreaJSX = (
         <Paper
             elevation={0}
             sx={{
                 flex: 1,
                 height: "100%",
-                borderRadius: 4,
+                borderRadius: 5,
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-                bgcolor: "white",
-                ml: isMobile ? 0 : 2,
+                bgcolor: "background.paper",
+                ml: isMobile ? 0 : 3,
+                border: '1px solid',
+                borderColor: 'divider'
             }}
         >
             {!activePartnerId ? (
-                /* Empty state */
-                <Box
-                    sx={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        px: 3,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            width: 100,
-                            height: 100,
-                            borderRadius: "50%",
-                            bgcolor: "#f1f5f9",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            mb: 3,
-                        }}
-                    >
-                        <ChatIcon sx={{ fontSize: 48, color: "#263238" }} />
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", p: 4 }}>
+                    <Box sx={{ width: 120, height: 120, borderRadius: '40%', bgcolor: alpha(theme.palette.primary.main, 0.05), display: "flex", alignItems: "center", justifyContent: "center", mb: 4 }}>
+                        <Sparkles size={48} color={theme.palette.primary.main} />
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: "#263238", mb: 1 }}>
-                        Start a Conversation
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" textAlign="center">
-                        Select a conversation from the list to start messaging
+                    <Typography variant="h5" sx={{ fontWeight: 900, mb: 1.5 }}>Secure Clinical Messenger</Typography>
+                    <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ maxWidth: 320, fontWeight: 500, lineHeight: 1.6 }}>
+                        Select a clinical partner or patient to initiate a secure, encrypted communication session. 
                     </Typography>
                 </Box>
             ) : (
                 <>
-                    {/* Chat Header */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 2,
-                            px: 3,
-                            py: 2,
-                            borderBottom: "1px solid #f0f0f0",
-                        }}
-                    >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, px: 3, py: 2.5, borderBottom: "1px solid", borderColor: 'divider', bgcolor: alpha(theme.palette.background.default, 0.5) }}>
                         {isMobile && (
-                            <IconButton
-                                onClick={() => {
-                                    setShowConversations(true);
-                                    dispatch(setActivePartner(null));
-                                }}
-                                size="small"
-                            >
-                                <ArrowBackIcon />
+                            <IconButton onClick={() => { setShowConversations(true); dispatch(setActivePartner(null)); }} size="small">
+                                <ChevronLeft size={20} />
                             </IconButton>
                         )}
-                        <Avatar
-                            sx={{
-                                bgcolor: activeConversation?.partnerRole === "doctor" ? "#263238" : "#1a237e",
-                                width: 44,
-                                height: 44,
-                                fontWeight: 700,
-                            }}
-                        >
+                        <Avatar sx={{ bgcolor: activeConversation?.partnerRole === "doctor" ? "primary.main" : "secondary.main", width: 48, height: 48, fontWeight: 900, border: '2px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                             {activeConversation?.partnerName?.charAt(0)?.toUpperCase()}
                         </Avatar>
                         <Box sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#263238" }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
                                 {activeConversation?.partnerName}
                             </Typography>
                             {typingUsers[activePartnerId] ? (
-                                <Typography variant="caption" sx={{ color: "#43a047", fontWeight: 600 }}>
-                                    typing...
+                                <Typography variant="caption" sx={{ color: "success.main", fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <span className="typing-dot">.</span><span className="typing-dot">.</span><span className="typing-dot">.</span> typing clinical response
                                 </Typography>
                             ) : (
-                                <Chip
-                                    label={activeConversation?.partnerRole === "doctor" ? "Doctor" : "Patient"}
-                                    size="small"
-                                    sx={{
-                                        height: 22,
-                                        fontSize: 11,
-                                        fontWeight: 600,
-                                        bgcolor: activeConversation?.partnerRole === "doctor" ? "#e8eaf6" : "#e0f2f1",
-                                        color: activeConversation?.partnerRole === "doctor" ? "#1a237e" : "#00695c",
-                                    }}
-                                />
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main', boxShadow: `0 0 8px ${theme.palette.success.main}` }} />
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                        {activeConversation?.partnerRole === "doctor" ? "Medical Specialist" : "Patient File"}
+                                    </Typography>
+                                </Stack>
                             )}
                         </Box>
+                        <Stack direction="row" spacing={1}>
+                            <Tooltip title="Audio Consultation"><IconButton size="small" sx={{ color: 'text.secondary' }}><Phone size={20} /></IconButton></Tooltip>
+                            <Tooltip title="Video Consultation"><IconButton size="small" sx={{ color: 'text.secondary' }}><Video size={20} /></IconButton></Tooltip>
+                            <Tooltip title="Clinical Options"><IconButton size="small" sx={{ color: 'text.secondary' }}><MoreVertical size={20} /></IconButton></Tooltip>
+                        </Stack>
                     </Box>
 
-                    {/* Messages */}
                     <Box
                         ref={messagesContainerRef}
                         sx={{
                             flex: 1,
                             overflow: "auto",
-                            px: 3,
-                            py: 2,
-                            bgcolor: "#f8f9fa",
+                            px: 4,
+                            py: 3,
+                            bgcolor: alpha(theme.palette.background.default, 0.3),
                             display: "flex",
                             flexDirection: "column",
-                            gap: 1,
+                            gap: 1.5,
                         }}
                     >
-                        {/* Load more */}
                         {currentPage < totalPages && (
-                            <Box sx={{ textAlign: "center", mb: 1 }}>
-                                <Chip
-                                    label="Load older messages"
-                                    onClick={handleLoadMore}
-                                    clickable
-                                    size="small"
-                                    sx={{
-                                        bgcolor: "white",
-                                        fontWeight: 600,
-                                        "&:hover": { bgcolor: "#e8eaf6" },
-                                    }}
-                                />
+                            <Box sx={{ textAlign: "center", mb: 2 }}>
+                                <Button size="small" variant="soft" onClick={handleLoadMore} sx={{ borderRadius: 2, fontWeight: 800, textTransform: 'none' }}>
+                                    Retroactive Sync (Load Older)
+                                </Button>
                             </Box>
                         )}
 
                         {isLoadingMessages && currentPage === 1 ? (
-                            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                                <CircularProgress size={32} sx={{ color: "#263238" }} />
-                            </Box>
+                            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><GlobalLoader message="" /></Box>
                         ) : messages.length === 0 ? (
-                            <Box sx={{ textAlign: "center", py: 6 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    No messages yet. Say hello! 👋
+                            <Box sx={{ textAlign: "center", py: 8 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 700, p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.05), color: 'info.main' }}>
+                                    Establishing secure channel. Send a message to begin.
                                 </Typography>
                             </Box>
                         ) : (
-                            messages.map((msg) => {
-                                const isMine =
-                                    (msg.sender?._id || msg.sender) === user?._id;
+                            messages.map((msg, idx) => {
+                                const isMine = (msg.sender?._id || msg.sender) === user?._id;
+                                const isFirstInGroup = idx === 0 || (messages[idx-1]?.sender?._id || messages[idx-1]?.sender) !== (msg.sender?._id || msg.sender);
+                                
                                 return (
-                                    <Box
-                                        key={msg._id}
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent: isMine ? "flex-end" : "flex-start",
-                                            mb: 0.5,
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                maxWidth: "70%",
-                                                px: 2.5,
-                                                py: 1.5,
-                                                borderRadius: isMine
-                                                    ? "20px 20px 4px 20px"
-                                                    : "20px 20px 20px 4px",
-                                                bgcolor: isMine ? "#263238" : "white",
-                                                color: isMine ? "white" : "#263238",
-                                                boxShadow: isMine
-                                                    ? "none"
-                                                    : "0 1px 3px rgba(0,0,0,0.06)",
-                                            }}
-                                        >
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    whiteSpace: "pre-wrap",
-                                                    wordBreak: "break-word",
-                                                    lineHeight: 1.5,
-                                                }}
-                                            >
+                                    <Box key={msg._id || idx} sx={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start", mt: isFirstInGroup ? 2 : 0 }}>
+                                        {!isMine && isFirstInGroup && (
+                                            <Avatar sx={{ width: 32, height: 32, fontSize: 12, mr: 1.5, mt: 0.5, bgcolor: 'secondary.main', fontWeight: 900 }}>
+                                                {activeConversation?.partnerName?.[0]}
+                                            </Avatar>
+                                        )}
+                                        <Box sx={{ 
+                                            maxWidth: "75%", 
+                                            px: 3, 
+                                            py: 2, 
+                                            borderRadius: isMine ? "24px 24px 4px 24px" : "24px 24px 24px 4px", 
+                                            bgcolor: isMine ? "primary.main" : "white", 
+                                            color: isMine ? "white" : "text.primary",
+                                            boxShadow: isMine ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` : "0 2px 8px rgba(0,0,0,0.04)",
+                                            ml: !isMine && !isFirstInGroup ? 6 : 0
+                                        }}>
+                                            <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.6, wordBreak: "break-word" }}>
                                                 {msg.text}
                                             </Typography>
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    display: "block",
-                                                    textAlign: "right",
-                                                    mt: 0.5,
-                                                    opacity: 0.7,
-                                                    fontSize: 10,
-                                                }}
-                                            >
-                                                {formatMessageTime(msg.createdAt)}
-                                            </Typography>
+                                            <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center" sx={{ mt: 0.5, opacity: 0.7 }}>
+                                                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700 }}>
+                                                    {formatMessageTime(msg.createdAt)}
+                                                </Typography>
+                                                {isMine && <CheckCheck size={12} />}
+                                            </Stack>
                                         </Box>
                                     </Box>
                                 );
@@ -494,54 +434,38 @@ const ChatPage = () => {
                         <div ref={messagesEndRef} />
                     </Box>
 
-                    {/* Input */}
-                    <Box
-                        sx={{
-                            p: 2,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            alignItems: "flex-end",
-                            gap: 1.5,
-                        }}
-                    >
-                        <TextField
-                            fullWidth
-                            multiline
-                            maxRows={4}
-                            placeholder="Type a message..."
-                            value={messageText}
-                            onChange={handleTyping}
-                            onKeyDown={handleKeyDown}
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: 4,
-                                    bgcolor: "#f1f5f9",
-                                    "& fieldset": { border: "none" },
-                                    "&:focus-within": {
-                                        bgcolor: "#f1f5f9",
-                                        boxShadow: "0 0 0 2px #263238",
-                                    },
-                                },
-                            }}
-                        />
-                        <IconButton
-                            onClick={handleSendMessage}
-                            disabled={!messageText.trim()}
-                            sx={{
-                                bgcolor: "#263238",
-                                color: "white",
-                                width: 48,
-                                height: 48,
-                                borderRadius: 3,
-                                "&:hover": { bgcolor: "#37474f" },
-                                "&.Mui-disabled": {
-                                    bgcolor: "#cfd8dc",
+                    <Box sx={{ p: 3, borderTop: "1px solid", borderColor: 'divider', bgcolor: 'white' }}>
+                        <Stack direction="row" spacing={2} alignItems="flex-end">
+                            <TextField
+                                fullWidth
+                                multiline
+                                maxRows={4}
+                                placeholder="Consultation notes or inquiry..."
+                                value={messageText}
+                                onChange={handleTyping}
+                                onKeyDown={handleKeyDown}
+                                InputProps={{
+                                    sx: { borderRadius: 4, bgcolor: alpha(theme.palette.background.default, 0.8), border: 'none', '& fieldset': { border: 'none' }, py: 1.5, px: 2.5 }
+                                }}
+                            />
+                            <IconButton
+                                onClick={handleSendMessage}
+                                disabled={!messageText.trim()}
+                                sx={{
+                                    bgcolor: "primary.main",
                                     color: "white",
-                                },
-                            }}
-                        >
-                            <SendIcon />
-                        </IconButton>
+                                    width: 54,
+                                    height: 54,
+                                    borderRadius: 3.5,
+                                    boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
+                                    "&:hover": { bgcolor: "primary.dark", transform: 'translateY(-2px)' },
+                                    "&.Mui-disabled": { bgcolor: "divider", color: "white", boxShadow: 'none' },
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Send size={24} />
+                            </IconButton>
+                        </Stack>
                     </Box>
                 </>
             )}
@@ -549,22 +473,9 @@ const ChatPage = () => {
     );
 
     return (
-        <Box
-            sx={{
-                height: "calc(100vh - 40px)",
-                display: "flex",
-                p: isMobile ? 1 : 3,
-                pt: isMobile ? 1 : 2,
-            }}
-        >
-            {/* Mobile: toggle between list and chat */}
-            {isMobile ? (
-                showConversations ? conversationListJSX : messageAreaJSX
-            ) : (
-                <>
-                    {conversationListJSX}
-                    {messageAreaJSX}
-                </>
+        <Box sx={{ height: "calc(100vh - 120px)", display: "flex", p: isMobile ? 1 : 0 }}>
+            {isMobile ? (showConversations ? conversationListJSX : messageAreaJSX) : (
+                <> {conversationListJSX} {messageAreaJSX} </>
             )}
         </Box>
     );

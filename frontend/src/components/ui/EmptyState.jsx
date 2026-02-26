@@ -1,36 +1,70 @@
-import { Box, Typography, Button } from "@mui/material";
-import { SearchOff as SearchOffIcon } from "@mui/icons-material";
+import { Box, Typography, Button, alpha } from "@mui/material";
+import { SearchX, Inbox } from "lucide-react";
 
-const EmptyState = ({ message = "No records found", subMessage, onClear }) => (
+/**
+ * Enhanced Empty State component with customizable icon and action
+ */
+const EmptyState = ({ 
+  message = "No records found", 
+  subMessage, 
+  onAction, 
+  actionLabel = "Refresh Page",
+  icon: Icon = Inbox
+}) => (
     <Box 
         sx={{ 
-            py: 10, 
+            py: 12, 
             textAlign: "center", 
             display: "flex", 
             flexDirection: "column", 
             alignItems: "center",
-            gap: 2
+            justifyContent: "center",
+            gap: 2,
+            width: "100%",
+            maxWidth: 500,
+            mx: "auto"
         }}
     >
-        <SearchOffIcon sx={{ fontSize: "5rem", color: "rgba(0,0,0,0.1)" }} />
+        <Box 
+          sx={{ 
+            p: 3, 
+            borderRadius: "50%", 
+            bgcolor: "rgba(0,0,0,0.02)", 
+            color: "text.disabled",
+            mb: 1
+          }}
+        >
+          <Icon size={64} strokeWidth={1.5} />
+        </Box>
+        
         <Typography variant="h5" sx={{ fontWeight: 800, color: "text.primary" }}>
             {message}
         </Typography>
+        
         {subMessage && (
-            <Typography color="text.secondary" sx={{ maxWidth: 400, mx: "auto" }}>
+            <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400, mx: "auto", mb: 1 }}>
                 {subMessage}
             </Typography>
         )}
-        {onClear && (
+        
+        {onAction && (
             <Button 
                 variant="outlined" 
-                onClick={onClear}
-                sx={{ mt: 2, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+                onClick={onAction}
+                sx={{ 
+                  mt: 1, 
+                  borderRadius: 2.5, 
+                  textTransform: "none", 
+                  fontWeight: 700,
+                  px: 4,
+                  py: 1
+                }}
             >
-                Clear All Filters
+                {actionLabel}
             </Button>
         )}
     </Box>
 );
 
 export default EmptyState;
+

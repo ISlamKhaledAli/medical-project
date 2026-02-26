@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-    Container,
-    Paper,
     Typography,
     Box,
     Table,
@@ -19,37 +17,43 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    CircularProgress,
     Alert,
     Snackbar,
     Tooltip,
-    Fade,
-    Grow
+    alpha,
+    useTheme,
+    IconButton
 } from "@mui/material";
 import {
-    CheckCircle as ApproveIcon,
-    Cancel as RejectIcon,
-    Refresh as RefreshIcon,
-    Person as PersonIcon,
-} from "@mui/icons-material";
+    UserCheck,
+    UserX,
+    RefreshCw,
+    User,
+    Mail,
+    Calendar,
+    ShieldCheck,
+    AlertTriangle,
+    Search
+} from "lucide-react";
 import { fetchUsers, toggleUserStatus, clearAdminError } from "../../features/admin/adminSlice";
-import { debugAdmin } from "../../utils/debugTrace";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import EmptyState from "../../components/ui/EmptyState";
+import TableSkeleton from "../../components/skeletons/TableSkeleton";
 
 const AdminDoctorApprovals = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { users, isLoading, actionLoadingStates, error } = useSelector((state) => state.admin);
 
-    // Filter for pending doctors only
-    // Memoized to prevent unnecessary re-renders when other state changes
     const pendingDoctors = useMemo(() => 
-        users.filter(u => u.role?.toLowerCase() === "doctor" && u.status === "pending"),
+        (users || []).filter(u => u.role?.toLowerCase() === "doctor" && u.status === "pending"),
     [users]);
 
-    const [confirmAction, setConfirmAction] = useState(null); // { id, name, action: 'approve' | 'reject' }
+    const [confirmAction, setConfirmAction] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
     const handleRefresh = useCallback(() => {
-        debugAdmin("Refreshing pending doctor list");
         dispatch(fetchUsers({ role: "doctor", status: "pending" }));
     }, [dispatch]);
 
@@ -65,241 +69,241 @@ const AdminDoctorApprovals = () => {
         const { id, action, name } = confirmAction;
         const status = action === "approve" ? "approved" : "rejected";
         
-        debugAdmin(`Initiating ${action} for doctor ${name} (ID: ${id})`);
-        
-        // Close dialog immediately for better UX
         setConfirmAction(null);
 
         try {
-            const resultAction = await dispatch(toggleUserStatus({ id, status })).unwrap();
-            debugAdmin(`${action} successful`, resultAction);
-            
+            await dispatch(toggleUserStatus({ id, status })).unwrap();
             setSnackbar({
                 open: true,
                 message: `Doctor ${name} ${action === "approve" ? "approved" : "rejected"} successfully!`,
                 severity: "success"
             });
-            
-            // Removed the setTimeout refresh hack. 
-            // The slice now handles optimistic removal and removal on fulfilled.
         } catch (err) {
-            debugAdmin(`${action} failed`, err);
             setSnackbar({
                 open: true,
-                message: err || "Action failed",
+                message: err || "Verification step failed",
                 severity: "error"
             });
         }
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Fade in={true} timeout={800}>
-                <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <Box>
-                        <Typography variant="h3" fontWeight="900" color="primary.main" sx={{ mb: 1, letterSpacing: "-0.02em" }}>
-                            Approvals
-                        </Typography>
-                        <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
-                            Review and authorize new medical professional registrations.
-                        </Typography>
-                    </Box>
-                    <Button 
-                        variant="contained" 
-                        disableElevation
-                        startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <RefreshIcon />} 
-                        onClick={handleRefresh}
-                        disabled={isLoading}
-                        sx={{ borderRadius: 2, fontWeight: 700, px: 3 }}
-                    >
-                        Sync List
-                    </Button>
-                </Box>
-            </Fade>
+        <Box>
+            <PageHeader 
+                title="Credential Verification"
+                subtitle="High-trust vetting process for medical professionals. Review certifications and identity before authorizing access."
+                breadcrumbs={[
+                    { label: "Admin", path: "/admin" },
+                    { label: "Approvals", active: true }
+                ]}
+                action={{
+                    label: "Sync Applications",
+                    icon: RefreshCw,
+                    onClick: handleRefresh,
+                    disabled: isLoading
+                }}
+            />
 
             {error && (
-                <Grow in={!!error}>
-                    <Alert severity="error" sx={{ mb: 3, borderRadius: 2, fontWeight: 600 }}>{error}</Alert>
-                </Grow>
+                <Alert 
+                    severity="error" 
+                    variant="soft"
+                    sx={{ mb: 3, borderRadius: 3, fontWeight: 700, border: "1px solid", borderColor: alpha(theme.palette.error.main, 0.2) }}
+                >
+                    {error}
+                </Alert>
             )}
 
-            <TableContainer 
-                component={Paper} 
-                elevation={0} 
-                sx={{ 
-                    borderRadius: 4, 
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    overflow: "hidden",
-                    bgcolor: "background.paper"
-                }}
-            >
-                {isLoading && users.length === 0 ? (
-                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", py: 15 }}>
-                        <CircularProgress thickness={5} size={50} />
-                    </Box>
-                ) : (
-                    <Table sx={{ minWidth: 700 }}>
-                        <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 800, color: "text.secondary", py: 2.5 }}>DOCTOR PROFILE</TableCell>
-                                <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>EMAIL ADDRESS</TableCell>
-                                <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>REGISTRATION</TableCell>
-                                <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>ACCOUNT STATUS</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary" }}>MANAGEMENT</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {pendingDoctors.length === 0 ? (
+            {isLoading && users.length === 0 ? (
+                <TableSkeleton rows={5} cols={5} />
+            ) : (
+                <SectionCard 
+                    title="Pending Applications" 
+                    subtitle={`${pendingDoctors.length} requests requiring immediate attention`}
+                    sx={{ mt: 2 }}
+                >
+                    <TableContainer sx={{ mt: 1 }}>
+                        <Table>
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 15 }}>
-                                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", opacity: 0.6 }}>
-                                            <Box 
-                                                sx={{ 
-                                                    width: 80, 
-                                                    height: 80, 
-                                                    borderRadius: "50%", 
-                                                    bgcolor: "primary.light", 
-                                                    display: "flex", 
-                                                    justifyContent: "center", 
-                                                    alignItems: "center",
-                                                    mb: 2,
-                                                    color: "primary.main"
-                                                }}
-                                            >
-                                                <PersonIcon sx={{ fontSize: 40 }} />
-                                            </Box>
-                                            <Typography variant="h5" fontWeight="800" gutterBottom>Queue is empty</Typography>
-                                            <Typography variant="body1" color="text.secondary">All doctor applications have been processed.</Typography>
-                                        </Box>
-                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary", pl: 0 }}>Clinical Profile</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Contact Information</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Submission Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Integrity Status</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary", pr: 0 }}>Review Actions</TableCell>
                                 </TableRow>
-                            ) : (
-                                pendingDoctors.map((doc, index) => {
-                                    const isRowLoading = !!actionLoadingStates[doc._id];
-                                    return (
-                                        <Grow in={true} key={doc._id} timeout={300 + (index * 100)}>
-                                            <TableRow hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                                                <TableCell>
+                            </TableHead>
+                            <TableBody>
+                                {pendingDoctors.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} sx={{ border: 0 }}>
+                                            <EmptyState 
+                                                title="Registry is Clean"
+                                                message="There are no pending doctor applications at this moment. You're all caught up!"
+                                                icon={ShieldCheck}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    pendingDoctors.map((doc) => {
+                                        const isRowLoading = !!actionLoadingStates[doc._id];
+                                        return (
+                                            <TableRow key={doc._id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                                                <TableCell sx={{ py: 2.5, pl: 0 }}>
                                                     <Stack direction="row" spacing={2} alignItems="center">
                                                         <Avatar 
                                                             sx={{ 
-                                                                bgcolor: "primary.main", 
-                                                                fontWeight: 800,
-                                                                width: 45,
-                                                                height: 45,
-                                                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                                                                width: 48, 
+                                                                height: 48, 
+                                                                borderRadius: 2.5,
+                                                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                                                color: "primary.main",
+                                                                fontWeight: 800
                                                             }}
                                                         >
                                                             {doc.fullName?.[0] || doc.name?.[0] || "D"}
                                                         </Avatar>
-                                                        <Typography variant="body1" fontWeight="700">
-                                                            {doc.fullName || doc.name}
+                                                        <Box>
+                                                            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                                                                {doc.fullName || doc.name}
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+                                                                <User size={12} />
+                                                                <Typography variant="caption" sx={{ fontWeight: 600 }}>ID: {doc._id?.slice(-8).toUpperCase()}</Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </Stack>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Stack spacing={0.5}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <Mail size={14} />
+                                                            {doc.email}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Verified Source</Typography>
+                                                    </Stack>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                        <Calendar size={14} color={theme.palette.text.secondary} />
+                                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
                                                         </Typography>
                                                     </Stack>
                                                 </TableCell>
-                                                <TableCell sx={{ fontWeight: 500, color: "text.secondary" }}>
-                                                    {doc.email}
-                                                </TableCell>
-                                                <TableCell sx={{ color: "text.secondary" }}>
-                                                    {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("en-US", {
-                                                        year: "numeric",
-                                                        month: "short",
-                                                        day: "numeric"
-                                                    }) : "N/A"}
-                                                </TableCell>
                                                 <TableCell>
                                                     <Chip 
-                                                        label={doc.status === "pending" ? "PENDING REVIEW" : doc.status} 
-                                                        color={doc.status === "pending" ? "warning" : "success"} 
+                                                        label="AWAITING AUDIT" 
                                                         size="small" 
-                                                        variant="soft"
                                                         sx={{ 
                                                             fontWeight: 800, 
-                                                            textTransform: "uppercase", 
-                                                            fontSize: "0.65rem",
-                                                            letterSpacing: "0.05em",
-                                                            borderRadius: 1
+                                                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                                            color: "warning.dark",
+                                                            fontSize: '0.65rem',
+                                                            letterSpacing: 0.5,
+                                                            borderRadius: 1.5
                                                         }} 
                                                     />
                                                 </TableCell>
-                                                <TableCell align="right">
+                                                <TableCell align="right" sx={{ pr: 0 }}>
                                                     <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-                                                        <Tooltip title="Verify and Approve">
-                                                            <span>
-                                                                <Button
-                                                                    variant="contained"
-                                                                    color="success"
-                                                                    disableElevation
-                                                                    size="small"
-                                                                    startIcon={isRowLoading ? <CircularProgress size={16} color="inherit" /> : <ApproveIcon />}
-                                                                    onClick={() => setConfirmAction({ id: doc._id, name: doc.fullName || doc.name, action: "approve" })}
-                                                                    disabled={isRowLoading}
-                                                                    sx={{ fontWeight: 800, borderRadius: 2, height: 36 }}
-                                                                >
-                                                                    Approve
-                                                                </Button>
-                                                            </span>
-                                                        </Tooltip>
-                                                        <Tooltip title="Reject Application">
-                                                            <span>
-                                                                <Button
-                                                                    variant="outlined"
-                                                                    color="error"
-                                                                    size="small"
-                                                                    startIcon={isRowLoading ? <CircularProgress size={16} color="inherit" /> : <RejectIcon />}
-                                                                    onClick={() => setConfirmAction({ id: doc._id, name: doc.fullName || doc.name, action: "reject" })}
-                                                                    disabled={isRowLoading}
-                                                                    sx={{ fontWeight: 800, borderRadius: 2, height: 36, borderWidth: 2, "&:hover": { borderWidth: 2 } }}
-                                                                >
-                                                                    Reject
-                                                                </Button>
-                                                            </span>
-                                                        </Tooltip>
+                                                        <Button
+                                                            variant="soft"
+                                                            color="success"
+                                                            size="small"
+                                                            startIcon={isRowLoading ? <RefreshCw className="animate-spin" size={16} /> : <UserCheck size={16} />}
+                                                            onClick={() => setConfirmAction({ id: doc._id, name: doc.fullName || doc.name, action: "approve" })}
+                                                            disabled={isRowLoading}
+                                                            sx={{ 
+                                                                fontWeight: 800, 
+                                                                borderRadius: 2.5, 
+                                                                height: 38,
+                                                                bgcolor: alpha(theme.palette.success.main, 0.1),
+                                                                color: 'success.dark',
+                                                                "&:hover": { bgcolor: alpha(theme.palette.success.main, 0.2) }
+                                                            }}
+                                                        >
+                                                            Verify
+                                                        </Button>
+                                                        <IconButton
+                                                            color="error"
+                                                            size="small"
+                                                            onClick={() => setConfirmAction({ id: doc._id, name: doc.fullName || doc.name, action: "reject" })}
+                                                            disabled={isRowLoading}
+                                                            sx={{ 
+                                                                borderRadius: 2.5, 
+                                                                bgcolor: alpha(theme.palette.error.main, 0.05),
+                                                                "&:hover": { bgcolor: "error.main", color: "white" } 
+                                                            }}
+                                                        >
+                                                            <UserX size={18} />
+                                                        </IconButton>
                                                     </Stack>
                                                 </TableCell>
                                             </TableRow>
-                                        </Grow>
-                                    );
-                                })
-                            )}
-                        </TableBody>
-                    </Table>
-                )}
-            </TableContainer>
+                                        );
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </SectionCard>
+            )}
 
-            {/* Confirmation Dialog */}
+            {/* Verification Confirmation Dialog */}
             <Dialog 
                 open={!!confirmAction} 
                 onClose={() => setConfirmAction(null)}
-                PaperProps={{
-                    sx: { borderRadius: 3, p: 1 }
-                }}
+                PaperProps={{ sx: { borderRadius: 4, width: '100%', maxWidth: 450 } }}
             >
-                <DialogTitle sx={{ fontWeight: 900, fontSize: "1.5rem" }}>
-                    {confirmAction?.action === "approve" ? "Confirm Approval" : "Confirm Rejection"}
+                <DialogTitle sx={{ p: 3, pb: 0 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ 
+                            p: 1.5, 
+                            borderRadius: 2.5, 
+                            bgcolor: alpha(confirmAction?.action === "approve" ? theme.palette.success.main : theme.palette.error.main, 0.1), 
+                            color: confirmAction?.action === "approve" ? 'success.main' : 'error.main', 
+                            display: 'flex' 
+                        }}>
+                            {confirmAction?.action === "approve" ? <UserCheck size={28} /> : <AlertTriangle size={28} />}
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                            {confirmAction?.action === "approve" ? "Verify Practitioner?" : "Reject Registry?"}
+                        </Typography>
+                    </Stack>
                 </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1" sx={{ color: "text.secondary", mb: 2 }}>
-                        Are you sure you want to <strong>{confirmAction?.action}</strong> doctor <strong>{confirmAction?.name}</strong>?
-                        {confirmAction?.action === "reject" && " This will move them to the rejected list and permanently block dashboard access."}
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.6 }}>
+                        You are about to <strong>{confirmAction?.action}</strong> doc <strong>{confirmAction?.name}</strong>. 
+                        {confirmAction?.action === "approve" 
+                            ? " This will grant them full clinical privileges and list them in the doctor search." 
+                            : " This will permanently block their access and delete their application data."}
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{ p: 2, gap: 1 }}>
-                    <Button onClick={() => setConfirmAction(null)} variant="text" color="inherit" sx={{ fontWeight: 700 }}>
-                        Go Back
+                <DialogActions sx={{ p: 3, pt: 0 }}>
+                    <Button 
+                        onClick={() => setConfirmAction(null)} 
+                        sx={{ fontWeight: 800, textTransform: 'none', color: 'text.secondary' }}
+                    >
+                        Review Profile
                     </Button>
                     <Button 
-                        onClick={handleAction} 
                         variant="contained" 
                         color={confirmAction?.action === "approve" ? "success" : "error"}
-                        sx={{ fontWeight: 800, borderRadius: 2, px: 3 }}
+                        onClick={handleAction}
+                        sx={{ 
+                            borderRadius: 2.5, 
+                            fontWeight: 900, 
+                            textTransform: 'none',
+                            px: 4,
+                            boxShadow: `0 8px 16px ${alpha(confirmAction?.action === "approve" ? theme.palette.success.main : theme.palette.error.main, 0.2)}`
+                        }}
                     >
-                        Yes, {confirmAction?.action === "approve" ? "Approve" : "Reject"}
+                        Confirm {confirmAction?.action}
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Notifications */}
             <Snackbar 
                 open={snackbar.open} 
                 autoHideDuration={5000} 
@@ -309,12 +313,13 @@ const AdminDoctorApprovals = () => {
                 <Alert 
                     severity={snackbar.severity} 
                     variant="filled" 
-                    sx={{ width: "100%", fontWeight: 800, borderRadius: 2, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
+                    icon={<ShieldCheck size={20} />}
+                    sx={{ width: "100%", fontWeight: 800, borderRadius: 2.5, boxShadow: "0 12px 32px rgba(0,0,0,0.1)" }}
                 >
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-        </Container>
+        </Box>
     );
 };
 

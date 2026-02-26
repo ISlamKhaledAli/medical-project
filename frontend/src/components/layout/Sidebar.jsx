@@ -9,29 +9,30 @@ import {
     Tooltip,
     Drawer,
     IconButton,
-    Badge
+    Badge,
+    Typography,
+    alpha,
+    useTheme
 } from "@mui/material";
 import {
-    Dashboard as DashboardIcon,
-    People as PeopleIcon,
-    CalendarMonth as CalendarIcon,
-    Email as MailIcon,
-    Work as AppointmentsIcon,
+    LayoutDashboard as DashboardIcon,
+    Users as PeopleIcon,
+    Calendar as CalendarIcon,
+    Mail as MailIcon,
+    BriefcaseMedical as AppointmentsIcon,
     Settings as SettingsIcon,
-    BarChart as AnalyticsIcon,
-    ChevronLeft as ChevronLeftIcon,
-    Person as ProfileIcon,
-    Category as SpecialityIcon,
-    AssignmentTurnedIn as ApprovalIcon
-} from "@mui/icons-material";
+    Stethoscope as SpecialityIcon,
+    ShieldCheck as ApprovalIcon,
+    PlusSquare as PlusIcon
+} from "lucide-react";
 
 import { ROLES } from "../../constants/roles";
 
 const DRAWER_WIDTH = 100;
 
-
 const Sidebar = ({ open, toggleDrawer, isMobile }) => {
     const { user } = useSelector((state) => state.auth);
+    const theme = useTheme();
     const conversations = useSelector((state) => state.chat?.conversations || []);
     const totalUnreadChat = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
     const location = useLocation();
@@ -41,27 +42,25 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
         const common = [];
         
         const patientItems = [
-            { id: "home", icon: <DashboardIcon />, path: "/patient", label: "Home" },
-            { id: "doctors", icon: <PeopleIcon />, path: "/patient/doctors", label: "Find Doctors" },
-            { id: "appointments", icon: <AppointmentsIcon />, path: "/patient/appointments", label: "My Appointments" },
-            { id: "chat", icon: <MailIcon />, path: "/patient/chat", label: "Chat" },
-            { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Profile Settings" },
+            { id: "home", icon: <DashboardIcon size={24} />, path: "/patient", label: "Home" },
+            { id: "doctors", icon: <PeopleIcon size={24} />, path: "/patient/doctors", label: "Find Doctors" },
+            { id: "appointments", icon: <AppointmentsIcon size={24} />, path: "/patient/appointments", label: "My Appointments" },
+            { id: "chat", icon: <MailIcon size={24} />, path: "/patient/chat", label: "Chat" },
         ];
 
         const doctorItems = [
-            { id: "dashboard", icon: <DashboardIcon />, path: "/doctor/dashboard", label: "Dashboard" },
-            { id: "appointments", icon: <AppointmentsIcon />, path: "/doctor/appointments", label: "Appointments" },
-            { id: "schedule", icon: <CalendarIcon />, path: "/doctor/schedule", label: "Manage Schedule" },
-            { id: "chat", icon: <MailIcon />, path: "/doctor/chat", label: "Chat" },
-            { id: "settings", icon: <ProfileIcon />, path: "/settings", label: "Professional Profile" },
+            { id: "dashboard", icon: <DashboardIcon size={24} />, path: "/doctor/dashboard", label: "Dashboard" },
+            { id: "appointments", icon: <AppointmentsIcon size={24} />, path: "/doctor/appointments", label: "Appointments" },
+            { id: "schedule", icon: <CalendarIcon size={24} />, path: "/doctor/schedule", label: "Manage Schedule" },
+            { id: "chat", icon: <MailIcon size={24} />, path: "/doctor/chat", label: "Chat" },
         ];
 
         const adminItems = [
-            { id: "dashboard", icon: <DashboardIcon />, path: "/admin/dashboard", label: "Admin Console" },
-            { id: "approvals", icon: <ApprovalIcon />, path: "/admin/doctor-approvals", label: "Doctor Approvals" },
-            { id: "users", icon: <PeopleIcon />, path: "/admin/users", label: "Manage Users" },
-            { id: "specialties", icon: <SpecialityIcon />, path: "/admin/specialties", label: "Manage Specialties" },
-            { id: "appointments", icon: <AppointmentsIcon />, path: "/admin/appointments", label: "All Appointments" },
+            { id: "dashboard", icon: <DashboardIcon size={24} />, path: "/admin/dashboard", label: "Admin Console" },
+            { id: "approvals", icon: <ApprovalIcon size={24} />, path: "/admin/doctor-approvals", label: "Doctor Approvals" },
+            { id: "users", icon: <PeopleIcon size={24} />, path: "/admin/users", label: "Manage Users" },
+            { id: "specialties", icon: <SpecialityIcon size={24} />, path: "/admin/specialties", label: "Manage Specialties" },
+            { id: "appointments", icon: <AppointmentsIcon size={24} />, path: "/admin/appointments", label: "All Appointments" },
         ];
 
         switch (role) {
@@ -81,32 +80,66 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 py: 4,
-                bgcolor: "#263238", // Dark sidebar background
+                bgcolor: "#1A237E", // Deep Indigo for medical theme
                 color: "white",
-                borderRadius: isMobile ? 0 : "0 40px 40px 0", // Matching the rounded design
-                transition: "width 0.3s ease",
+                borderRadius: isMobile ? 0 : "0 30px 30px 0",
+                transition: "all 0.3s ease",
+                boxShadow: "10px 0 20px rgba(0,0,0,0.05)"
             }}
         >
-            <List sx={{ width: "100%", mt: 2 }}>
+            {/* Branding Logo */}
+            <Box 
+              sx={{ 
+                mb: 6, 
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center",
+                cursor: "pointer"
+              }}
+              onClick={() => navigate("/")}
+            >
+              <Box 
+                sx={{ 
+                  width: 50, 
+                  height: 50, 
+                  borderRadius: 3, 
+                  bgcolor: "rgba(255,255,255,0.15)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  mb: 1,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                }}
+              >
+                <PlusIcon color="white" size={32} strokeWidth={3} />
+              </Box>
+              <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: 2, opacity: 0.8 }}>
+                MEDIC
+              </Typography>
+            </Box>
+
+            <List sx={{ width: "100%", mt: 0 }}>
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
-                        <ListItem key={item.id} disablePadding sx={{ mb: 3, justifyContent: "center" }}>
-                            <Tooltip title={item.label} placement="right">
+                        <ListItem key={item.id} disablePadding sx={{ mb: 2, justifyContent: "center" }}>
+                            <Tooltip title={item.label} placement="right" arrow>
                                 <ListItemButton
                                     onClick={() => navigate(item.path)}
                                     sx={{
                                         minWidth: 0,
                                         justifyContent: "center",
-                                        bgcolor: isActive ? "rgba(255, 255, 255, 0.9)" : "transparent",
-                                        color: isActive ? "#263238" : "white",
-                                        borderRadius: "20px",
-                                        width: "60px",
-                                        height: "60px",
+                                        bgcolor: isActive ? "white" : "transparent",
+                                        color: isActive ? "#1A237E" : "rgba(255,255,255,0.7)",
+                                        borderRadius: "16px",
+                                        width: "56px",
+                                        height: "56px",
                                         "&:hover": {
                                             bgcolor: isActive ? "white" : "rgba(255, 255, 255, 0.1)",
+                                            color: "white"
                                         },
-                                        mx: "auto"
+                                        mx: "auto",
+                                        transition: "all 0.2s ease"
                                     }}
                                 >
                                     <ListItemIcon
@@ -131,13 +164,16 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                 })}
             </List>
 
-            <Box sx={{ mt: "auto", mb: 5 }}>
-                <Tooltip title="Settings" placement="right">
+            <Box sx={{ mt: "auto", mb: 2 }}>
+                <Tooltip title="Settings" placement="right" arrow>
                     <IconButton 
                         onClick={() => navigate("/settings")}
-                        sx={{ color: "white" }}
+                        sx={{ 
+                          color: "rgba(255,255,255,0.7)",
+                          "&:hover": { color: "white", bgcolor: "rgba(255,255,255,0.1)" }
+                        }}
                     >
-                        <SettingsIcon />
+                        <SettingsIcon size={24} />
                     </IconButton>
                 </Tooltip>
             </Box>
@@ -152,7 +188,7 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                 onClose={toggleDrawer}
                 ModalProps={{ keepMounted: true }}
                 sx={{
-                    "& .MuiDrawer-paper": { width: DRAWER_WIDTH, boxSizing: "border-box", border: "none" },
+                    "& .MuiDrawer-paper": { width: DRAWER_WIDTH, boxSizing: "border-box", border: "none", backgroundColor: "transparent" },
                 }}
             >
                 {drawerContent}
@@ -179,3 +215,4 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
 };
 
 export default Sidebar;
+

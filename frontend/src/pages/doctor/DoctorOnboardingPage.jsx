@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
     Container,
-    Paper,
     Box,
     Stepper,
     Step,
@@ -13,19 +12,28 @@ import {
     TextField,
     MenuItem,
     Grid,
-    CircularProgress,
     Alert,
-    Divider,
     Stack,
-    IconButton,
+    alpha,
+    useTheme,
+    Paper,
+    InputAdornment,
+    Divider
 } from "@mui/material";
 import {
-    Person as PersonIcon,
-    Work as WorkIcon,
-    Visibility as ReviewIcon,
-    ArrowBack as BackIcon,
-    CheckCircle as SuccessIcon,
-} from "@mui/icons-material";
+    User,
+    Briefcase,
+    CheckCircle2,
+    ChevronRight,
+    ChevronLeft,
+    MapPin,
+    DollarSign,
+    Award,
+    Sparkles,
+    FileText,
+    Building,
+    Check
+} from "lucide-react";
 import { fetchSpecialties } from "../../features/specialty/specialtySlice";
 import {
     createDoctorProfile,
@@ -33,11 +41,14 @@ import {
     fetchMyProfile,
 } from "../../features/doctor/doctorSlice";
 import { toast } from "react-hot-toast";
+import GlobalLoader from "../../components/ui/GlobalLoader";
+import SectionCard from "../../components/ui/SectionCard";
 
-const steps = ["Personal Info", "Professional Info", "Review & Submit"];
+const steps = ["Clinical Identity", "Professional Context", "Final Verification"];
 
 const DoctorOnboardingPage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const navigate = useNavigate();
 
     const { user } = useSelector((state) => state.auth);
@@ -51,12 +62,12 @@ const DoctorOnboardingPage = () => {
         address: "",
         specialty: "",
         consultationFee: "",
+        hospitalName: "",
     });
 
     const [errors, setErrors] = useState({});
     const [isEditMode, setIsEditMode] = useState(false);
 
-    // Initial load: Fetch profile and specialties
     useEffect(() => {
         dispatch(fetchSpecialties());
         dispatch(fetchMyProfile())
@@ -70,19 +81,16 @@ const DoctorOnboardingPage = () => {
                         address: data.address || "",
                         specialty: data.specialty?._id || data.specialty || "",
                         consultationFee: data.consultationFee || "",
+                        hospitalName: data.hospitalName || "Central Medical Plaza",
                     });
                 }
             })
-            .catch(() => {
-                // No profile found, stay in setup mode
-                setIsEditMode(false);
-            });
+            .catch(() => setIsEditMode(false));
     }, [dispatch]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
-        // Clear error when user types
         if (errors[name]) {
             setErrors((prev) => {
                 const newErrors = { ...prev };
@@ -95,285 +103,283 @@ const DoctorOnboardingPage = () => {
     const validateStep = () => {
         const newErrors = {};
         if (activeStep === 0) {
-            if (!formData.bio) newErrors.bio = "Bio is required";
-            if (formData.bio.length > 500) newErrors.bio = "Bio cannot exceed 500 characters";
+            if (!formData.bio) newErrors.bio = "Clinical narrative is required";
+            if (formData.bio.length < 50) newErrors.bio = "Narrative is too brief. Provide more detail for patients.";
             if (formData.experienceYears === "" || formData.experienceYears < 0)
-                newErrors.experienceYears = "Valid experience is required";
-            if (!formData.address) newErrors.address = "Address is required";
+                newErrors.experienceYears = "Valid clinical experience required";
+            if (!formData.address) newErrors.address = "Clinical address is required";
         } else if (activeStep === 1) {
-            if (!formData.specialty) newErrors.specialty = "Specialty is required";
+            if (!formData.specialty) newErrors.specialty = "Medical specialty required";
             if (formData.consultationFee === "" || formData.consultationFee < 1)
-                newErrors.consultationFee = "Fee must be at least 1";
+                newErrors.consultationFee = "Standardize your consultation fee";
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleNext = () => {
-        if (validateStep()) {
-            setActiveStep((prev) => prev + 1);
-        }
+        if (validateStep()) setActiveStep((prev) => prev + 1);
     };
 
-    const handleBack = () => {
-        setActiveStep((prev) => prev - 1);
-    };
+    const handleBack = () => setActiveStep((prev) => prev - 1);
 
     const handleSubmit = async () => {
         try {
             if (isEditMode) {
                 await dispatch(updateDoctorProfile(formData)).unwrap();
-                toast.success("Profile updated!");
+                toast.success("Clinical profile synchronized!");
             } else {
                 await dispatch(createDoctorProfile(formData)).unwrap();
-                toast.success("Profile setup complete!");
+                toast.success("Welcome to the clinical network!");
             }
             navigate("/doctor/dashboard");
         } catch (err) {
-            toast.error(err || "Action failed");
+            toast.error(err || "Failed to commit clinical patterns");
         }
     };
 
-    const isNextDisabled = () => {
-        if (activeStep === 0) {
-            return !formData.bio || !formData.address || formData.experienceYears === "";
-        }
-        if (activeStep === 1) {
-            return !formData.specialty || !formData.consultationFee;
-        }
-        return false;
-    };
-
-    if (isDoctorLoading && activeStep === 0 && !isEditMode) {
-        return (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    if (isDoctorLoading && !isEditMode && activeStep === 0) return <GlobalLoader message="Initializing onboarding sequence..." />;
 
     return (
-        <Container maxWidth="md" sx={{ py: 4 }}>
-            <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, border: "1px solid", borderColor: "divider" }}>
-                <Box sx={{ textAlign: "center", mb: 4 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: "primary.main", mb: 1 }}>
-                        {isEditMode ? "Edit Professional Profile" : "Doctor Onboarding"}
-                    </Typography>
-                    <Typography color="text.secondary">
-                        {isEditMode 
-                            ? "Keep your professional information up to date for patients." 
-                            : "Complete your profile to start receiving appointment requests."}
-                    </Typography>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            <Box sx={{ textAlign: "center", mb: 8 }}>
+                <Box sx={{ 
+                    width: 64, height: 64, borderRadius: 3, 
+                    bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                    color: 'primary.main', display: 'flex', 
+                    alignItems: 'center', justifyContent: 'center', 
+                    mx: 'auto', mb: 3 
+                }}>
+                    <Award size={32} />
                 </Box>
+                <Typography variant="h3" sx={{ fontWeight: 900, color: "text.primary", mb: 1.5 }}>
+                    {isEditMode ? "Clinical Credentials" : "Professional Onboarding"}
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: 500, mx: "auto", fontWeight: 500 }}>
+                    {isEditMode 
+                        ? "Update your professional narrative and clinical attributes for patient visibility." 
+                        : "Complete your expert profile to join our network of elite medical specialists."}
+                </Typography>
+            </Box>
 
-                <Stepper activeStep={activeStep} sx={{ mb: 5 }}>
-                    {steps.map((label) => (
-                        <Step key={label}>
-                            <StepLabel>{label}</StepLabel>
-                        </Step>
-                    ))}
-                </Stepper>
+            <Stepper 
+                activeStep={activeStep} 
+                sx={{ 
+                    mb: 8,
+                    '& .MuiStepIcon-root': { width: 32, height: 32 },
+                    '& .MuiStepIcon-root.Mui-active': { color: 'primary.main' },
+                    '& .MuiStepIcon-root.Mui-completed': { color: 'success.main' },
+                    '& .MuiStepLabel-label': { fontWeight: 800, mt: 1 }
+                }}
+            >
+                {steps.map((label) => (
+                    <Step key={label}>
+                        <StepLabel>{label}</StepLabel>
+                    </Step>
+                ))}
+            </Stepper>
 
-                {doctorError && (
-                    <Alert severity="error" sx={{ mb: 3 }}>
-                        {doctorError}
-                    </Alert>
+            {doctorError && (
+                <Alert severity="error" sx={{ mb: 4, borderRadius: 3, fontWeight: 700 }}>{doctorError}</Alert>
+            )}
+
+            <Box sx={{ mb: 6 }}>
+                {activeStep === 0 && (
+                    <SectionCard title="Practice Foundations" icon={User}>
+                        <Grid container spacing={4}>
+                            <Grid item xs={12}>
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Professional Narrative</Typography>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={5}
+                                        name="bio"
+                                        placeholder="Share your expertise, clinical philosophy, and academic background..."
+                                        value={formData.bio}
+                                        onChange={handleChange}
+                                        error={!!errors.bio}
+                                        helperText={errors.bio || `${formData.bio.length}/500 characters`}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                                    />
+                                </Stack>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Tenure (Years)</Typography>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        name="experienceYears"
+                                        value={formData.experienceYears}
+                                        onChange={handleChange}
+                                        error={!!errors.experienceYears}
+                                        helperText={errors.experienceYears}
+                                        InputProps={{
+                                            startAdornment: <InputAdornment position="start"><Award size={18} /></InputAdornment>,
+                                            sx: { borderRadius: 3 }
+                                        }}
+                                    />
+                                </Stack>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Primary Hospital</Typography>
+                                    <TextField
+                                        fullWidth
+                                        name="hospitalName"
+                                        placeholder="e.g. Mayo Clinic"
+                                        value={formData.hospitalName}
+                                        onChange={handleChange}
+                                        InputProps={{
+                                            startAdornment: <InputAdornment position="start"><Building size={18} /></InputAdornment>,
+                                            sx: { borderRadius: 3 }
+                                        }}
+                                    />
+                                </Stack>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Site Address</Typography>
+                                    <TextField
+                                        fullWidth
+                                        name="address"
+                                        placeholder="Enter the full medical facility address..."
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        error={!!errors.address}
+                                        helperText={errors.address}
+                                        InputProps={{
+                                            startAdornment: <InputAdornment position="start"><MapPin size={18} /></InputAdornment>,
+                                            sx: { borderRadius: 3 }
+                                        }}
+                                    />
+                                </Stack>
+                            </Grid>
+                        </Grid>
+                    </SectionCard>
                 )}
 
-                <Box sx={{ mt: 2 }}>
-                    {/* STEP 1: PERSONAL INFO */}
-                    {activeStep === 0 && (
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                                        Professional Bio
-                                    </Typography>
-                                    <Typography variant="caption" color={formData.bio.length > 500 ? "error" : "text.secondary"}>
-                                        {formData.bio.length}/500
-                                    </Typography>
-                                </Box>
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={4}
-                                    name="bio"
-                                    placeholder="Tell patients about your expertise, background, and approach to care..."
-                                    value={formData.bio}
-                                    onChange={handleChange}
-                                    error={!!errors.bio}
-                                    helperText={errors.bio}
-                                />
+                {activeStep === 1 && (
+                    <SectionCard title="Medical Domain" icon={Briefcase}>
+                        <Grid container spacing={4}>
+                            <Grid item xs={12} sm={6}>
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Clinical Specialty</Typography>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        name="specialty"
+                                        value={formData.specialty}
+                                        onChange={handleChange}
+                                        error={!!errors.specialty}
+                                        helperText={errors.specialty}
+                                        InputProps={{ sx: { borderRadius: 3 } }}
+                                    >
+                                        {specialties.map((s) => (
+                                            <MenuItem key={s._id} value={s._id} sx={{ fontWeight: 700 }}>{s.name}</MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Stack>
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                                    Years of Experience
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    type="number"
-                                    name="experienceYears"
-                                    value={formData.experienceYears}
-                                    onChange={handleChange}
-                                    error={!!errors.experienceYears}
-                                    helperText={errors.experienceYears}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                                    Clinic/Office Address
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    error={!!errors.address}
-                                    helperText={errors.address}
-                                />
+                                <Stack spacing={1}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.secondary' }}>Standard Consultation Fee</Typography>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        name="consultationFee"
+                                        value={formData.consultationFee}
+                                        onChange={handleChange}
+                                        error={!!errors.consultationFee}
+                                        helperText={errors.consultationFee}
+                                        InputProps={{
+                                            startAdornment: <InputAdornment position="start"><DollarSign size={18} /></InputAdornment>,
+                                            sx: { borderRadius: 3 }
+                                        }}
+                                    />
+                                </Stack>
                             </Grid>
                         </Grid>
-                    )}
+                    </SectionCard>
+                )}
 
-                    {/* STEP 2: PROFESSIONAL INFO */}
-                    {activeStep === 1 && (
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                                    Specialty
-                                </Typography>
-                                <TextField
-                                    select
-                                    fullWidth
-                                    name="specialty"
-                                    value={formData.specialty}
-                                    onChange={handleChange}
-                                    error={!!errors.specialty}
-                                    helperText={errors.specialty}
-                                    disabled={isSpecialtiesLoading}
-                                >
-                                    {specialties.map((s) => (
-                                        <MenuItem key={s._id} value={s._id}>
-                                            {s.name}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
+                {activeStep === 2 && (
+                    <SectionCard title="Regulatory Verification" icon={FileText}>
+                        <Alert severity="success" icon={<Sparkles size={20} />} sx={{ mb: 4, borderRadius: 3, bgcolor: alpha(theme.palette.success.main, 0.05), color: 'success.dark', border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.1) }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Validation Successful</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 600 }}>Your clinical attributes are verified and ready for publication.</Typography>
+                        </Alert>
+                        
+                        <Stack spacing={4}>
+                            <Box sx={{ p: 4, borderRadius: 4, bgcolor: alpha(theme.palette.primary.main, 0.02), border: '1px dashed', borderColor: alpha(theme.palette.primary.main, 0.1) }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>Professional Narrative</Typography>
+                                <Typography variant="body1" sx={{ mt: 1, fontWeight: 500, lineHeight: 1.8 }}>{formData.bio}</Typography>
+                            </Box>
+
+                            <Grid container spacing={3}>
+                                {[
+                                    { icon: Award, label: 'Clinical Domain', value: specialties.find(s => s._id === formData.specialty)?.name || "N/A" },
+                                    { icon: Sparkles, label: 'Tenure', value: `${formData.experienceYears} Years` },
+                                    { icon: DollarSign, label: 'Standard Rate', value: `$${formData.consultationFee}` },
+                                    { icon: MapPin, label: 'Active Facility', value: formData.hospitalName || "N/A" }
+                                ].map((stat, i) => (
+                                    <Grid item xs={6} key={i}>
+                                        <Paper elevation={0} sx={{ p: 3, borderRadius: 4, bgcolor: 'white', border: '1px solid', borderColor: 'divider' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), color: 'primary.main' }}>
+                                                    <stat.icon size={18} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, display: 'block' }}>{stat.label}</Typography>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{stat.value}</Typography>
+                                                </Box>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid>
+                                ))}
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                                    Consultation Fee ($)
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    type="number"
-                                    name="consultationFee"
-                                    value={formData.consultationFee}
-                                    onChange={handleChange}
-                                    error={!!errors.consultationFee}
-                                    helperText={errors.consultationFee}
-                                    inputProps={{ min: 1 }}
-                                />
-                            </Grid>
-                        </Grid>
-                    )}
+                        </Stack>
+                    </SectionCard>
+                )}
+            </Box>
 
-                    {/* STEP 3: REVIEW */}
-                    {activeStep === 2 && (
-                        <Box>
-                            <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, display: "flex", alignItems: "center" }}>
-                                <ReviewIcon sx={{ mr: 1 }} /> Review Your Information
-                            </Typography>
-                            
-                            <Stack spacing={2}>
-                                <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
-                                        Bio
-                                    </Typography>
-                                    <Typography variant="body2">{formData.bio}</Typography>
-                                </Box>
-
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
-                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
-                                                Specialty
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                                                {specialties.find(s => s._id === formData.specialty)?.name || "Not selected"}
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
-                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
-                                                Experience
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                                                {formData.experienceYears} Years
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
-                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
-                                                Consultation Fee
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 700, color: "primary.main" }}>
-                                                ${formData.consultationFee}
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
-                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
-                                                Clinic Location
-                                            </Typography>
-                                            <Typography variant="body1">{formData.address}</Typography>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                            </Stack>
-                        </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Button
+                    variant="soft"
+                    onClick={handleBack}
+                    disabled={activeStep === 0 || isDoctorLoading}
+                    startIcon={<ChevronLeft size={20} />}
+                    sx={{ borderRadius: 3, px: 4, py: 1.5, fontWeight: 900 }}
+                >
+                    Previous Sequence
+                </Button>
+                
+                <Box>
+                    {activeStep < 2 ? (
+                        <Button
+                            variant="contained"
+                            onClick={handleNext}
+                            disabled={isDoctorLoading}
+                            endIcon={<ChevronRight size={20} />}
+                            sx={{ borderRadius: 3, px: 5, py: 1.5, fontWeight: 900, boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}` }}
+                        >
+                            Next Milestone
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            color="success"
+                            onClick={handleSubmit}
+                            disabled={isDoctorLoading}
+                            startIcon={isDoctorLoading ? null : <Check size={20} />}
+                            sx={{ borderRadius: 3, px: 5, py: 1.5, fontWeight: 900, boxShadow: `0 8px 24px ${alpha(theme.palette.success.main, 0.25)}` }}
+                        >
+                            {isDoctorLoading ? "Commiting..." : isEditMode ? "Synchronize" : "Finalize Setup"}
+                        </Button>
                     )}
                 </Box>
-
-                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 5, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
-                    <Button
-                        variant="outlined"
-                        onClick={handleBack}
-                        disabled={activeStep === 0 || isDoctorLoading}
-                        startIcon={<BackIcon />}
-                        sx={{ borderRadius: 2, px: 3, fontWeight: 700 }}
-                    >
-                        Back
-                    </Button>
-                    
-                    <Box>
-                        {activeStep < 2 ? (
-                            <Button
-                                variant="contained"
-                                onClick={handleNext}
-                                disabled={isNextDisabled()}
-                                sx={{ borderRadius: 2, px: 4, fontWeight: 700 }}
-                            >
-                                Next Step
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="contained"
-                                color="success"
-                                onClick={handleSubmit}
-                                disabled={isDoctorLoading}
-                                startIcon={isDoctorLoading ? <CircularProgress size={20} color="inherit" /> : <SuccessIcon />}
-                                sx={{ borderRadius: 2, px: 4, fontWeight: 700 }}
-                            >
-                                {isEditMode ? "Save Changes" : "Complete Setup"}
-                            </Button>
-                        )}
-                    </Box>
-                </Box>
-            </Paper>
+            </Box>
         </Container>
     );
 };
