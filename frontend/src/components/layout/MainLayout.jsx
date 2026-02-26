@@ -28,7 +28,7 @@ const MainLayout = ({ children }) => {
         setOpen(!open);
     };
 
-    if (isInitialLoading) return null; // Or a full-screen skeleton/loader
+    if (isAuthChecking) return null; // Or a full-screen skeleton/loader
 
     return (
         <Box sx={{ display: "flex", bgcolor: "#f1f5f9", minHeight: "100vh" }}>
