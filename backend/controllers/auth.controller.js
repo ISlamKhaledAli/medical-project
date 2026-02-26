@@ -8,43 +8,40 @@ import { sendEmail, emailTemplate } from "../utils/sendEmail.js";
  */
 export const register = async (req, res, next) => {
   try {
+    console.log("📝 Registration started for:", req.body.email);
+
     const user = await authService.createUser(req.body);
+    console.log("✅ User created successfully in DB:", user._id);
 
     let verificationToken;
     try {
       verificationToken = await authService.generateVerificationToken(user._id);
+      console.log("✅ Verification token generated");
     } catch (tokenError) {
       console.error("❌ Token generation failed:", tokenError.message);
       return res.status(201).json({
         success: true,
-        message:
-          "Account created, but verification failed. Please contact support.",
+        message: "Account created, but verification failed. Please contact support."
       });
     }
 
     const verifyUrl = `${req.protocol}://${req.get("host")}/api/auth/verifyemail/${verificationToken}`;
     const html = emailTemplate({
       title: "Verify Your Email",
-      greeting: `Hi ${user.fullName || "there"} 👋`,
+      greeting: `Hi ${user.fullName || 'there'} 👋`,
       body: "Thank you for creating your MediConnect account! To get started, please verify your email address by clicking the button below.",
       buttonText: "✅ Verify My Email",
       buttonUrl: verifyUrl,
-      footerText:
-        "⏰ This verification link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.",
+      footerText: "⏰ This verification link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.",
     });
 
     try {
-      await sendEmail({
-        email: user.email,
-        subject: "🏥 Verify Your MediConnect Email",
-        message: `Verify your email: ${verifyUrl}`,
-        html,
-      });
+      await sendEmail({ email: user.email, subject: "🏥 Verify Your MediConnect Email", message: `Verify your email: ${verifyUrl}`, html });
+      console.log("✉️ Verification email sent successfully");
 
-      const successMsg =
-        user.role === "doctor"
-          ? "Registration successful! Your account is pending admin approval. Please check your email for verification."
-          : "Registration successful. Please check your email to verify your account.";
+      const successMsg = user.role === "doctor"
+        ? "Registration successful! Your account is pending admin approval. Please check your email for verification."
+        : "Registration successful. Please check your email to verify your account.";
 
       res.status(201).json({
         success: true,
@@ -54,8 +51,7 @@ export const register = async (req, res, next) => {
       console.error("📧 Email sending failed:", emailError.message);
       res.status(201).json({
         success: true,
-        message:
-          "Registration successful, but we couldn't send the verification email. Please try logging in to resend it.",
+        message: "Registration successful, but we couldn't send the verification email. Please try logging in to resend it.",
       });
     }
   } catch (error) {
@@ -84,15 +80,9 @@ export const login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
     res.status(200).json({
       success: true,
+      accessToken,
       user,
     });
   } catch (error) {
@@ -102,8 +92,7 @@ export const login = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
   try {
-    const incomingRefreshToken =
-      req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
     const { accessToken, refreshToken: newRefreshToken } =
       await authService.handleRefreshToken(incomingRefreshToken);
@@ -115,15 +104,9 @@ export const refreshToken = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
-    });
-
     res.status(200).json({
       success: true,
+      accessToken,
     });
   } catch (error) {
     next(error);
@@ -135,7 +118,6 @@ export const logout = async (req, res, next) => {
     await authService.handleLogout(req.user._id);
 
     res.clearCookie("refreshToken");
-    res.clearCookie("accessToken");
 
     res.status(200).json({
       success: true,
@@ -247,15 +229,14 @@ export const verifyEmail = async (req, res, next) => {
           </div>
           <h1>Email Verified!</h1>
           <p>Your email address has been successfully verified. You can now log in to your account and start booking appointments.</p>
-          <a href="${process.env.CLIENT_URL || "http://localhost:5173"}/login" class="btn">Go to Login</a>
+          <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/login" class="btn">Go to Login</a>
           <p class="footer">MediConnect &mdash; Your Health, Our Priority</p>
         </div>
       </body>
       </html>
     `);
   } catch (error) {
-    const errMsg =
-      error.message || "Verification failed. The link may have expired.";
+    const errMsg = error.message || "Verification failed. The link may have expired.";
     res.status(400).send(`
       <!DOCTYPE html>
       <html lang="en">
@@ -338,7 +319,7 @@ export const verifyEmail = async (req, res, next) => {
           <h1>Verification Failed</h1>
           <p class="error-msg">${errMsg}</p>
           <p>The verification link may have expired or is invalid. Please try logging in and requesting a new verification email.</p>
-          <a href="${process.env.CLIENT_URL || "http://localhost:5173"}/login" class="btn">Go to Login</a>
+          <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/login" class="btn">Go to Login</a>
           <p class="footer">MediConnect &mdash; Your Health, Our Priority</p>
         </div>
       </body>
@@ -364,12 +345,11 @@ export const resendVerification = async (req, res, next) => {
     const verifyUrl = `${req.protocol}://${req.get("host")}/api/auth/verifyemail/${verificationToken}`;
     const html = emailTemplate({
       title: "Verify Your Email",
-      greeting: `Hi ${user.fullName || "there"} 👋`,
+      greeting: `Hi ${user.fullName || 'there'} 👋`,
       body: "You requested a new verification link. Please click the button below to verify your email address.",
       buttonText: "✅ Verify My Email",
       buttonUrl: verifyUrl,
-      footerText:
-        "⏰ This verification link will expire in 24 hours. If you didn't request this, you can safely ignore this email.",
+      footerText: "⏰ This verification link will expire in 24 hours. If you didn't request this, you can safely ignore this email.",
     });
     await sendEmail({
       email: user.email,
@@ -393,15 +373,14 @@ export const forgotPassword = async (req, res, next) => {
       req.body.email,
     );
 
-    const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
     const html = emailTemplate({
       title: "Reset Your Password",
       greeting: "Hi there 👋",
       body: "We received a request to reset the password for your MediConnect account. Click the button below to set a new password.",
       buttonText: "🔒 Reset My Password",
       buttonUrl: resetUrl,
-      footerText:
-        "⏰ This link will expire in 10 minutes. If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.",
+      footerText: "⏰ This link will expire in 10 minutes. If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.",
     });
     await sendEmail({
       email: req.body.email,

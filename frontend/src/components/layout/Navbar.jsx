@@ -23,14 +23,12 @@ import {
     Settings as SettingsIcon
 } from "@mui/icons-material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../features/auth/authSlice";
 import NotificationBell from "./NotificationBell";
 
 const Navbar = ({ onMenuClick }) => {
     const { user } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
 
     const handleProfileClick = (event) => {
@@ -44,23 +42,6 @@ const Navbar = ({ onMenuClick }) => {
     const handleLogout = () => {
         dispatch(logoutUser());
         handleClose();
-    };
-
-    const handleProfileClickMenu = () => {
-        handleClose();
-        // Navigate to profile based on user role
-        if (user?.role === 'doctor') {
-            navigate('/doctor/profile');
-        } else if (user?.role === 'patient') {
-            navigate('/patient/profile');
-        } else if (user?.role === 'admin') {
-            navigate('/admin/dashboard');
-        }
-    };
-
-    const handleSettingsClick = () => {
-        handleClose();
-        navigate('/settings');
     };
 
     return (
@@ -165,13 +146,11 @@ const Navbar = ({ onMenuClick }) => {
                             }
                         }}
                     >
-                        {user?.role === 'doctor' &&
-                        <MenuItem onClick={handleProfileClickMenu}>
+                        <MenuItem onClick={handleClose}>
                             <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                             Profile
                         </MenuItem>
-                        }
-                        <MenuItem onClick={handleSettingsClick}>
+                        <MenuItem onClick={handleClose}>
                             <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
                             Account Settings
                         </MenuItem>

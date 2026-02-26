@@ -43,6 +43,21 @@ export const validateSlotAvailability = async ({
         isActive: true,
     });
 
+    console.log("Validation Debug Info:", {
+        doctorId,
+        appointmentDate,
+        startTime,
+        excludeAppointmentId,
+        normalizedDate: normalizedDate.toISOString().split("T")[0],
+        calculatedDayOfWeek: dayOfWeek,
+        foundAvailability: availability ? {
+            dayOfWeek: availability.dayOfWeek,
+            startTime: availability.startTime,
+            endTime: availability.endTime,
+            slotDurationMinutes: availability.slotDurationMinutes
+        } : "NONE"
+    });
+
     if (!availability) {
         throw new ApiError("NOT_WORKING_DAY: Doctor does not work on this day", 400);
     }
@@ -52,6 +67,15 @@ export const validateSlotAvailability = async ({
     const availableEnd = timeToMinutes(availability.endTime);
     const slotDuration = availability.slotDurationMinutes || 30;
     const minutesFromStart = requestedStart - availableStart;
+
+    console.log("Alignment Debug Info:", {
+        availableStart,
+        availableEnd,
+        requestedStart,
+        minutesFromStart,
+        slotDuration,
+        isAligned: minutesFromStart % slotDuration === 0
+    });
 
     // 3. Confirm time is between startTime and endTime
     if (requestedStart < availableStart || requestedStart >= availableEnd) {
