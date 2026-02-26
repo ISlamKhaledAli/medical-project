@@ -1,4 +1,5 @@
-import { sendEmail, emailTemplate } from "../utils/sendEmail.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { emailTemplate } from "../templates/email.template.js";
 import {
   verificationSuccessTemplate,
   verificationFailureTemplate
@@ -236,3 +237,5 @@ export const getMe = async (req, res, next) => {
     next(error);
   }
 };
+
+// End of file
