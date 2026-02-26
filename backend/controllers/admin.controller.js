@@ -8,7 +8,7 @@ import {
     updateUserRole,
     rejectDoctor,
 } from "../services/admin.service.js";
-import wrapAsync from "../middleware/asyncHandler.js";  
+import wrapAsync from "../middleware/asyncHandler.js";
 
 //GET /api/admin/users
 
