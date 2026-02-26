@@ -11,7 +11,8 @@ import {
     Menu,
     MenuItem,
     Divider,
-    ListItemIcon
+    ListItemIcon,
+    Badge
 } from "@mui/material";
 import { 
     Search as SearchIcon, 
@@ -24,12 +25,16 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 import { logoutUser } from "../../features/auth/authSlice";
+import { fetchConversations } from "../../features/chat/chatSlice";
 import NotificationBell from "./NotificationBell";
 
 const Navbar = ({ onMenuClick }) => {
     const { user } = useSelector((state) => state.auth);
+    const { conversations } = useSelector((state) => state.chat);
     const dispatch = useDispatch();
     const [anchorEl, setAnchorEl] = useState(null);
+
+    const totalUnreadMessages = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
     const handleProfileClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -42,6 +47,27 @@ const Navbar = ({ onMenuClick }) => {
     const handleLogout = () => {
         dispatch(logoutUser());
         handleClose();
+    };
+
+    const handleProfileClickMenu = () => {
+        handleClose();
+        // Navigate to profile based on user role
+        if (user?.role === 'doctor') {
+            navigate('/doctor/profile');
+        } else if (user?.role === 'patient') {
+            navigate('/patient/profile');
+        } else if (user?.role === 'admin') {
+            navigate('/admin/dashboard');
+        }
+    };
+
+    const handleSettingsClick = () => {
+        handleClose();
+        navigate('/settings');
+    };
+
+    const handleChatClick = () => {
+        navigate('/chat');
     };
 
     return (
@@ -92,8 +118,22 @@ const Navbar = ({ onMenuClick }) => {
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 3 } }}>
                     {/* Icons */}
-                    <IconButton sx={{ bgcolor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-                        <MailIcon />
+                    <IconButton 
+                        onClick={handleChatClick}
+                        sx={{ 
+                            bgcolor: "white", 
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                            transition: "all 0.2s ease-in-out",
+                            "&:hover": {
+                                transform: "translateY(-2px)",
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }
+                        }}
+                    >
+                        <Badge badgeContent={totalUnreadMessages} color="error">
+                            <MailIcon />
+                        </Badge>
                     </IconButton>
                     
                     <NotificationBell />
