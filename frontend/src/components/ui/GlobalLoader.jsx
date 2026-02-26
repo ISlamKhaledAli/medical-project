@@ -1,12 +1,12 @@
 import { useSelector } from "react-redux";
-import { Backdrop, CircularProgress, Typography, Box } from "@mui/material";
+import { Backdrop, CircularProgress, Typography, Box, alpha } from "@mui/material";
 
 const GlobalLoader = () => {
     const { globalLoading } = useSelector((state) => state.ui);
-    const { isInitialLoading } = useSelector((state) => state.auth);
+    const { isAuthChecking } = useSelector((state) => state.auth);
 
     // Initial auth check always takes priority visual precedence
-    const open = isInitialLoading || globalLoading;
+    const open = isAuthChecking || globalLoading;
 
     if (!open) return null;
 
@@ -14,21 +14,45 @@ const GlobalLoader = () => {
         <Backdrop
             sx={{
                 color: "#fff",
-                zIndex: (theme) => theme.zIndex.drawer + 1,
+                zIndex: (theme) => theme.zIndex.drawer + 2000,
                 flexDirection: "column",
-                gap: 2,
-                backgroundColor: "rgba(26, 35, 126, 0.7)", // Deep blue overlay
-                backdropFilter: "blur(4px)",
+                gap: 3,
+                backgroundColor: alpha("#1A237E", 0.8), // Deep indigo overlay
+                backdropFilter: "blur(8px)",
+                transition: "all 0.4s ease"
             }}
             open={open}
         >
-            <CircularProgress color="inherit" size={60} thickness={4} />
-            <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, letterSpacing: 1 }}>
-                    {isInitialLoading ? "AUTHENTICATING" : "LOADING"}
+            <Box sx={{ position: "relative", display: "inline-flex" }}>
+              <CircularProgress 
+                color="inherit" 
+                size={70} 
+                thickness={4} 
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: "absolute",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="caption" component="div" color="inherit" sx={{ fontWeight: 800 }}>
+                  MT
                 </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8, display: "block", mt: 1 }}>
-                    Please wait a moment...
+              </Box>
+            </Box>
+            
+            <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: 2, textTransform: "uppercase", mb: 1 }}>
+                    {isAuthChecking ? "Authenticating" : "Loading"}
+                </Typography>
+                <Typography variant="body1" sx={{ opacity: 0.7, fontWeight: 500 }}>
+                    Please wait while we prepare your session...
                 </Typography>
             </Box>
         </Backdrop>
@@ -36,3 +60,4 @@ const GlobalLoader = () => {
 };
 
 export default GlobalLoader;
+

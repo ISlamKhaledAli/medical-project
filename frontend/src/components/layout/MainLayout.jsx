@@ -9,29 +9,25 @@ import { fetchConversations } from "../../features/chat/chatSlice";
 const MainLayout = ({ children }) => {
     const dispatch = useDispatch();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Standardized check
     const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const [open, setOpen] = useState(false);
     
-    const { user, accessToken, isAuthChecking } = useSelector((state) => state.auth);
+    const { accessToken, isAuthChecking } = useSelector((state) => state.auth);
 
     useEffect(() => {
         if (accessToken) {
             dispatch(fetchConversations());
         }
     }, [dispatch, accessToken]);
-    const navigate = useNavigate();
-
-    // Protection logic is handled by the wrapping ProtectedRoute component
 
     const toggleDrawer = () => {
         setOpen(!open);
     };
 
-    if (isAuthChecking) return null; // Or a full-screen skeleton/loader
+    if (isAuthChecking) return null;
 
     return (
-        <Box sx={{ display: "flex", bgcolor: "#f1f5f9", minHeight: "100vh" }}>
+        <Box sx={{ display: "flex", bgcolor: "background.default", minHeight: "100vh" }}>
             <Sidebar 
                 open={open} 
                 toggleDrawer={toggleDrawer} 
@@ -42,15 +38,25 @@ const MainLayout = ({ children }) => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: { xs: 2, md: 3 },
-                    width: { md: `calc(100% - 130px)` }, // 100px sidebar + some margin
-                    ml: { md: "110px" }, // Offset for the fixed sidebar
-                    transition: "0.3s"
+                    minHeight: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    width: { md: `calc(100% - 130px)` }, 
+                    ml: { md: "100px" },
+                    transition: "all 0.3s ease"
                 }}
             >
                 <Navbar onMenuClick={toggleDrawer} />
                 
-                <Box sx={{ mt: 2 }}>
+                <Box 
+                    sx={{ 
+                        p: { xs: 2.5, sm: 4, md: 5 }, 
+                        flexGrow: 1,
+                        maxWidth: "1600px",
+                        width: "100%",
+                        mx: "auto"
+                    }}
+                >
                     {children}
                 </Box>
             </Box>
@@ -59,3 +65,4 @@ const MainLayout = ({ children }) => {
 };
 
 export default MainLayout;
+

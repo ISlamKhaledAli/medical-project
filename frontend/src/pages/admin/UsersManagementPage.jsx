@@ -1,135 +1,243 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-    Container, 
-    Paper, 
-    Table, 
-    TableBody, 
-    TableCell, 
-    TableContainer, 
-    TableHead, 
-    TableRow,
-    Typography,
-    Box,
-    Avatar,
-    Chip,
-    IconButton,
-    Button,
+    Typography, 
+    Box, 
+    Avatar, 
+    Chip, 
+    IconButton, 
+    Button, 
     Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    alpha,
+    useTheme,
+    TextField,
+    InputAdornment,
+    Tooltip
 } from "@mui/material";
 import { 
-    Block as BlockIcon, 
-    CheckCircle as ApproveIcon 
-} from "@mui/icons-material";
+    ShieldCheck, 
+    ShieldAlert,
+    Search,
+    Filter,
+    Mail,
+    User,
+    Shield,
+    MoreHorizontal,
+    UserMinus,
+    UserPlus
+} from "lucide-react";
 import { fetchUsers, toggleUserStatus } from "../../features/admin/adminSlice";
-import { debugAdmin } from "../../utils/debugTrace";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import TableSkeleton from "../../components/skeletons/TableSkeleton";
 
 const UsersManagementPage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { users, isLoading } = useSelector((state) => state.admin);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         dispatch(fetchUsers());
     }, [dispatch]);
 
+    const filteredUsers = useMemo(() => {
+        if (!searchQuery) return users;
+        return users.filter(u => 
+            u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [users, searchQuery]);
+
     const handleToggleStatus = (id, isCurrentlyBlocked) => {
         const targetStatus = isCurrentlyBlocked ? "active" : "blocked";
-        debugAdmin(`Toggling status for user ${id}. Current block state: ${isCurrentlyBlocked}. Target status: ${targetStatus}`);
         dispatch(toggleUserStatus({ id, status: targetStatus }));
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 5 }}>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
-                    User Management
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Manage system access and roles for all registered users.
-                </Typography>
-            </Box>
+        <Box>
+            <PageHeader 
+                title="Identity & Access"
+                subtitle="Centralized registry for all system actors. Control authentication states, security roles, and platform access."
+                breadcrumbs={[
+                    { label: "Admin", path: "/admin" },
+                    { label: "User Management", active: true }
+                ]}
+            />
 
-            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
-                <Table>
-                    <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 800 }}>User Info</TableCell>
-                            <TableCell sx={{ fontWeight: 800 }}>Role</TableCell>
-                            <TableCell sx={{ fontWeight: 800 }}>Account Status</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 800 }}>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {users.map((user) => {
-                            const isBlocked = user.isBlocked;
-                            const accountStatus = user.status || (user.role === "doctor" ? "pending" : "approved");
-                            
-                            return (
-                                <TableRow key={user._id} hover>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <Avatar sx={{ mr: 2, bgcolor: user.role === "doctor" ? "primary.light" : "secondary.light" }}>
-                                                {user?.fullName?.[0] || user?.name?.[0] || "U"}
-                                            </Avatar>
-                                            <Box>
-                                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                                                    {user?.fullName || user?.name || "Unknown User"}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {user.email}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip 
-                                            label={user.role} 
-                                            size="small" 
-                                            variant="outlined" 
-                                            sx={{ textTransform: "capitalize", fontWeight: 700 }} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                                            <Chip 
-                                                label={accountStatus} 
-                                                size="small" 
-                                                color={
-                                                    accountStatus === "approved" ? "success" : 
-                                                    accountStatus === "pending" ? "warning" : "error"
-                                                }
-                                                sx={{ fontWeight: 700, textTransform: "capitalize", maxWidth: "fit-content" }} 
-                                            />
-                                            {isBlocked && (
-                                                <Chip 
-                                                    label="Blocked" 
-                                                    size="small" 
-                                                    color="error"
-                                                    variant="outlined"
-                                                    sx={{ fontWeight: 700, maxWidth: "fit-content" }} 
-                                                />
-                                            )}
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            startIcon={isBlocked ? <ApproveIcon /> : <BlockIcon />}
-                                            color={isBlocked ? "success" : "error"}
-                                            onClick={() => handleToggleStatus(user._id, isBlocked)}
-                                            sx={{ fontWeight: 700 }}
-                                        >
-                                            {isBlocked ? "Unblock" : "Block"}
-                                        </Button>
-                                    </TableCell>
+            {isLoading ? (
+                <TableSkeleton rows={8} cols={5} />
+            ) : (
+                <SectionCard 
+                    title="System Registry" 
+                    subtitle={`${filteredUsers.length} total users identified across all nodes`}
+                    headerAction={
+                        <TextField 
+                            placeholder="Search by identity or email..."
+                            size="small"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{ 
+                                minWidth: 300,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 3,
+                                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                                    '& fieldset': { borderColor: 'divider' }
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={18} color={theme.palette.text.disabled} />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                    }
+                >
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary", pl: 0 }}>Identity</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Access Role</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Lifecycle Status</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Security State</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary", pr: 0 }}>Management</TableCell>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Container>
+                            </TableHead>
+                            <TableBody>
+                                {filteredUsers.map((user) => {
+                                    const isBlocked = user.isBlocked;
+                                    const accountStatus = user.status || (user.role === "doctor" ? "pending" : "active");
+                                    
+                                    return (
+                                        <TableRow key={user._id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                                            <TableCell sx={{ py: 2.5, pl: 0 }}>
+                                                <Stack direction="row" spacing={2} alignItems="center">
+                                                    <Avatar 
+                                                        sx={{ 
+                                                            width: 44, 
+                                                            height: 44, 
+                                                            borderRadius: 2.5,
+                                                            bgcolor: user.role === "admin" ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.primary.main, 0.1),
+                                                            color: user.role === "admin" ? "error.main" : "primary.main",
+                                                            fontWeight: 900
+                                                        }}
+                                                    >
+                                                        {user?.fullName?.[0] || user?.name?.[0] || "U"}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                                                            {user?.fullName || user?.name || "Anonymous Actor"}
+                                                        </Typography>
+                                                        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+                                                            <Mail size={12} />
+                                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>{user.email}</Typography>
+                                                        </Stack>
+                                                    </Box>
+                                                </Stack>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip 
+                                                    label={user.role} 
+                                                    size="small" 
+                                                    icon={<Shield size={12} />}
+                                                    sx={{ 
+                                                        textTransform: "uppercase", 
+                                                        fontWeight: 800, 
+                                                        fontSize: '0.65rem',
+                                                        letterSpacing: 0.5,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: alpha(theme.palette.text.primary, 0.05),
+                                                        color: 'text.primary',
+                                                        border: '1px solid',
+                                                        borderColor: alpha(theme.palette.text.primary, 0.1),
+                                                        '& .MuiChip-icon': { color: 'inherit', ml: 1 }
+                                                    }} 
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip 
+                                                    label={accountStatus} 
+                                                    size="small" 
+                                                    sx={{ 
+                                                        fontWeight: 800, 
+                                                        textTransform: "uppercase",
+                                                        fontSize: '0.65rem',
+                                                        letterSpacing: 0.5,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: alpha(
+                                                            accountStatus === "active" || accountStatus === "approved" ? theme.palette.success.main : 
+                                                            accountStatus === "pending" ? theme.palette.warning.main : theme.palette.error.main, 
+                                                            0.1
+                                                        ),
+                                                        color: (
+                                                            accountStatus === "active" || accountStatus === "approved" ? "success.main" : 
+                                                            accountStatus === "pending" ? "warning.dark" : "error.main"
+                                                        )
+                                                    }} 
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                {isBlocked ? (
+                                                    <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'error.main' }}>
+                                                        <ShieldAlert size={14} />
+                                                        <Typography variant="caption" sx={{ fontWeight: 800 }}>RESTRICTED</Typography>
+                                                    </Stack>
+                                                ) : (
+                                                    <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'success.main' }}>
+                                                        <ShieldCheck size={14} />
+                                                        <Typography variant="caption" sx={{ fontWeight: 800 }}>VERIFIED</Typography>
+                                                    </Stack>
+                                                )}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ pr: 0 }}>
+                                                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                                    <Tooltip title={isBlocked ? "Restore Access" : "Revoke Access"}>
+                                                        <IconButton 
+                                                            onClick={() => handleToggleStatus(user._id, isBlocked)}
+                                                            sx={{ 
+                                                                borderRadius: 2, 
+                                                                bgcolor: alpha(isBlocked ? theme.palette.success.main : theme.palette.error.main, 0.05),
+                                                                color: isBlocked ? "success.main" : "error.main",
+                                                                "&:hover": { 
+                                                                    bgcolor: isBlocked ? "success.main" : "error.main", 
+                                                                    color: "white" 
+                                                                }
+                                                            }}
+                                                        >
+                                                            {isBlocked ? <UserPlus size={18} /> : <UserMinus size={18} />}
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="View Logs">
+                                                        <IconButton 
+                                                            sx={{ 
+                                                                borderRadius: 2, 
+                                                                bgcolor: alpha(theme.palette.text.primary, 0.05),
+                                                                color: "text.primary"
+                                                            }}
+                                                        >
+                                                            <MoreHorizontal size={18} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Stack>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </SectionCard>
+            )}
+        </Box>
     );
 };
 

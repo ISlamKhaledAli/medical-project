@@ -13,7 +13,9 @@ import {
     Stack,
     Card,
     CardContent,
-    CircularProgress
+    CircularProgress,
+    alpha,
+    useTheme
 } from "@mui/material";
 import { 
     Person as ProfileIcon, 
@@ -26,6 +28,7 @@ import { updateProfile } from "../../features/auth/authSlice";
 
 const PatientProfilePage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { user, isLoading, error } = useSelector((state) => state.auth);
     
     const [formData, setFormData] = useState({
@@ -77,13 +80,39 @@ const PatientProfilePage = () => {
             </Box>
 
             {success && (
-                <Alert severity="success" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.success.main, 0.08),
+                    color: "success.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.success.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     Your profile has been updated successfully.
                 </Alert>
             )}
 
             {error && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    color: "error.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     {error}
                 </Alert>
             )}
@@ -91,7 +120,7 @@ const PatientProfilePage = () => {
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={4}>
                     {/* Sidebar Info */}
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Card sx={{ borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                             <CardContent sx={{ textAlign: "center", py: 5 }}>
                                 <Avatar 
@@ -120,7 +149,7 @@ const PatientProfilePage = () => {
                     </Grid>
 
                     {/* Form Fields */}
-                    <Grid item xs={12} md={8}>
+                    <Grid size={{ xs: 12, md: 8 }}>
                         <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.05)" }}>
                             <Stack spacing={4}>
                                 <Box>

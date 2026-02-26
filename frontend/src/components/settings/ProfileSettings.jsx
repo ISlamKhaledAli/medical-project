@@ -74,7 +74,7 @@ const ProfileSettings = () => {
                 </Box>
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <NameIcon fontSize="small" color="action" /> Full Name
                         </Typography>
@@ -86,7 +86,7 @@ const ProfileSettings = () => {
                             required
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <EmailIcon fontSize="small" color="action" /> Email Address
                         </Typography>
@@ -97,7 +97,7 @@ const ProfileSettings = () => {
                             helperText="Email is managed by administrator."
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <PhoneIcon fontSize="small" color="action" /> Phone Number
                         </Typography>
@@ -109,7 +109,7 @@ const ProfileSettings = () => {
                             placeholder="+1 (555) 000-0000"
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Address</Typography>
                         <TextField
                             fullWidth

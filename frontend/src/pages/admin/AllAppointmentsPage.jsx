@@ -1,19 +1,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-    Container, 
-    Paper, 
+    Box, 
+    Alert,
     Table, 
     TableBody, 
     TableCell, 
     TableContainer, 
     TableHead, 
     TableRow,
-    Typography,
-    Box,
-    Alert,
-    LinearProgress
+    alpha,
+    useTheme,
+    TextField,
+    InputAdornment
 } from "@mui/material";
+import { 
+    Search,
+    Calendar
+} from "lucide-react";
 import { 
     fetchAllAppointments, 
     approveAppointment, 
@@ -22,14 +26,20 @@ import {
 } from "../../features/admin/adminSlice";
 import AdminAppointmentRow from "../../components/appointment/AdminAppointmentRow";
 import AppointmentDetailsModal from "../../components/appointment/AppointmentDetailsModal";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import TableSkeleton from "../../components/skeletons/TableSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
 
 const AllAppointmentsPage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { appointments, isLoading, actionLoadingStates, error } = useSelector((state) => state.admin);
     
     // Modal states
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         dispatch(fetchAllAppointments());
@@ -46,87 +56,134 @@ const AllAppointmentsPage = () => {
     }, [dispatch]);
 
     const handleCancel = useCallback((id) => {
-        if (window.confirm("Are you sure you want to cancel this appointment?")) {
-            dispatch(cancelAppointment(id));
-        }
+        dispatch(cancelAppointment(id));
     }, [dispatch]);
 
     const handleDelete = useCallback((id) => {
-        if (window.confirm("CRITICAL ACTION: Are you sure you want to PERMANENTLY DELETE this record? This cannot be undone.")) {
-            dispatch(deleteAppointment(id));
-        }
+        dispatch(deleteAppointment(id));
     }, [dispatch]);
 
+    const filteredAppointments = (appointments || []).filter(app => 
+        app.patient?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.doctor?.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 5 }}>
-                <Typography variant="h4" sx={{ fontWeight: 900, color: "#1a237e", mb: 1 }}>
-                    Appointments Management
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Monitor and manage all consultations across the medical network.
-                </Typography>
-            </Box>
+        <Box>
+            <PageHeader 
+                title="Clinical Audit Logs"
+                subtitle="High-level oversight of all medical consultations across the network. Monitor status and resolve conflicts."
+                breadcrumbs={[
+                    { label: "Admin", path: "/admin" },
+                    { label: "Appointments", active: true }
+                ]}
+            />
 
             {error && (
-                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                <Alert severity="error" variant="soft" sx={{ mb: 3, borderRadius: 3, fontWeight: 700 }}>
                     {error}
                 </Alert>
             )}
 
-            <TableContainer 
-                component={Paper} 
-                elevation={0} 
-                sx={{ 
-                    borderRadius: 4, 
-                    border: "1px solid rgba(0,0,0,0.05)",
-                    overflow: "hidden",
-                    position: "relative"
-                }}
-            >
-                {isLoading && <LinearProgress sx={{ position: "absolute", top: 0, left: 0, right: 0, height: 3 }} />}
-                
-                <Table sx={{ minWidth: 800 }}>
-                    <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Patient Information</TableCell>
-                            <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Doctor & Specialty</TableCell>
-                            <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Schedule</TableCell>
-                            <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Current Status</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary" }}>Admin Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {!isLoading && appointments.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
-                                    <Typography color="text.secondary">No appointments found in the system.</Typography>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            appointments.map((appointment) => (
-                                <AdminAppointmentRow 
-                                    key={appointment._id} 
-                                    appointment={appointment}
-                                    onView={handleViewDetails}
-                                    onApprove={handleApprove}
-                                    onCancel={handleCancel}
-                                    onDelete={handleDelete}
-                                    isLoading={!!actionLoadingStates[appointment._id]}
-                                />
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            {isLoading ? (
+                <TableSkeleton rows={8} cols={5} />
+            ) : filteredAppointments.length === 0 ? (
+                <SectionCard 
+                    title="Network Consultations" 
+                    subtitle={`${filteredAppointments.length} records identified in current scope`}
+                    headerAction={
+                        <TextField 
+                            placeholder="Search patient or doctor..."
+                            size="small"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{ 
+                                minWidth: 300,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 3,
+                                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={18} color={theme.palette.text.disabled} />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                    }
+                >
+                    <Box sx={{ py: 6 }}>
+                        <EmptyState 
+                            title="No Records Found"
+                            message="The clinical registry is empty or no matches were found for your search."
+                            icon={Calendar}
+                        />
+                    </Box>
+                </SectionCard>
+            ) : (
+                <SectionCard 
+                    title="Network Consultations" 
+                    subtitle={`${filteredAppointments.length} records identified in current scope`}
+                    headerAction={
+                        <TextField 
+                            placeholder="Search patient or doctor..."
+                            size="small"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{ 
+                                minWidth: 300,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 3,
+                                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={18} color={theme.palette.text.disabled} />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                    }
+                >
+                    <TableContainer>
+                        <Table sx={{ minWidth: 800 }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary", pl: 0 }}>Subject Identity</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Professional</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>Schedule</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, color: "text.secondary" }}>System Status</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 800, color: "text.secondary", pr: 0 }}>Governance</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {filteredAppointments.map((appointment) => (
+                                    <AdminAppointmentRow 
+                                        key={appointment._id} 
+                                        appointment={appointment}
+                                        onView={handleViewDetails}
+                                        onApprove={handleApprove}
+                                        onCancel={handleCancel}
+                                        onDelete={handleDelete}
+                                        isLoading={!!actionLoadingStates[appointment._id]}
+                                    />
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </SectionCard>
+            )}
 
-            {/* Details Modal */}
             <AppointmentDetailsModal 
                 open={detailsOpen}
                 onClose={() => setDetailsOpen(false)}
                 appointment={selectedAppointment}
             />
-        </Container>
+        </Box>
     );
 };
 

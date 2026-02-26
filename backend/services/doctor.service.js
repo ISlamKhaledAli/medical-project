@@ -78,14 +78,22 @@ export const getAllDoctors = async (queryParams = {}) => {
  * Get a single doctor profile by its _id (public).
  */
 export const getDoctorById = async (doctorId) => {
-  const doctor = await DoctorProfile.findById(doctorId)
+  // Try finding by DoctorProfile _id first
+  let doctor = await DoctorProfile.findById(doctorId)
     .populate("user", "fullName email status")
     .populate("specialty", "name");
+
+  // Fallback: If not found, try finding by the associated User ID
+  if (!doctor) {
+    doctor = await DoctorProfile.findOne({ user: doctorId })
+      .populate("user", "fullName email status")
+      .populate("specialty", "name");
+  }
 
   if (!doctor) throw new ApiError("Doctor profile not found.", 404);
 
   // Public check: Only approved doctors details should be public
-  if (doctor.user.status !== "approved") {
+  if (doctor.user?.status !== "approved") {
     throw new ApiError("Doctor not yet available for consultation.", 403);
   }
 

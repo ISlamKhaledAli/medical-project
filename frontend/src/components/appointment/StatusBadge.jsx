@@ -1,4 +1,5 @@
 import { Chip, Box } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import { 
     AccessTime as ClockIcon, 
     CheckCircle as CheckCircleIcon, 
@@ -10,48 +11,48 @@ import {
 /**
  * Enterprise-grade status badge with icons and dynamic styling
  */
-const STATUS_CONFIG = {
-    pending: { 
-        color: "#ed6c02", 
-        label: "Pending", 
-        bgcolor: "rgba(237, 108, 2, 0.08)", 
-        icon: <ClockIcon sx={{ fontSize: "1rem !important" }} /> 
-    },
-    approved: { 
-        color: "#2e7d32", 
-        label: "Approved", 
-        bgcolor: "rgba(46, 125, 50, 0.08)", 
-        icon: <CheckIcon sx={{ fontSize: "1rem !important" }} /> 
-    },
-    confirmed: { // Alias for approved in some flows
-        color: "#2e7d32", 
-        label: "Confirmed", 
-        bgcolor: "rgba(46, 125, 50, 0.08)", 
-        icon: <CheckIcon sx={{ fontSize: "1rem !important" }} /> 
-    },
-    cancelled: { 
-        color: "#d32f2f", 
-        label: "Cancelled", 
-        bgcolor: "rgba(211, 47, 47, 0.08)", 
-        icon: <CancelIcon sx={{ fontSize: "1rem !important" }} /> 
-    },
-    completed: { 
-        color: "#0288d1", 
-        label: "Completed", 
-        bgcolor: "rgba(2, 136, 209, 0.08)", 
-        icon: <CheckCircleIcon sx={{ fontSize: "1rem !important" }} /> 
-    },
-    default: { 
-        color: "#757575", 
-        label: "Unknown", 
-        bgcolor: "rgba(0, 0, 0, 0.05)", 
-        icon: <HelpIcon sx={{ fontSize: "1rem !important" }} /> 
-    }
-};
-
 const StatusBadge = ({ status }) => {
+    const theme = useTheme();
     const s = status?.toLowerCase() || "default";
-    const config = STATUS_CONFIG[s] || STATUS_CONFIG.default;
+
+    const config = {
+        pending: { 
+            color: theme.palette.warning.main, 
+            label: "Pending", 
+            icon: <ClockIcon sx={{ fontSize: "1rem !important" }} /> 
+        },
+        approved: { 
+            color: theme.palette.success.main, 
+            label: "Approved", 
+            icon: <CheckIcon sx={{ fontSize: "1rem !important" }} /> 
+        },
+        confirmed: { 
+            color: theme.palette.success.main, 
+            label: "Confirmed", 
+            icon: <CheckIcon sx={{ fontSize: "1rem !important" }} /> 
+        },
+        cancelled: { 
+            color: theme.palette.error.main, 
+            label: "Cancelled", 
+            icon: <CancelIcon sx={{ fontSize: "1rem !important" }} /> 
+        },
+        completed: { 
+            color: theme.palette.info.main, 
+            label: "Completed", 
+            icon: <CheckCircleIcon sx={{ fontSize: "1rem !important" }} /> 
+        },
+        default: { 
+            color: theme.palette.text.disabled, 
+            label: "Unknown", 
+            icon: <HelpIcon sx={{ fontSize: "1rem !important" }} /> 
+        }
+    }[s] || { 
+        color: theme.palette.text.disabled, 
+        label: "Unknown", 
+        icon: <HelpIcon sx={{ fontSize: "1rem !important" }} /> 
+    };
+
+    const bgcolor = alpha(config.color, 0.1);
 
     return (
         <Chip 
@@ -65,15 +66,17 @@ const StatusBadge = ({ status }) => {
                 letterSpacing: 0.5,
                 fontSize: "0.65rem",
                 color: config.color,
-                bgcolor: config.bgcolor,
+                bgcolor: bgcolor,
                 border: "1px solid",
-                borderColor: "transparent",
+                borderColor: alpha(config.color, 0.1),
                 transition: "all 0.2s ease-in-out",
                 "&:hover": {
-                    bgcolor: config.bgcolor.replace("0.08", "0.15"),
+                    bgcolor: alpha(config.color, 0.15),
                     borderColor: config.color,
                     transform: "translateY(-1px)",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+                    boxShadow: theme.palette.mode === "dark" 
+                        ? `0 2px 8px ${alpha(config.color, 0.2)}` 
+                        : "0 2px 4px rgba(0,0,0,0.05)"
                 },
                 "& .MuiChip-icon": {
                     color: "inherit",
