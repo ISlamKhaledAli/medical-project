@@ -1,7 +1,9 @@
-import { sendEmail, emailTemplate } from "../utils/sendEmail.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import * as authService from "../services/auth.service.js";
+import { emailTemplate } from "../templates/email.template.js";
 import {
   verificationSuccessTemplate,
-  verificationFailureTemplate
+  verificationFailureTemplate,
 } from "../templates/verification.template.js";
 
 /**
@@ -23,27 +25,35 @@ export const register = async (req, res, next) => {
       console.error("❌ Token generation failed:", tokenError.message);
       return res.status(201).json({
         success: true,
-        message: "Account created, but verification failed. Please contact support."
+        message:
+          "Account created, but verification failed. Please contact support.",
       });
     }
 
     const verifyUrl = `${req.protocol}://${req.get("host")}/api/auth/verifyemail/${verificationToken}`;
     const html = emailTemplate({
       title: "Verify Your Email",
-      greeting: `Hi ${user.fullName || 'there'} 👋`,
+      greeting: `Hi ${user.fullName || "there"} 👋`,
       body: "Thank you for creating your MEDIC TOTAL account! To get started, please verify your email address by clicking the button below.",
       buttonText: "✅ Verify My Email",
       buttonUrl: verifyUrl,
-      footerText: "⏰ This verification link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.",
+      footerText:
+        "⏰ This verification link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.",
     });
 
     try {
-      await sendEmail({ email: user.email, subject: "🏥 Verify Your MEDIC TOTAL Email", message: `Verify your email: ${verifyUrl}`, html });
+      await sendEmail({
+        email: user.email,
+        subject: "🏥 Verify Your MEDIC TOTAL Email",
+        message: `Verify your email: ${verifyUrl}`,
+        html,
+      });
       console.log("✉️ Verification email sent successfully");
 
-      const successMsg = user.role === "doctor"
-        ? "Registration successful! Your account is pending admin approval. Please check your email for verification."
-        : "Registration successful. Please check your email to verify your account.";
+      const successMsg =
+        user.role === "doctor"
+          ? "Registration successful! Your account is pending admin approval. Please check your email for verification."
+          : "Registration successful. Please check your email to verify your account.";
 
       res.status(201).json({
         success: true,
@@ -53,7 +63,8 @@ export const register = async (req, res, next) => {
       console.error("📧 Email sending failed:", emailError.message);
       res.status(201).json({
         success: true,
-        message: "Registration successful, but we couldn't send the verification email. Please try logging in to resend it.",
+        message:
+          "Registration successful, but we couldn't send the verification email. Please try logging in to resend it.",
       });
     }
   } catch (error) {
@@ -94,7 +105,8 @@ export const login = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
   try {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
 
     const { accessToken, refreshToken: newRefreshToken } =
       await authService.handleRefreshToken(incomingRefreshToken);
@@ -133,11 +145,12 @@ export const logout = async (req, res, next) => {
 export const verifyEmail = async (req, res, next) => {
   try {
     await authService.verifyEmailToken(req.params.token);
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     res.status(200).send(verificationSuccessTemplate(clientUrl));
   } catch (error) {
-    const errMsg = error.message || "Verification failed. The link may have expired.";
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const errMsg =
+      error.message || "Verification failed. The link may have expired.";
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     res.status(400).send(verificationFailureTemplate(clientUrl, errMsg));
   }
 };
@@ -159,11 +172,12 @@ export const resendVerification = async (req, res, next) => {
     const verifyUrl = `${req.protocol}://${req.get("host")}/api/auth/verifyemail/${verificationToken}`;
     const html = emailTemplate({
       title: "Verify Your Email",
-      greeting: `Hi ${user.fullName || 'there'} 👋`,
+      greeting: `Hi ${user.fullName || "there"} 👋`,
       body: "You requested a new verification link. Please click the button below to verify your email address.",
       buttonText: "✅ Verify My Email",
       buttonUrl: verifyUrl,
-      footerText: "⏰ This verification link will expire in 24 hours. If you didn't request this, you can safely ignore this email.",
+      footerText:
+        "⏰ This verification link will expire in 24 hours. If you didn't request this, you can safely ignore this email.",
     });
     await sendEmail({
       email: user.email,
@@ -187,14 +201,15 @@ export const forgotPassword = async (req, res, next) => {
       req.body.email,
     );
 
-    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
     const html = emailTemplate({
       title: "Reset Your Password",
       greeting: "Hi there 👋",
       body: "We received a request to reset the password for your MEDIC TOTAL account. Click the button below to set a new password.",
       buttonText: "🔒 Reset My Password",
       buttonUrl: resetUrl,
-      footerText: "⏰ This link will expire in 10 minutes. If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.",
+      footerText:
+        "⏰ This link will expire in 10 minutes. If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.",
     });
     await sendEmail({
       email: req.body.email,
