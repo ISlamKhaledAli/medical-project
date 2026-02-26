@@ -14,7 +14,6 @@ import mongoose from "mongoose";
 import ApiError from "../utils/ApiError.js";
 
 export const bookAppointment = wrapAsync(async (req, res) => {
-    console.log("Incoming booking payload:", req.body);
     const appointment = await createAppointment({
         doctorId: req.body.doctorId,
         patientId: req.user._id,
@@ -78,7 +77,6 @@ export const cancelAppointmentHandler = wrapAsync(async (req, res) => {
 });
 
 export const rescheduleAppointmentHandler = wrapAsync(async (req, res) => {
-    console.log("Incoming reschedule payload:", req.body);
     const appointment = await rescheduleAppointment({
         appointmentId: req.params.id,
         newDate: req.body.appointmentDate,

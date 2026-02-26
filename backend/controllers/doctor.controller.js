@@ -1,12 +1,17 @@
 import * as doctorService from "../services/doctor.service.js";
 import wrapAsync from "../middleware/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
 
 export const createDoctorProfile = wrapAsync(async (req, res) => {
   const doctor = await doctorService.createDoctorProfile(req.user._id, req.body);
   res.status(201).json({ success: true, data: doctor });
 });
 
+
 export const getDoctorProfile = wrapAsync(async (req, res) => {
+  if (req.user.status !== "approved") {
+    throw new ApiError("Your account is not yet approved.", 403);
+  }
   const doctor = await doctorService.getDoctorProfile(req.user._id);
   res.json({ success: true, data: doctor });
 });
