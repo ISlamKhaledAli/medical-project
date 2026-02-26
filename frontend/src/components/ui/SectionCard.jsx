@@ -1,10 +1,11 @@
-import { Paper, Box, Typography, Divider, Button } from "@mui/material";
+import { Paper, Box, Typography, Divider, Button, alpha, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 /**
  * Consistent card wrapper for dashboard sections
  */
 const SectionCard = ({ title, children, action, sx = {}, contentSx = {} }) => {
+  const theme = useTheme();
   return (
     <Paper
       elevation={0}
@@ -28,7 +29,7 @@ const SectionCard = ({ title, children, action, sx = {}, contentSx = {} }) => {
               display: "flex", 
               justifyContent: "space-between", 
               alignItems: "center",
-              bgcolor: "rgba(0,0,0,0.01)" 
+              bgcolor: "action.hover" 
             }}
           >
             {title && (

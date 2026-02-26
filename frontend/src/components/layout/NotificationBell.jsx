@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 
 const NotificationBell = () => {
     const theme = useTheme();
+    const mode = theme.palette.mode;
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { notifications, unreadCount } = useSelector((state) => state.notification);
@@ -67,7 +68,7 @@ const NotificationBell = () => {
                 PaperProps={{
                     sx: {
                         width: 380,
-                        maxHeight: 520,
+                        maxHeight: 550,
                         borderRadius: "16px",
                         mt: 2,
                         boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
@@ -79,7 +80,7 @@ const NotificationBell = () => {
                     }
                 }}
             >
-                <Box sx={{ p: 2.5, px: 3, display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "white", position: "sticky", top: 0, zIndex: 1 }}>
+                <Box sx={{ p: 2.5, px: 3, display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "background.paper", position: "sticky", top: 0, zIndex: 1, borderBottom: "1px solid", borderColor: "divider" }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "text.primary" }}>Notifications</Typography>
                     <Typography 
                         variant="caption" 
@@ -108,7 +109,7 @@ const NotificationBell = () => {
                     flexGrow: 1, 
                     maxHeight: 400,
                     '&::-webkit-scrollbar': { width: '6px' },
-                    '&::-webkit-scrollbar-thumb': { bgcolor: alpha(theme.palette.divider, 0.5), borderRadius: '10px' },
+                    '&::-webkit-scrollbar-thumb': { bgcolor: "divider", borderRadius: '10px' },
                 }}>
                     <List sx={{ p: 0 }}>
                         {notifications.length > 0 ? (
@@ -120,13 +121,13 @@ const NotificationBell = () => {
                                         py: 2.5,
                                         px: 3,
                                         cursor: "pointer", 
-                                        bgcolor: notification.isRead ? "transparent" : alpha(theme.palette.primary.main, 0.02),
+                                        bgcolor: notification.isRead ? "transparent" : "action.hover",
                                         borderBottom: "1px solid",
-                                        borderColor: "rgba(0,0,0,0.03)",
+                                        borderColor: "divider",                                        
                                         transition: "all 0.2s ease",
                                         position: "relative",
                                         "&:hover": { 
-                                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                                            bgcolor: "action.selected",
                                             "& .MuiAvatar-root": { transform: "scale(1.05)" }
                                         }
                                     }}
@@ -182,7 +183,7 @@ const NotificationBell = () => {
                     </List>
                 </Box>
 
-                <Box sx={{ p: 2, px: 3, display: "flex", justifyContent: "center", bgcolor: "white", borderTop: "1px solid", borderColor: "divider" }}>
+                <Box sx={{ p: 2, pb: 2.5, px: 3, display: "flex", justifyContent: "center", bgcolor: "background.paper", borderTop: "1px solid", borderColor: "divider" }}>
                     <Button 
                         fullWidth
                         size="medium"
@@ -194,9 +195,9 @@ const NotificationBell = () => {
                             textTransform: "none",
                             borderRadius: "12px",
                             color: "primary.main",
-                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                            bgcolor: "action.hover",
                             "&:hover": {
-                                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                bgcolor: "action.selected",
                                 transform: "translateY(-1px)"
                             },
                             transition: "all 0.2s"

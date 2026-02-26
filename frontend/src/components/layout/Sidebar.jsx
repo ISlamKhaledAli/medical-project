@@ -80,11 +80,15 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 py: 4,
-                bgcolor: "#1A237E", // Deep Indigo for medical theme
-                color: "white",
+                bgcolor: "background.paper", 
+                color: "text.primary",
                 borderRadius: isMobile ? 0 : "0 30px 30px 0",
                 transition: "all 0.3s ease",
-                boxShadow: "10px 0 20px rgba(0,0,0,0.05)"
+                boxShadow: theme.palette.mode === "dark" 
+                    ? "10px 0 20px rgba(0,0,0,0.4)" 
+                    : "10px 0 20px rgba(0,0,0,0.05)",
+                borderRight: "1px solid",
+                borderColor: "divider"
             }}
         >
             {/* Branding Logo */}
@@ -103,17 +107,19 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                   width: 50, 
                   height: 50, 
                   borderRadius: 3, 
-                  bgcolor: "rgba(255,255,255,0.15)", 
+                  bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : alpha(theme.palette.primary.main, 0.1), 
                   display: "flex", 
                   alignItems: "center", 
                   justifyContent: "center",
                   mb: 1,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                  boxShadow: theme.palette.mode === "dark" ? "none" : "0 4px 12px rgba(21, 101, 192, 0.1)",
+                  border: "1px solid",
+                  borderColor: "divider"
                 }}
               >
-                <PlusIcon color="white" size={32} strokeWidth={3} />
+                <PlusIcon color={theme.palette.primary.main} size={32} strokeWidth={3} />
               </Box>
-              <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: 2, opacity: 0.8 }}>
+              <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: 2, color: "text.secondary" }}>
                 MEDIC
               </Typography>
             </Box>
@@ -137,11 +143,11 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                                     top: "15%",
                                     height: isActive ? "70%" : "0%",
                                     width: "4px",
-                                    bgcolor: "white", // Since sidebar is dark blue, we use white or bright accent
+                                    bgcolor: "primary.main", 
                                     borderRadius: "0 4px 4px 0",
                                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                                     opacity: isActive ? 1 : 0,
-                                    boxShadow: isActive ? "0 0 10px rgba(255,255,255,0.5)" : "none"
+                                    boxShadow: isActive ? `0 0 12px ${alpha(theme.palette.primary.main, 0.5)}` : "none"
                                 }
                             }}
                         >
@@ -151,14 +157,14 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                                     sx={{
                                         minWidth: 0,
                                         justifyContent: "center",
-                                        bgcolor: isActive ? "rgba(255,255,255,0.15)" : "transparent",
-                                        color: isActive ? "white" : "rgba(255,255,255,0.6)",
+                                        bgcolor: isActive ? alpha(theme.palette.primary.main, 0.1) : "transparent",
+                                        color: isActive ? "primary.main" : "text.secondary",
                                         borderRadius: "14px",
                                         width: "64px",
                                         height: "64px",
                                         "&:hover": {
-                                            bgcolor: isActive ? "rgba(255,255,255,0.2)" : "rgba(255, 255, 255, 0.08)",
-                                            color: "white",
+                                            bgcolor: isActive ? alpha(theme.palette.primary.main, 0.15) : "action.hover",
+                                            color: "primary.main",
                                             "& .MuiListItemIcon-root": {
                                                 transform: "scale(1.1)",
                                             }
@@ -187,12 +193,12 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                                                 max={99}
                                                 sx={{ 
                                                     "& .MuiBadge-badge": { 
-                                                        fontSize: "0.65rem", 
-                                                        height: 18, 
-                                                        minWidth: 18,
-                                                        border: "2px solid #1A237E"
-                                                    } 
-                                                }}
+                                                         fontSize: "0.65rem", 
+                                                         height: 18, 
+                                                         minWidth: 18,
+                                                         border: `2px solid ${theme.palette.mode === "dark" ? theme.palette.background.paper : "#1A237E"}`
+                                                     } 
+                                                 }}
                                             >
                                                 {item.icon}
                                             </Badge>
@@ -223,8 +229,8 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                     <IconButton 
                         onClick={() => navigate("/settings")}
                         sx={{ 
-                          color: "rgba(255,255,255,0.7)",
-                          "&:hover": { color: "white", bgcolor: "rgba(255,255,255,0.1)" }
+                          color: "text.secondary",
+                          "&:hover": { color: "primary.main", bgcolor: "action.hover" }
                         }}
                     >
                         <SettingsIcon size={24} />

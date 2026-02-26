@@ -32,44 +32,23 @@ const DoctorCard = ({ doctor }) => {
                 height: "100%", 
                 borderRadius: 4, 
                 border: "1px solid",
-                borderColor: "divider",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.02)", 
+                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "divider",
+                boxShadow: theme.palette.mode === "dark" ? "none" : "0 4px 12px rgba(0,0,0,0.02)", 
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", 
                 overflow: "hidden",
+                bgcolor: "background.paper",
                 "&:hover": { 
                     transform: "translateY(-6px)", 
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.06)",
-                    borderColor: "primary.light"
+                    boxShadow: theme.palette.mode === "dark" 
+                        ? "0 12px 24px rgba(0,0,0,0.4)" 
+                        : "0 20px 40px rgba(0,0,0,0.06)",
+                    borderColor: "primary.main"
                 },
                 display: "flex",
                 flexDirection: "column",
-                position: "relative",
-                flex: "1 1 auto"
+                position: "relative"
             }}
         >
-            {/* Experience Badge */}
-            <Box 
-                sx={{ 
-                    position: "absolute", 
-                    top: 16, 
-                    right: 16, 
-                    zIndex: 1,
-                    bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                    color: "secondary.dark",
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5
-                }}
-            >
-                <Award size={14} />
-                <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                    {doctor.experienceYears || "8+"} Yrs Exp
-                </Typography>
-            </Box>
-
             <CardContent sx={{ p: 3, flexGrow: 1 }}>
                 <Stack direction="row" spacing={2.5} sx={{ mb: 3 }}>
                     <Avatar 
@@ -87,29 +66,60 @@ const DoctorCard = ({ doctor }) => {
                     </Avatar>
                     
                     <Box sx={{ pt: 0.5, flexGrow: 1, minWidth: 0 }}>
+                        <Box sx={{ 
+                            display: "flex", 
+                            justifyContent: "space-between", 
+                            alignItems: "flex-start", 
+                            gap: 1.5, 
+                            mb: 0.5 
+                        }}>
+                            <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                    fontWeight: 700, 
+                                    color: "text.primary",
+                                    lineHeight: 1.2, 
+                                    flex: 1,
+                                    minWidth: 0,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                }}
+                            >
+                                Dr. {doctor.user?.fullName || doctor.user?.name}
+                            </Typography>
+
+                            {/* Experience Badge */}
+                            <Box 
+                                sx={{ 
+                                    flexShrink: 0,
+                                    bgcolor: alpha(theme.palette.primary.main, 0.12),
+                                    color: "text.primary",
+                                    px: 1.2,
+                                    py: 0.4,
+                                    borderRadius: "20px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    border: "1px solid",
+                                    borderColor: alpha(theme.palette.primary.main, 0.1)
+                                }}
+                            >
+                                <Award size={12} color={theme.palette.primary.main} />
+                                <Typography variant="caption" sx={{ fontWeight: 800, fontSize: "0.65rem", whiteSpace: "nowrap" }}>
+                                    {doctor.experienceYears || "8+"} Yrs
+                                </Typography>
+                            </Box>
+                        </Box>
+
                         <Typography 
-                            variant="h6" 
+                            variant="caption" 
                             sx={{ 
-                                fontWeight: 900, 
-                                lineHeight: 1.2, 
-                                mb: 0.8,
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                wordBreak: "break-word"
-                            }}
-                        >
-                            Dr. {doctor.user?.fullName || doctor.user?.name}
-                        </Typography>
-                        <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                                fontWeight: 800, 
-                                color: "primary.main",
+                                fontWeight: 700, 
+                                color: "text.secondary",
                                 textTransform: "uppercase",
-                                letterSpacing: 1,
-                                fontSize: "0.7rem"
+                                letterSpacing: 0.5,
+                                fontSize: "0.75rem"
                             }}
                         >
                             {doctor.specialty?.name || doctor.specialty || "General Practitioner"}

@@ -380,16 +380,18 @@ const RegisterPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#fff" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "background.default" }}>
       <Grid container sx={{ flexGrow: 1 }}>
         {/* Left Column: Branding & Illustration (Shared with Login) */}
         <Grid size={{ xs: 12, md: 5, lg: 6 }} sx={{ 
           display: { xs: "none", md: "flex" },
           flexDirection: "column",
-          bgcolor: alpha(theme.palette.primary.main, 0.03),
+          bgcolor: "action.hover",
           p: 8,
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          borderRight: theme.palette.mode === "dark" ? "1px solid" : "none",
+          borderColor: "divider"
         }}>
           {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 8 }}>
@@ -410,7 +412,16 @@ const RegisterPage = () => {
                 { icon: Calendar, title: "For Patients", desc: "Find the best doctors and book appointments in seconds." }
               ].map((f, i) => (
                 <Box key={i} sx={{ display: "flex", gap: 2.5 }}>
-                  <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", color: "primary.main", height: "fit-content" }}>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: 2.5, 
+                    bgcolor: "background.paper", 
+                    boxShadow: theme.palette.mode === "dark" ? "none" : "0 4px 12px rgba(0,0,0,0.03)", 
+                    color: "primary.main", 
+                    height: "fit-content",
+                    border: theme.palette.mode === "dark" ? "1px solid" : "none",
+                    borderColor: "divider"
+                  }}>
                     <f.icon size={28} />
                   </Box>
                   <Box>

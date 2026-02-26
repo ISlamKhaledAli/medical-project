@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
+import { toggleTheme } from "../../features/ui/uiSlice";
 import { useNavigate } from "react-router-dom";
 import { 
     AppBar, 
@@ -24,7 +25,9 @@ import {
     ChevronDown as ArrowDownIcon,
     LogOut as LogoutIcon,
     User as PersonIcon,
-    Settings as SettingsIcon
+    Settings as SettingsIcon,
+    Sun as SunIcon,
+    Moon as MoonIcon
 } from "lucide-react";
 import { useState } from "react";
 import { logoutUser } from "../../features/auth/authSlice";
@@ -33,6 +36,7 @@ import NotificationBell from "./NotificationBell";
 const Navbar = ({ onMenuClick }) => {
     const { user } = useSelector((state) => state.auth);
     const { conversations } = useSelector((state) => state.chat);
+    const { mode } = useSelector((state) => state.ui);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const theme = useTheme();
@@ -79,7 +83,7 @@ const Navbar = ({ onMenuClick }) => {
             position="sticky" 
             elevation={0}
             sx={{ 
-                bgcolor: alpha("#fff", 0.7), 
+                bgcolor: alpha(theme.palette.background.paper, 0.8), 
                 color: "text.primary",
                 backdropFilter: "blur(12px)",
                 borderBottom: "1px solid",
@@ -100,43 +104,43 @@ const Navbar = ({ onMenuClick }) => {
                         <MenuIcon size={24} />
                     </IconButton>
 
-                    {/* Search Bar */}
-                    <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                      <Paper
-                          elevation={0}
-                          sx={{
-                              p: "2px 12px",
-                              display: "flex",
-                              alignItems: "center",
-                              width: { sm: 250, md: 350 },
-                              bgcolor: alpha(theme.palette.background.default, 0.8),
-                              borderRadius: "12px",
-                              border: "1.5px solid",
-                              borderColor: "transparent",
-                              transition: "all 0.2s ease",
-                              "&:focus-within": {
-                                borderColor: "primary.main",
-                                bgcolor: "#fff",
-                                boxShadow: "0 4px 12px rgba(21, 101, 192, 0.08)"
-                              }
-                          }}
-                      >
-                          <SearchIcon size={18} color={theme.palette.text.secondary} />
-                          <InputBase
-                              sx={{ ml: 1.5, flex: 1, fontSize: "0.9rem", fontWeight: 500 }}
-                              placeholder="Search anything..."
-                              inputProps={{ "aria-label": "search" }}
-                          />
-                      </Paper>
-                    </Box>
+                    {/* Brand Name replacement for Search Bar */}
+                    <Typography 
+                        variant="h6" 
+                        noWrap
+                        sx={{ 
+                            display: { xs: "none", sm: "block" },
+                            fontWeight: 700, 
+                            letterSpacing: 0.5,
+                            color: theme.palette.mode === "dark" ? "text.primary" : "primary.main",
+                            ml: 1
+                        }}
+                    >
+                        MediSystem
+                    </Typography>
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2.5 } }}>
-                    {/* Icons */}
+                    <IconButton 
+                        onClick={() => dispatch(toggleTheme())}
+                        sx={{ 
+                            bgcolor: mode === "dark" ? alpha(theme.palette.primary.main, 0.1) : "rgba(0,0,0,0.02)",
+                            color: mode === "dark" ? "primary.main" : "text.secondary",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                bgcolor: "primary.light",
+                                color: "primary.main",
+                                transform: "rotate(15deg) scale(1.1)"
+                            }
+                        }}
+                    >
+                        {mode === "dark" ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+                    </IconButton>
+
                     <IconButton 
                         onClick={handleChatClick}
                         sx={{ 
-                            bgcolor: "rgba(0,0,0,0.02)", 
+                            bgcolor: mode === "dark" ? alpha(theme.palette.text.primary, 0.05) : "rgba(0,0,0,0.02)", 
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 bgcolor: "primary.light",
@@ -165,9 +169,9 @@ const Navbar = ({ onMenuClick }) => {
                             ml: 1,
                             p: 0.5,
                             pr: 1,
-                            borderRadius: "12px",
+                             borderRadius: "12px",
                             transition: "0.2s",
-                            "&:hover": { bgcolor: "rgba(0,0,0,0.03)" }
+                            "&:hover": { bgcolor: mode === "dark" ? alpha(theme.palette.text.primary, 0.07) : "rgba(0,0,0,0.03)" }
                         }}
                     >
                         <Avatar 
@@ -176,8 +180,9 @@ const Navbar = ({ onMenuClick }) => {
                             sx={{ 
                               width: 38, 
                               height: 38, 
-                              border: "2px solid #fff", 
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              border: "2px solid", 
+                              borderColor: "background.paper",
+                              boxShadow: theme.palette.mode === "dark" ? "none" : "0 2px 8px rgba(0,0,0,0.1)",
                               fontWeight: 800,
                               bgcolor: "primary.main"
                             }}

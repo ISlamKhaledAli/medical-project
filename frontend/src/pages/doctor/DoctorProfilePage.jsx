@@ -187,12 +187,30 @@ const DoctorProfilePage = () => {
                             <CardContent sx={{ textAlign: "center", py: 5 }}>
                                 <Avatar 
                                     sx={{ 
-                                        width: 120, 
-                                        height: 120, 
+                                        width: 110, 
+                                        height: 110, 
                                         mx: "auto", 
                                         mb: 3, 
                                         bgcolor: "primary.main",
-                                        fontSize: "3rem"
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                                        fontSize: "3.5rem",
+                                        fontWeight: 800,
+                                        boxShadow: theme.palette.mode === "dark" 
+                                            ? "0 8px 24px rgba(0,0,0,0.5)" 
+                                            : `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
+                                        border: "4px solid",
+                                        borderColor: "background.paper",
+                                        position: "relative",
+                                        "&::after": {
+                                            content: '""',
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            borderRadius: "50%",
+                                            boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)"
+                                        }
                                     }}
                                 >
                                     {user?.fullName?.[0]}

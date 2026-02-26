@@ -172,7 +172,7 @@ const ScheduleManagementPage = () => {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box>
+            <Box sx={{ maxWidth: "100%", overflowX: "hidden" }}>
                 <PageHeader 
                     title="Clinical Availability"
                     subtitle="Define your recurring weekly schedule. These patterns automatically generate bookable slots for patients."
@@ -204,9 +204,12 @@ const ScheduleManagementPage = () => {
                                             p: 2.5,
                                             borderRadius: 4,
                                             border: "1px solid",
-                                            borderColor: day.isActive ? alpha(theme.palette.primary.main, 0.2) : "divider",
-                                            bgcolor: day.isActive ? "white" : alpha(theme.palette.background.default, 0.5),
+                                            borderColor: day.isActive 
+                                                ? alpha(theme.palette.primary.main, 0.4) 
+                                                : (theme.palette.mode === 'dark' ? alpha('#fff', 0.08) : "divider"),
+                                            bgcolor: day.isActive ? "background.paper" : "transparent",
                                             transition: "all 0.3s ease",
+                                            overflow: "hidden",
                                             "&:hover": { borderColor: alpha(theme.palette.primary.main, 0.4) }
                                         }}
                                     >
@@ -247,7 +250,14 @@ const ScheduleManagementPage = () => {
                                                         pointerEvents: day.isActive ? "auto" : "none" 
                                                     }}
                                                 >
-                                                    <Box sx={{ display: 'flex', gap: 1.5, width: '100%', flexGrow: 1 }}>
+                                                    <Box sx={{ 
+                                                        display: 'flex', 
+                                                        gap: 1.5, 
+                                                        width: '100%', 
+                                                        flexGrow: 1,
+                                                        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                                                        minWidth: 0
+                                                    }}>
                                                         <TimePicker
                                                             label="Start Shift"
                                                             value={day.startTime}
@@ -303,8 +313,9 @@ const ScheduleManagementPage = () => {
                                                             border: '1px solid',
                                                             borderColor: day.isActive ? alpha(theme.palette.success.main, 0.1) : 'transparent',
                                                             color: day.isActive ? 'success.dark' : 'text.disabled',
-                                                            minWidth: 110,
-                                                            justifyContent: 'center'
+                                                            minWidth: { xs: '100%', md: 110 },
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0
                                                         }}
                                                     >
                                                         <Clock size={14} />

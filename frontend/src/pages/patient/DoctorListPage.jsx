@@ -134,10 +134,14 @@ const DoctorListPage = () => {
                     p: 2.5, 
                     mb: 5, 
                     borderRadius: 4, 
-                    bgcolor: "white", 
+                    bgcolor: "background.paper", 
                     border: "1px solid",
-                    borderColor: "divider",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+                    borderColor: theme.palette.mode === "dark" 
+                        ? "rgba(255, 255, 255, 0.08)" 
+                        : "divider",
+                    boxShadow: theme.palette.mode === "dark" 
+                        ? "0 8px 32px rgba(0, 0, 0, 0.4)" 
+                        : "0 4px 20px rgba(0, 0, 0, 0.03)",
                     display: "flex",
                     flexDirection: { xs: "column", md: "row" },
                     gap: 2.5,
@@ -145,8 +149,8 @@ const DoctorListPage = () => {
                     position: "sticky",
                     top: 100,
                     zIndex: 10,
-                    backdropFilter: "blur(10px)",
-                    backgroundColor: alpha("#fff", 0.9)
+                    backdropFilter: "blur(12px)",
+                    backgroundColor: alpha(theme.palette.background.paper, 0.9)
                 }}
             >
                 <TextField
@@ -168,7 +172,16 @@ const DoctorListPage = () => {
                                 </IconButton>
                             </InputAdornment>
                         ),
-                        sx: { borderRadius: 3, bgcolor: alpha(theme.palette.background.default, 0.5) }
+                        sx: { 
+                            borderRadius: 3, 
+                            bgcolor: theme.palette.mode === "dark" 
+                                ? alpha(theme.palette.background.default, 0.5) 
+                                : alpha(theme.palette.background.default, 0.5),
+                            "& input::placeholder": {
+                                color: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.5)" : "inherit",
+                                opacity: 1
+                            }
+                        }
                     }}
                 />
                 
@@ -191,9 +204,11 @@ const DoctorListPage = () => {
                             fontWeight: 800, 
                             px: 3, 
                             height: 44,
-                            bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                            color: "secondary.dark",
-                            "&:hover": { bgcolor: alpha(theme.palette.secondary.main, 0.2) }
+                            bgcolor: "action.hover",
+                            color: "text.secondary",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            "&:hover": { bgcolor: "action.selected" }
                         }}
                     >
                         Reset

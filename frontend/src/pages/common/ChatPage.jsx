@@ -250,8 +250,9 @@ const ChatPage = () => {
                                                 height: 52,
                                                 fontWeight: 900,
                                                 fontSize: 18,
-                                                border: '2px solid white',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                                                border: '2px solid',
+                                                borderColor: 'background.paper',
+                                                boxShadow: theme.palette.mode === 'dark' ? 'none' : '0 4px 12px rgba(0,0,0,0.05)'
                                             }}
                                         >
                                             {conv.partnerName?.charAt(0)?.toUpperCase()}
@@ -339,7 +340,15 @@ const ChatPage = () => {
                                 <ChevronLeft size={20} />
                             </IconButton>
                         )}
-                        <Avatar sx={{ bgcolor: activeConversation?.partnerRole === "doctor" ? "primary.main" : "secondary.main", width: 48, height: 48, fontWeight: 900, border: '2px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <Avatar sx={{ 
+                            bgcolor: activeConversation?.partnerRole === "doctor" ? "primary.main" : "secondary.main", 
+                            width: 48, 
+                            height: 48, 
+                            fontWeight: 900, 
+                            border: '2px solid',
+                            borderColor: 'background.paper',
+                            boxShadow: theme.palette.mode === 'dark' ? 'none' : '0 4px 12px rgba(0,0,0,0.05)' 
+                        }}>
                             {activeConversation?.partnerName?.charAt(0)?.toUpperCase()}
                         </Avatar>
                         <Box sx={{ flex: 1 }}>
@@ -412,10 +421,16 @@ const ChatPage = () => {
                                             px: 3, 
                                             py: 2, 
                                             borderRadius: isMine ? "24px 24px 4px 24px" : "24px 24px 24px 4px", 
-                                            bgcolor: isMine ? "primary.main" : "white", 
+                                            bgcolor: isMine 
+                                                ? "primary.main" 
+                                                : (theme.palette.mode === 'dark' ? alpha(theme.palette.text.primary, 0.06) : alpha('#000', 0.04)), 
                                             color: isMine ? "white" : "text.primary",
-                                            boxShadow: isMine ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` : "0 2px 8px rgba(0,0,0,0.04)",
-                                            ml: !isMine && !isFirstInGroup ? 6 : 0
+                                            boxShadow: isMine 
+                                                ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` 
+                                                : (theme.palette.mode === 'dark' ? 'none' : "0 2px 8px rgba(0,0,0,0.04)"),
+                                            ml: !isMine && !isFirstInGroup ? 6 : 0,
+                                            border: !isMine && theme.palette.mode === 'dark' ? '1px solid' : 'none',
+                                            borderColor: alpha(theme.palette.divider, 0.5)
                                         }}>
                                             <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.6, wordBreak: "break-word" }}>
                                                 {msg.text}
@@ -434,7 +449,13 @@ const ChatPage = () => {
                         <div ref={messagesEndRef} />
                     </Box>
 
-                    <Box sx={{ p: 3, borderTop: "1px solid", borderColor: 'divider', bgcolor: 'white' }}>
+                    <Box sx={{ 
+                        p: 3, 
+                        borderTop: "1px solid", 
+                        borderColor: 'divider', 
+                        bgcolor: 'background.paper',
+                        zIndex: 2
+                    }}>
                         <Stack direction="row" spacing={2} alignItems="flex-end">
                             <TextField
                                 fullWidth

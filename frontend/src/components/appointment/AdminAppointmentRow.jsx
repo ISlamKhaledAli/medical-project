@@ -59,9 +59,11 @@ const AdminAppointmentRow = ({
                             width: 44, 
                             height: 44, 
                             borderRadius: 2.5,
-                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            bgcolor: "action.hover",
                             color: "primary.main",
-                            fontWeight: 800
+                            fontWeight: 800,
+                            border: "1px solid",
+                            borderColor: "divider"
                         }}
                     >
                         {appointment.patient?.fullName?.[0] || "?"}
@@ -108,8 +110,9 @@ const AdminAppointmentRow = ({
                             onClick={() => onView(appointment)}
                             sx={{ 
                                 borderRadius: 2, 
-                                bgcolor: alpha(theme.palette.text.primary, 0.05),
-                                color: "text.primary"
+                                bgcolor: "action.hover",
+                                color: "text.primary",
+                                "&:hover": { bgcolor: "action.selected" }
                             }}
                         >
                             <Eye size={18} />
@@ -140,7 +143,8 @@ const AdminAppointmentRow = ({
                                 disabled={!canCancel || isLoading}
                                 sx={{ 
                                     borderRadius: 2, 
-                                    bgcolor: canCancel ? alpha(theme.palette.warning.main, 0.05) : "transparent"
+                                    bgcolor: canCancel ? alpha(theme.palette.warning.main, 0.08) : "transparent",
+                                    "&:hover": { bgcolor: canCancel ? alpha(theme.palette.warning.main, 0.15) : "transparent" }
                                 }}
                             >
                                 <XCircle size={18} />

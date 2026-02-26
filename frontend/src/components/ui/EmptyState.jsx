@@ -29,7 +29,7 @@ const EmptyState = ({
           sx={{ 
             p: 3, 
             borderRadius: "50%", 
-            bgcolor: "rgba(0,0,0,0.02)", 
+            bgcolor: "action.hover", 
             color: "text.disabled",
             mb: 1
           }}

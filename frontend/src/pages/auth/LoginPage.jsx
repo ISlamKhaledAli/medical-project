@@ -116,16 +116,18 @@ const LoginPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#fff" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "background.default" }}>
       <Grid container sx={{ flexGrow: 1 }}>
         {/* Left Column: Branding & Illustration */}
         <Grid size={{ xs: 12, md: 6, lg: 7 }} sx={{ 
           display: { xs: "none", md: "flex" },
           flexDirection: "column",
-          bgcolor: alpha(theme.palette.primary.main, 0.03),
+          bgcolor: "action.hover",
           p: 8,
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          borderRight: theme.palette.mode === "dark" ? "1px solid" : "none",
+          borderColor: "divider"
         }}>
           {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 10 }}>
@@ -163,7 +165,15 @@ const LoginPage = () => {
                 { icon: ShieldCheck, title: "Secure Data", desc: "Your medical history is protected with enterprise security." }
               ].map((feature, i) => (
                 <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
-                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", color: "primary.main" }}>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: 2, 
+                    bgcolor: "background.paper", 
+                    boxShadow: theme.palette.mode === "dark" ? "none" : "0 4px 12px rgba(0,0,0,0.03)", 
+                    color: "primary.main",
+                    border: theme.palette.mode === "dark" ? "1px solid" : "none",
+                    borderColor: "divider"
+                  }}>
                     <feature.icon size={24} />
                   </Box>
                   <Box>
@@ -237,7 +247,7 @@ const LoginPage = () => {
                         startAdornment: (
                           <InputAdornment position="start">
                             <Box sx={{ color: formData.email ? "primary.main" : "text.disabled", display: "flex", mr: 1 }}>
-                              <PlusIcon size={18} />
+                              <PlusIcon size={18} color={theme.palette.primary.main} />
                             </Box>
                           </InputAdornment>
                         ),
