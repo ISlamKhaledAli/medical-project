@@ -25,7 +25,7 @@ const DoctorListPage = () => {
     const dispatch = useDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const { doctors, isLoading, error, pagination, filters } = useSelector((state) => state.doctor);
-    const { isAuthChecking, user, accessToken } = useSelector((state) => state.auth);
+    const { isAuthChecking, user } = useSelector((state) => state.auth);
     
     // Local state for immediate search input feedback
     const [searchTerm, setSearchTerm] = useState(filters.name || "");
@@ -55,7 +55,7 @@ const DoctorListPage = () => {
         // 1. Wait for auth initialization
         // 2. Wait for URL parameters to be synced to Redux
         // 3. Ensure user is authenticated
-        if (isAuthChecking || !isInitialized || !accessToken) return;
+        if (isAuthChecking || !isInitialized || !user) return;
 
         // Cancel previous request if it exists
         if (abortControllerRef.current) {
@@ -80,7 +80,7 @@ const DoctorListPage = () => {
                 abortControllerRef.current.abort();
             }
         };
-    }, [dispatch, debouncedSearch, filters.specialty, pagination.page, pagination.limit, isAuthChecking, isInitialized, accessToken]);
+    }, [dispatch, debouncedSearch, filters.specialty, pagination.page, pagination.limit, isAuthChecking, isInitialized, user]);
 
     // 3. Update URL when filters or page change
     const updateURL = useCallback((newFilters, newPage) => {
