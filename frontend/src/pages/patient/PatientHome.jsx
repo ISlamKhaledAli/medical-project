@@ -82,7 +82,7 @@ const PatientHome = () => {
 
             {/* Quick Stats Overview */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Total Visits" 
                         value={stats.total} 
@@ -91,7 +91,7 @@ const PatientHome = () => {
                         color="primary"
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Confirmed" 
                         value={stats.confirmed} 
@@ -100,7 +100,7 @@ const PatientHome = () => {
                         trend={{ value: "Next visit soon", isUp: true }}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Pending Approvals" 
                         value={stats.pending} 
@@ -108,7 +108,7 @@ const PatientHome = () => {
                         color="warning"
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                   <StatCard 
                       title="Today's Care" 
                       value={todayAppointments.length} 

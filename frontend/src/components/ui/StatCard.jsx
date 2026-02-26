@@ -12,8 +12,8 @@ const StatCard = ({ title, value, icon: Icon, color = "primary", subtitle, trend
         p: 3,
         borderRadius: 4,
         display: "flex",
-        alignItems: "center",
-        gap: 2.5,
+        flexDirection: "column",
+        height: "100%",
         position: "relative",
         overflow: "hidden",
         transition: "all 0.3s ease",
@@ -26,55 +26,57 @@ const StatCard = ({ title, value, icon: Icon, color = "primary", subtitle, trend
         },
       }}
     >
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          borderRadius: 3,
-          bgcolor: lightColor,
-          color: mainColor,
-          zIndex: 1,
-        }}
-      >
-        <Icon size={28} strokeWidth={2.5} />
-      </Box>
-
-      <Box sx={{ zIndex: 1 }}>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", mb: 0.5, display: "block" }}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, mb: 1, zIndex: 1, flexGrow: 1 }}>
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            borderRadius: 3,
+            bgcolor: lightColor,
+            color: mainColor,
+            flexShrink: 0
+          }}
         >
-          {title}
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: "text.primary" }}>
-            {value}
-          </Typography>
-          {trend && (
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 800,
-                color: (typeof trend === 'string' ? trend.startsWith("+") : trend.isUp) ? "success.main" : "error.main",
-                bgcolor: (typeof trend === 'string' ? trend.startsWith("+") : trend.isUp) ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
-                px: 1,
-                py: 0.2,
-                borderRadius: 1,
-                display: "inline-flex",
-                alignItems: "center"
-              }}
-            >
-              {typeof trend === 'string' ? trend : trend.value}
-            </Typography>
-          )}
+          <Icon size={28} strokeWidth={2.5} />
         </Box>
-        {subtitle && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mt: 0.5, display: "block" }}>
-            {subtitle}
+
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", mb: 0.5, display: "block" }}
+          >
+            {title}
           </Typography>
-        )}
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, flexWrap: "wrap" }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: "text.primary" }}>
+              {value}
+            </Typography>
+            {trend && (
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  color: (typeof trend === 'string' ? trend.startsWith("+") : trend.isUp) ? "success.main" : "error.main",
+                  bgcolor: (typeof trend === 'string' ? trend.startsWith("+") : trend.isUp) ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
+                  px: 1,
+                  py: 0.2,
+                  borderRadius: 1,
+                  display: "inline-flex",
+                  alignItems: "center"
+                }}
+              >
+                {typeof trend === 'string' ? trend : trend.value}
+              </Typography>
+            )}
+          </Box>
+        </Box>
       </Box>
+      {subtitle && (
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mt: 0.5, display: "block" }}>
+          {subtitle}
+        </Typography>
+      )}
 
       {/* Decorative background circle */}
       <Box

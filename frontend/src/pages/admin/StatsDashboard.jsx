@@ -52,7 +52,7 @@ const StatsDashboard = () => {
 
             {/* Performance Metrics */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Platform Users" 
                         value={data.totalUsers} 
@@ -62,7 +62,7 @@ const StatsDashboard = () => {
                         trend={{ value: "8% increase", isUp: true }}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Appointments" 
                         value={data.totalAppointments} 
@@ -72,7 +72,7 @@ const StatsDashboard = () => {
                         trend={{ value: "12% growth", isUp: true }}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Active Doctors" 
                         value={data.activeDoctors} 
@@ -81,7 +81,7 @@ const StatsDashboard = () => {
                         duration="Clinical Capacity"
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Pending Audits" 
                         value={data.pendingApprovals} 

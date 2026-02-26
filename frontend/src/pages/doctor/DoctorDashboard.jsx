@@ -88,7 +88,7 @@ const DoctorDashboard = () => {
 
             {/* Stats Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Today's visits" 
                         value={stats.today} 
@@ -98,7 +98,7 @@ const DoctorDashboard = () => {
                         trend={{ value: "12% more than yesterday", isUp: true }}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Pending Review" 
                         value={stats.pending} 
@@ -107,7 +107,7 @@ const DoctorDashboard = () => {
                         subtitle="Action required"
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Completed" 
                         value={stats.completed} 
@@ -117,7 +117,7 @@ const DoctorDashboard = () => {
                         trend={{ value: "4% growth", isUp: true }}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
                     <StatCard 
                         title="Total Patients" 
                         value={stats.total} 
