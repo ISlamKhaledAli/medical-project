@@ -8,11 +8,11 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
 
 const useSocket = () => {
     const dispatch = useDispatch();
-    const { accessToken: token, user } = useSelector((state) => state.auth);
+    const { user } = useSelector((state) => state.auth);
     const socketRef = useRef(null);
 
     useEffect(() => {
-        if (!token || !user) {
+        if (!user) {
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
@@ -22,7 +22,6 @@ const useSocket = () => {
 
         // Initialize socket with authentication
         socketRef.current = io(SOCKET_URL, {
-            auth: { token },
             withCredentials: true,
             transports: ['websocket']
         });
