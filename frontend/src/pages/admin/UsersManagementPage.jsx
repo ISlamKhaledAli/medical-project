@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
     Container, 
@@ -13,9 +13,7 @@ import {
     Box,
     Avatar,
     Chip,
-    IconButton,
     Button,
-    Stack,
 } from "@mui/material";
 import { 
     Block as BlockIcon, 
@@ -23,14 +21,28 @@ import {
 } from "@mui/icons-material";
 import { fetchUsers, toggleUserStatus } from "../../features/admin/adminSlice";
 import { debugAdmin } from "../../utils/debugTrace";
+import { setGlobalSearchQuery } from "../../features/ui/uiSlice";
 
 const UsersManagementPage = () => {
     const dispatch = useDispatch();
     const { users, isLoading } = useSelector((state) => state.admin);
+    const { globalSearchQuery } = useSelector((state) => state.ui);
 
     useEffect(() => {
         dispatch(fetchUsers());
     }, [dispatch]);
+
+    // Filter users based on global search query
+    const filteredUsers = useMemo(() => {
+        if (!globalSearchQuery) return users;
+        const query = globalSearchQuery.toLowerCase();
+        return users.filter(user => 
+            user.fullName?.toLowerCase().includes(query) ||
+            user.name?.toLowerCase().includes(query) ||
+            user.email?.toLowerCase().includes(query) ||
+            user.role?.toLowerCase().includes(query)
+        );
+    }, [users, globalSearchQuery]);
 
     const handleToggleStatus = (id, isCurrentlyBlocked) => {
         const targetStatus = isCurrentlyBlocked ? "active" : "blocked";
@@ -60,7 +72,7 @@ const UsersManagementPage = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => {
+                        {filteredUsers.map((user) => {
                             const isBlocked = user.isBlocked;
                             const accountStatus = user.status || (user.role === "doctor" ? "pending" : "approved");
                             

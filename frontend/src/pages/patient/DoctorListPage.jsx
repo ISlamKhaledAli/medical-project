@@ -20,20 +20,29 @@ import PaginationControl from "../../components/ui/PaginationControl";
 import DoctorCardSkeleton from "../../components/skeletons/DoctorCardSkeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
+import { setGlobalSearchQuery, clearGlobalSearchQuery } from "../../features/ui/uiSlice";
 
 const DoctorListPage = () => {
     const dispatch = useDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const { doctors, isLoading, error, pagination, filters } = useSelector((state) => state.doctor);
     const { isAuthChecking, user, accessToken } = useSelector((state) => state.auth);
+    const { globalSearchQuery } = useSelector((state) => state.ui);
     
-    // Local state for immediate search input feedback
-    const [searchTerm, setSearchTerm] = useState(filters.name || "");
+    // Local state for immediate search input feedback - initialize from global search
+    const [searchTerm, setSearchTerm] = useState(filters.name || globalSearchQuery || "");
     const debouncedSearch = useDebounce(searchTerm, 500);
     const [isInitialized, setIsInitialized] = useState(false);
     
     // AbortController ref to cancel stale requests
     const abortControllerRef = useRef(null);
+
+    // Effect to sync global search query to local search term
+    useEffect(() => {
+        if (globalSearchQuery !== searchTerm) {
+            setSearchTerm(globalSearchQuery);
+        }
+    }, [globalSearchQuery]);
 
     // 1. Sync URL params to Redux state (ONLY ON MOUNT or URL change)
     useEffect(() => {
@@ -41,10 +50,10 @@ const DoctorListPage = () => {
         const specialty = searchParams.get("specialty") || "";
         const page = parseInt(searchParams.get("page")) || 1;
         
-        // Initialize local search term from URL
-        setSearchTerm(name);
+        // Initialize local search term from URL or global search
+        setSearchTerm(name || globalSearchQuery || "");
         
-        dispatch(setFilters({ name, specialty }));
+        dispatch(setFilters({ name: name || globalSearchQuery, specialty }));
         dispatch(setPage(page));
         setIsInitialized(true);
     }, [dispatch, searchParams]); // searchParams change happens only when updateURL or manual URL edit happens
@@ -122,6 +131,7 @@ const DoctorListPage = () => {
     const handleClearFilters = () => {
         setSearchTerm("");
         dispatch(setFilters({ name: "", specialty: "" }));
+        dispatch(clearGlobalSearchQuery());
         updateURL({ name: "", specialty: "" }, 1);
     };
 

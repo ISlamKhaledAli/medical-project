@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { fetchConversations } from "../../features/chat/chatSlice";
+import { clearGlobalSearchQuery } from "../../features/ui/uiSlice";
 
 const MainLayout = ({ children }) => {
     const dispatch = useDispatch();
@@ -12,8 +13,30 @@ const MainLayout = ({ children }) => {
     const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Standardized check
     const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const [open, setOpen] = useState(false);
+    const location = useLocation();
     
     const { user, accessToken, isAuthChecking } = useSelector((state) => state.auth);
+
+    // Routes where search bar should be shown
+    const searchRoutes = [
+        '/patient/doctors',
+        '/admin/users',
+        '/admin/doctor-approvals',
+        '/admin/specialties',
+        '/admin/appointments'
+    ];
+    
+    // Check if current route should show search bar
+    const showSearch = searchRoutes.some(route => 
+        location.pathname === route || location.pathname.startsWith(route.split(':')[0])
+    );
+
+    // Clear global search when navigating to pages without search
+    useEffect(() => {
+        if (!showSearch) {
+            dispatch(clearGlobalSearchQuery());
+        }
+    }, [location.pathname, showSearch, dispatch]);
 
     useEffect(() => {
         if (accessToken) {
@@ -48,7 +71,7 @@ const MainLayout = ({ children }) => {
                     transition: "0.3s"
                 }}
             >
-                <Navbar onMenuClick={toggleDrawer} />
+                <Navbar onMenuClick={toggleDrawer} showSearch={showSearch} />
                 
                 <Box sx={{ mt: 2 }}>
                     {children}

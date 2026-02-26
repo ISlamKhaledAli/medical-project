@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
     AppBar, 
     Toolbar, 
@@ -27,17 +27,79 @@ import {
 import { useState } from "react";
 import { logoutUser } from "../../features/auth/authSlice";
 import { fetchConversations } from "../../features/chat/chatSlice";
+import { setGlobalSearchQuery, clearGlobalSearchQuery } from "../../features/ui/uiSlice";
 import NotificationBell from "./NotificationBell";
 import { ROLES } from "../../constants/roles";
 
-const Navbar = ({ onMenuClick }) => {
+// Helper function to get page title based on route
+const getPageTitle = (pathname, user) => {
+    const firstName = user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || "User";
+    
+    // Dashboard/root pages - show welcome message
+    if (pathname === '/patient' || pathname === '/doctor/dashboard' || pathname === '/admin') {
+        return `Welcome back, ${firstName}!`;
+    }
+    
+    // Page titles based on route
+    const pageTitles = {
+        '/patient/doctors': 'Find Doctors',
+        '/patient/doctors/:id': 'Doctor Details',
+        '/patient/book': 'Book Appointment',
+        '/patient/appointments': 'My Appointments',
+        '/patient/chat': 'Messages',
+        '/patient/profile': 'My Profile',
+        '/doctor/schedule': 'Schedule Management',
+        '/doctor/appointments': 'Appointments',
+        '/doctor/chat': 'Messages',
+        '/doctor/profile': 'My Profile',
+        '/admin/users': 'User Management',
+        '/admin/doctor-approvals': 'Doctor Approvals',
+        '/admin/specialties': 'Specialties',
+        '/admin/appointments': 'All Appointments',
+        '/notifications': 'Notifications',
+        '/chat': 'Messages',
+        '/settings': 'Settings'
+    };
+    
+    // Check for exact match or partial match
+    for (const [route, title] of Object.entries(pageTitles)) {
+        if (pathname === route || pathname.startsWith(route.split(':')[0])) {
+            return title;
+        }
+    }
+    
+    return `Welcome back, ${firstName}!`;
+};
+
+const Navbar = ({ onMenuClick, showSearch = true }) => {
     const { user } = useSelector((state) => state.auth);
     const { conversations } = useSelector((state) => state.chat);
+    const { globalSearchQuery } = useSelector((state) => state.ui);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(globalSearchQuery);
 
     const totalUnreadMessages = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
+
+    const handleSearchChange = (event) => {
+        const query = event.target.value;
+        setSearchQuery(query);
+        // Dispatch to Redux for global access
+        dispatch(setGlobalSearchQuery(query));
+    };
+
+    const handleSearchKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            dispatch(setGlobalSearchQuery(searchQuery));
+        }
+    };
+
+    const handleSearchBlur = () => {
+        // Update Redux state when user leaves the search field
+        dispatch(setGlobalSearchQuery(searchQuery));
+    };
 
     const handleProfileClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -89,28 +151,51 @@ const Navbar = ({ onMenuClick }) => {
                         <MenuIcon />
                     </IconButton>
 
-                    {/* Search Bar */}
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            p: "2px 10px",
-                            display: "flex",
+                    {/* Search Bar or Welcome Message */}
+                    {showSearch ? (
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: "2px 10px",
+                                display: "flex",
+                                alignItems: "center",
+                                width: { xs: 150, sm: 300, md: 400 },
+                                bgcolor: "rgba(255, 255, 255, 0.8)",
+                                borderRadius: "15px",
+                                border: "1px solid rgba(0,0,0,0.05)"
+                            }}
+                        >
+                            <IconButton sx={{ p: "10px" }} aria-label="search">
+                                <SearchIcon />
+                            </IconButton>
+                            <InputBase
+                                sx={{ ml: 1, flex: 1, fontSize: "0.9rem" }}
+                                placeholder="Search doctors, patients..."
+                                inputProps={{ "aria-label": "search" }}
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                onKeyDown={handleSearchKeyDown}
+                                onBlur={handleSearchBlur}
+                            />
+                        </Paper>
+                    ) : (
+                        <Box sx={{ 
+                            display: "flex", 
                             alignItems: "center",
                             width: { xs: 150, sm: 300, md: 400 },
-                            bgcolor: "rgba(255, 255, 255, 0.8)",
-                            borderRadius: "15px",
-                            border: "1px solid rgba(0,0,0,0.05)"
-                        }}
-                    >
-                        <IconButton sx={{ p: "10px" }} aria-label="search">
-                            <SearchIcon />
-                        </IconButton>
-                        <InputBase
-                            sx={{ ml: 1, flex: 1, fontSize: "0.9rem" }}
-                            placeholder="Search"
-                            inputProps={{ "aria-label": "search" }}
-                        />
-                    </Paper>
+                        }}>
+                            <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                    fontWeight: 600,
+                                    color: "text.primary",
+                                    display: { xs: "none", sm: "block" }
+                                }}
+                            >
+                                {getPageTitle(location.pathname, user)}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 3 } }}>
