@@ -15,7 +15,9 @@ import {
     Card,
     CardContent,
     Chip,
-    Stack
+    Stack,
+    alpha,
+    useTheme
 } from "@mui/material";
 import { 
     Person as ProfileIcon, 
@@ -30,6 +32,7 @@ import SpecialtySelect from "../../components/doctor/SpecialtySelect";
 
 const DoctorProfilePage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { user } = useSelector((state) => state.auth);
     const { doctorDetails, isLoading, error } = useSelector((state) => state.doctor);
     
@@ -95,26 +98,84 @@ const DoctorProfilePage = () => {
             </Box>
 
             {success && (
-                <Alert severity="success" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.success.main, 0.08),
+                    color: "success.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.success.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     Profile updated successfully!
                 </Alert>
             )}
 
             {user?.status === "pending" && (
-                <Alert severity="warning" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="warning" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.warning.main, 0.08),
+                    color: "warning.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.warning.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     <strong>Account Pending Approval:</strong> Your profile is currently being reviewed by administrators. You will be able to manage availability once approved.
                 </Alert>
             )}
 
             {user?.status === "rejected" && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    color: "error.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     <strong>Account Rejected:</strong> Your application has been rejected. Please contact support if you believe this is an error.
                 </Alert>
             )}
 
-            {error && error !== "Doctor profile not found." && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-                    {error}
+            {error && (
+                <Alert 
+                  severity={error === "Doctor profile not found." ? "info" : "error"}
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: error === "Doctor profile not found." 
+                      ? alpha(theme.palette.info.main, 0.08)
+                      : alpha(theme.palette.error.main, 0.08),
+                    color: error === "Doctor profile not found." ? "info.dark" : "error.dark",
+                    border: "1px solid",
+                    borderColor: error === "Doctor profile not found." 
+                      ? alpha(theme.palette.info.main, 0.2)
+                      : alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
+                    {error === "Doctor profile not found." 
+                      ? "Clinical profile not found. Please complete the setup below to join the network." 
+                      : error}
                 </Alert>
             )}
 

@@ -180,7 +180,22 @@ const DoctorOnboardingPage = () => {
             </Stepper>
 
             {doctorError && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 3, fontWeight: 700 }}>{doctorError}</Alert>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    color: "error.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
+                    {doctorError}
+                </Alert>
             )}
 
             <Box sx={{ mb: 6 }}>
@@ -306,7 +321,22 @@ const DoctorOnboardingPage = () => {
 
                 {activeStep === 2 && (
                     <SectionCard title="Regulatory Verification" icon={FileText}>
-                        <Alert severity="success" icon={<Sparkles size={20} />} sx={{ mb: 4, borderRadius: 3, bgcolor: alpha(theme.palette.success.main, 0.05), color: 'success.dark', border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.1) }}>
+                        <Alert 
+                          severity="success" 
+                          icon={<Sparkles size={22} />} 
+                          sx={{ 
+                            mb: 4, 
+                            borderRadius: "16px", 
+                            bgcolor: alpha(theme.palette.success.main, 0.08), 
+                            color: 'success.dark', 
+                            border: '1px solid', 
+                            borderColor: alpha(theme.palette.success.main, 0.2),
+                            py: 2,
+                            px: 3,
+                            fontWeight: 600,
+                            "& .MuiAlert-icon": { display: 'flex', alignItems: 'center' }
+                          }}
+                        >
                             <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Validation Successful</Typography>
                             <Typography variant="caption" sx={{ fontWeight: 600 }}>Your clinical attributes are verified and ready for publication.</Typography>
                         </Alert>

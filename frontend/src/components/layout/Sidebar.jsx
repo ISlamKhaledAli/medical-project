@@ -118,28 +118,58 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
               </Typography>
             </Box>
 
-            <List sx={{ width: "100%", mt: 0 }}>
+            <List sx={{ width: "100%", mt: 0, px: 0 }}>
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
-                        <ListItem key={item.id} disablePadding sx={{ mb: 2, justifyContent: "center" }}>
+                        <ListItem 
+                            key={item.id} 
+                            disablePadding 
+                            sx={{ 
+                                mb: 1, 
+                                justifyContent: "center",
+                                position: "relative",
+                                // Active indicator bar
+                                "&::before": {
+                                    content: '""',
+                                    position: "absolute",
+                                    left: 0,
+                                    top: "15%",
+                                    height: isActive ? "70%" : "0%",
+                                    width: "4px",
+                                    bgcolor: "white", // Since sidebar is dark blue, we use white or bright accent
+                                    borderRadius: "0 4px 4px 0",
+                                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    opacity: isActive ? 1 : 0,
+                                    boxShadow: isActive ? "0 0 10px rgba(255,255,255,0.5)" : "none"
+                                }
+                            }}
+                        >
                             <Tooltip title={item.label} placement="right" arrow>
                                 <ListItemButton
                                     onClick={() => navigate(item.path)}
                                     sx={{
                                         minWidth: 0,
                                         justifyContent: "center",
-                                        bgcolor: isActive ? "white" : "transparent",
-                                        color: isActive ? "#1A237E" : "rgba(255,255,255,0.7)",
-                                        borderRadius: "16px",
-                                        width: "56px",
-                                        height: "56px",
+                                        bgcolor: isActive ? "rgba(255,255,255,0.15)" : "transparent",
+                                        color: isActive ? "white" : "rgba(255,255,255,0.6)",
+                                        borderRadius: "14px",
+                                        width: "64px",
+                                        height: "64px",
                                         "&:hover": {
-                                            bgcolor: isActive ? "white" : "rgba(255, 255, 255, 0.1)",
-                                            color: "white"
+                                            bgcolor: isActive ? "rgba(255,255,255,0.2)" : "rgba(255, 255, 255, 0.08)",
+                                            color: "white",
+                                            "& .MuiListItemIcon-root": {
+                                                transform: "scale(1.1)",
+                                            }
                                         },
                                         mx: "auto",
-                                        transition: "all 0.2s ease"
+                                        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        // Prevent layout shift
+                                        padding: 0,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 0.5
                                     }}
                                 >
                                     <ListItemIcon
@@ -147,16 +177,40 @@ const Sidebar = ({ open, toggleDrawer, isMobile }) => {
                                             minWidth: 0,
                                             justifyContent: "center",
                                             color: "inherit",
+                                            transition: "inherit",
                                         }}
                                     >
                                         {item.id === "chat" ? (
-                                            <Badge badgeContent={totalUnreadChat} color="error" max={99}>
+                                            <Badge 
+                                                badgeContent={totalUnreadChat} 
+                                                color="error" 
+                                                max={99}
+                                                sx={{ 
+                                                    "& .MuiBadge-badge": { 
+                                                        fontSize: "0.65rem", 
+                                                        height: 18, 
+                                                        minWidth: 18,
+                                                        border: "2px solid #1A237E"
+                                                    } 
+                                                }}
+                                            >
                                                 {item.icon}
                                             </Badge>
                                         ) : (
                                             item.icon
                                         )}
                                     </ListItemIcon>
+                                    <Typography 
+                                        variant="caption" 
+                                        sx={{ 
+                                            fontSize: "0.6rem", 
+                                            fontWeight: isActive ? 800 : 500,
+                                            opacity: isActive ? 1 : 0.7,
+                                            transition: "inherit"
+                                        }}
+                                    >
+                                        {item.label}
+                                    </Typography>
                                 </ListItemButton>
                             </Tooltip>
                         </ListItem>

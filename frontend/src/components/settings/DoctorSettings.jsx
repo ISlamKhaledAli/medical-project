@@ -18,7 +18,7 @@ import {
     Payments as FeeIcon,
     WorkHistory as ExpIcon
 } from "@mui/icons-material";
-import { fetchDoctorById, updateDoctorProfile } from "../../features/doctor/doctorSlice";
+import { fetchMyProfile, updateDoctorProfile } from "../../features/doctor/doctorSlice";
 import SpecialtySelect from "../doctor/SpecialtySelect";
 
 const DoctorSettings = () => {
@@ -37,7 +37,7 @@ const DoctorSettings = () => {
 
     useEffect(() => {
         if (user?._id) {
-            dispatch(fetchDoctorById(user._id));
+            dispatch(fetchMyProfile());
         }
     }, [dispatch, user]);
 

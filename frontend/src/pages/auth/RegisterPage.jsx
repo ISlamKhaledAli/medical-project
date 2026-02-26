@@ -349,8 +349,26 @@ const RegisterPage = () => {
             </Stack>
             <Alert 
               severity="info" 
-              icon={<SuccessIcon size={20} />}
-              sx={{ borderRadius: 3, fontWeight: 600, bgcolor: alpha(theme.palette.info.main, 0.05) }}
+              icon={<SuccessIcon size={22} style={{ color: theme.palette.info.main }} />}
+              sx={{ 
+                borderRadius: "16px", 
+                fontWeight: 600, 
+                bgcolor: alpha(theme.palette.info.main, 0.08),
+                color: "info.dark", // High contrast
+                border: "1px solid",
+                borderColor: alpha(theme.palette.info.main, 0.2),
+                py: 2,
+                px: 3,
+                "& .MuiAlert-icon": {
+                  display: 'flex',
+                  alignItems: 'center',
+                  opacity: 1
+                },
+                "& .MuiAlert-message": {
+                  fontSize: "0.95rem",
+                  letterSpacing: "0.01em"
+                }
+              }}
             >
               Almost there! Click the button below to finalize your registration.
             </Alert>

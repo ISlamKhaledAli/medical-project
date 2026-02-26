@@ -297,10 +297,14 @@ const LoginPage = () => {
                       severity="error" 
                       variant="outlined"
                       sx={{ 
-                        borderRadius: 3, 
+                        borderRadius: "16px", 
                         fontWeight: 600,
                         borderWidth: 1.5,
-                        bgcolor: alpha(theme.palette.error.main, 0.02)
+                        bgcolor: alpha(theme.palette.error.main, 0.04),
+                        color: "error.dark",
+                        borderColor: alpha(theme.palette.error.main, 0.2),
+                        py: 1.5,
+                        px: 2.5
                       }}
                     >
                       {error}

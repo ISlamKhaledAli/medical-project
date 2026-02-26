@@ -8,6 +8,8 @@ import {
   Paper,
   CircularProgress,
   Alert,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import {
   VerifiedUser as VerifyIcon,
@@ -16,6 +18,7 @@ import {
 import axiosInstance from "../../api/axiosInstance";
 
 const VerifyEmailPage = () => {
+  const theme = useTheme();
   const { token } = useParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading"); // loading, success, error
@@ -78,7 +81,20 @@ const VerifyEmailPage = () => {
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: "error.main" }}>
               Oops!
             </Typography>
-            <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 4, 
+                borderRadius: "16px",
+                bgcolor: alpha(theme.palette.error.main, 0.08),
+                color: "error.dark",
+                border: "1px solid",
+                borderColor: alpha(theme.palette.error.main, 0.2),
+                fontWeight: 600,
+                py: 1.5,
+                px: 2.5
+              }}
+            >
               {message}
             </Alert>
             <Button

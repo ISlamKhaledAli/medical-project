@@ -360,9 +360,18 @@ const ScheduleManagementPage = () => {
                                     {schedule.filter(d => d.isActive).length === 0 && (
                                         <Alert 
                                             severity="warning" 
-                                            variant="soft"
                                             icon={<AlertTriangle size={20} />}
-                                            sx={{ borderRadius: 3, fontWeight: 700 }}
+                                            sx={{ 
+                                                mb: 4, 
+                                                borderRadius: "16px",
+                                                bgcolor: alpha(theme.palette.warning.main, 0.08),
+                                                color: "warning.dark",
+                                                border: "1px solid",
+                                                borderColor: alpha(theme.palette.warning.main, 0.2),
+                                                fontWeight: 600,
+                                                py: 1.5,
+                                                px: 2.5
+                                            }}
                                         >
                                             Your profile is currently invisible to patients as no work days are active.
                                         </Alert>
@@ -394,8 +403,17 @@ const ScheduleManagementPage = () => {
                 {error && (
                     <Alert 
                         severity="error" 
-                        variant="soft"
-                        sx={{ mt: 3, borderRadius: 3, fontWeight: 700 }}
+                        sx={{ 
+                            mt: 3, 
+                            borderRadius: "16px",
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            color: "error.dark",
+                            border: "1px solid",
+                            borderColor: alpha(theme.palette.error.main, 0.2),
+                            fontWeight: 600,
+                            py: 1.5,
+                            px: 2.5
+                        }}
                     >
                         {error}
                     </Alert>

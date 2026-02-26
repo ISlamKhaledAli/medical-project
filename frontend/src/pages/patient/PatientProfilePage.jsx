@@ -13,7 +13,9 @@ import {
     Stack,
     Card,
     CardContent,
-    CircularProgress
+    CircularProgress,
+    alpha,
+    useTheme
 } from "@mui/material";
 import { 
     Person as ProfileIcon, 
@@ -26,6 +28,7 @@ import { updateProfile } from "../../features/auth/authSlice";
 
 const PatientProfilePage = () => {
     const dispatch = useDispatch();
+    const theme = useTheme();
     const { user, isLoading, error } = useSelector((state) => state.auth);
     
     const [formData, setFormData] = useState({
@@ -77,13 +80,39 @@ const PatientProfilePage = () => {
             </Box>
 
             {success && (
-                <Alert severity="success" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.success.main, 0.08),
+                    color: "success.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.success.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     Your profile has been updated successfully.
                 </Alert>
             )}
 
             {error && (
-                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 4, 
+                    borderRadius: "16px",
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    color: "error.dark",
+                    border: "1px solid",
+                    borderColor: alpha(theme.palette.error.main, 0.2),
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2.5
+                  }}
+                >
                     {error}
                 </Alert>
             )}
