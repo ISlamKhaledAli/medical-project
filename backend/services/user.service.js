@@ -82,7 +82,10 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
  */
 export const deleteAccount = async (userId, password) => {
   if (!password) {
-    throw new ApiError("Please provide your password to delete your account.", 400);
+    throw new ApiError(
+      "Please provide your password to delete your account.",
+      400,
+    );
   }
 
   const user = await User.findById(userId).select("+password");

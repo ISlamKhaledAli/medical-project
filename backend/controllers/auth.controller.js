@@ -12,17 +12,12 @@ import {
  */
 export const register = async (req, res, next) => {
   try {
-    console.log("📝 Registration started for:", req.body.email);
-
     const user = await authService.createUser(req.body);
-    console.log("✅ User created successfully in DB:", user._id);
 
     let verificationToken;
     try {
       verificationToken = await authService.generateVerificationToken(user._id);
-      console.log("✅ Verification token generated");
     } catch (tokenError) {
-      console.error("❌ Token generation failed:", tokenError.message);
       return res.status(201).json({
         success: true,
         message:
@@ -48,7 +43,6 @@ export const register = async (req, res, next) => {
         message: `Verify your email: ${verifyUrl}`,
         html,
       });
-      console.log("✉️ Verification email sent successfully");
 
       const successMsg =
         user.role === "doctor"
@@ -60,7 +54,6 @@ export const register = async (req, res, next) => {
         message: successMsg,
       });
     } catch (emailError) {
-      console.error("📧 Email sending failed:", emailError.message);
       res.status(201).json({
         success: true,
         message:
@@ -68,7 +61,6 @@ export const register = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error("💥 Registration overall failure:", error.message);
     next(error);
   }
 };
